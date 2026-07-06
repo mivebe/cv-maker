@@ -1,0 +1,165 @@
+/*
+ * CV document styling - deliberately NOT Tailwind. Every visual property is
+ * driven by CSS custom properties set from a variant's ThemeConfig, so the
+ * same markup renders every theme and the print output stays predictable.
+ *
+ * Units: the page is sized in inches (US Letter). Margins come from a token so
+ * they are identical on screen and in print. @page margin is 0; the visible
+ * margin is the page padding, which the browser's print pipeline preserves.
+ */
+
+.cv-root {
+  --cv-font-family: Georgia, serif;
+  --cv-font-size: 10.5pt;
+  --cv-line-height: 1.4;
+  --cv-accent: #1f2937;
+  --cv-text: #111827;
+  --cv-heading: #111827;
+  --cv-margin: 18mm;
+  --cv-gap: 12px;
+  --cv-section-gap: 18px;
+
+  font-family: var(--cv-font-family);
+  font-size: var(--cv-font-size);
+  line-height: var(--cv-line-height);
+  color: var(--cv-text);
+}
+
+.cv-page {
+  width: 8.5in;
+  min-height: 11in;
+  box-sizing: border-box;
+  padding: var(--cv-margin);
+  background: #fff;
+  margin: 0 auto;
+}
+
+/* Header ------------------------------------------------------------------ */
+.cv-header {
+  margin-bottom: var(--cv-section-gap);
+}
+.cv-name {
+  font-size: 1.9em;
+  font-weight: 700;
+  color: var(--cv-heading);
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+.cv-headline {
+  font-size: 1.05em;
+  color: var(--cv-accent);
+  margin: 0.15em 0 0;
+}
+.cv-contact {
+  margin-top: 0.5em;
+  font-size: 0.85em;
+  color: var(--cv-text);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35em 0.9em;
+}
+.cv-contact a {
+  color: var(--cv-accent);
+  text-decoration: none;
+}
+.cv-summary {
+  margin-top: 0.6em;
+  font-size: 0.95em;
+}
+
+/* Body layout ------------------------------------------------------------- */
+.cv-body {
+  display: block;
+}
+.cv-body.cv-two-col {
+  display: grid;
+  grid-template-columns: 1.9fr 1fr;
+  gap: calc(var(--cv-section-gap) * 1.4);
+}
+
+/* Sections ---------------------------------------------------------------- */
+.cv-section {
+  margin-bottom: var(--cv-section-gap);
+  break-inside: avoid-column;
+}
+.cv-section-title {
+  font-size: 0.95em;
+  font-weight: 700;
+  color: var(--cv-heading);
+  margin: 0 0 0.5em;
+  letter-spacing: 0.03em;
+}
+.cv-root[data-uppercase='true'] .cv-section-title {
+  text-transform: uppercase;
+}
+.cv-root[data-rule='true'] .cv-section-title {
+  border-bottom: 1px solid var(--cv-accent);
+  padding-bottom: 0.2em;
+}
+
+.cv-item {
+  margin-bottom: var(--cv-gap);
+  break-inside: avoid;
+}
+.cv-item:last-child {
+  margin-bottom: 0;
+}
+.cv-item-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1em;
+}
+.cv-item-title {
+  font-weight: 700;
+  color: var(--cv-heading);
+}
+.cv-item-sub {
+  color: var(--cv-accent);
+}
+.cv-item-meta {
+  font-size: 0.85em;
+  color: var(--cv-text);
+  white-space: nowrap;
+  opacity: 0.85;
+}
+.cv-item-summary {
+  margin: 0.2em 0;
+  font-size: 0.95em;
+}
+.cv-bullets {
+  margin: 0.3em 0 0;
+  padding-left: 1.1em;
+}
+.cv-bullets li {
+  margin-bottom: 0.15em;
+}
+
+/* Skills ------------------------------------------------------------------ */
+.cv-skillgroup {
+  margin-bottom: 0.5em;
+}
+.cv-skillgroup-name {
+  font-weight: 700;
+  color: var(--cv-heading);
+}
+.cv-skillgroup-list {
+  color: var(--cv-text);
+}
+
+/* Print ------------------------------------------------------------------- */
+@media print {
+  @page {
+    size: letter;
+    margin: 0;
+  }
+  .cv-page {
+    width: 100%;
+    min-height: auto;
+    box-shadow: none;
+    margin: 0;
+  }
+  a {
+    color: inherit;
+  }
+}

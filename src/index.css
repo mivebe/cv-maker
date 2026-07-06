@@ -1,0 +1,36 @@
+@import 'tailwindcss';
+
+/*
+ * App chrome styling only (Tailwind). The CV document itself is styled
+ * separately with plain token-driven CSS in src/cv/cv.css so the print
+ * stylesheet stays clean and predictable.
+ */
+
+:root {
+  color-scheme: light;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif;
+}
+
+/* When printing, hide all app chrome; only the CV document shows. */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}
