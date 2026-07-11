@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { ItemControls } from '../ui'
+import { ItemControls } from '@/components/app-ui'
 
 /** Bordered container for a single list item with a title + reorder controls. */
 export function ItemFrame({
@@ -20,10 +20,10 @@ export function ItemFrame({
   children: ReactNode
 }) {
   return (
-    <div className="rounded-md border border-slate-200 bg-slate-50/50 p-4">
+    <div className="rounded-lg border bg-muted/30 p-4">
       <div className="mb-3 flex items-center justify-between gap-2">
-        <span className="truncate text-sm font-medium text-slate-700">
-          {title || <span className="text-slate-400">Untitled</span>}
+        <span className="truncate text-sm font-medium">
+          {title || <span className="text-muted-foreground">Untitled</span>}
         </span>
         <ItemControls
           onUp={onUp}

@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { CircleCheck, CircleX, TriangleAlert } from 'lucide-react'
 import type { ResolvedCV } from '../../lib/resolve'
 import type { ThemeConfig } from '../../schema'
 import {
@@ -7,16 +8,16 @@ import {
   validateExtraction,
   type AtsCheck,
 } from '../../lib/ats'
-import { Button, SectionCard } from '../ui'
+import { SectionCard } from '@/components/app-ui'
+import { Button } from '@/components/ui/button'
+import { Separator } from '@/components/ui/separator'
 
 function CheckIcon({ level }: { level: AtsCheck['level'] }) {
-  const map = {
-    pass: { icon: '✓', cls: 'text-green-600' },
-    warn: { icon: '!', cls: 'text-amber-500' },
-    fail: { icon: '✕', cls: 'text-red-600' },
-  }
-  const { icon, cls } = map[level]
-  return <span className={`font-bold ${cls}`}>{icon}</span>
+  const cls = 'size-4 shrink-0'
+  if (level === 'pass') return <CircleCheck className={`${cls} text-green-600`} />
+  if (level === 'warn')
+    return <TriangleAlert className={`${cls} text-amber-500`} />
+  return <CircleX className={`${cls} text-destructive`} />
 }
 
 function CheckList({ checks }: { checks: AtsCheck[] }) {
@@ -26,9 +27,11 @@ function CheckList({ checks }: { checks: AtsCheck[] }) {
         <li key={i} className="flex gap-2 text-sm">
           <CheckIcon level={c.level} />
           <span>
-            <span className="text-slate-700">{c.label}</span>
+            <span>{c.label}</span>
             {c.detail && (
-              <span className="block text-xs text-slate-400">{c.detail}</span>
+              <span className="block text-xs text-muted-foreground">
+                {c.detail}
+              </span>
             )}
           </span>
         </li>
@@ -80,18 +83,20 @@ export function AtsPanel({
       title="ATS check"
       description="Predicts how cleanly this CV parses, and verifies an exported PDF extracts to structured text."
     >
-      <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+      <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
         Structural checks
       </h3>
       <CheckList checks={structural} />
 
       <div className="mt-3">
-        <button
+        <Button
+          variant="link"
+          size="sm"
+          className="px-0"
           onClick={() => setShowText((s) => !s)}
-          className="text-xs font-medium text-blue-600 hover:underline"
         >
           {showText ? 'Hide' : 'Show'} what an ATS reads (linear text)
-        </button>
+        </Button>
         {showText && (
           <pre className="mt-2 max-h-64 overflow-auto rounded-md bg-slate-900 p-3 text-xs leading-relaxed text-slate-100">
             {linear}
@@ -99,16 +104,20 @@ export function AtsPanel({
         )}
       </div>
 
-      <hr className="my-4 border-slate-100" />
+      <Separator className="my-4" />
 
-      <h3 className="mb-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
+      <h3 className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
         Verify exported PDF
       </h3>
-      <p className="mb-2 text-xs text-slate-500">
+      <p className="mb-2 text-xs text-muted-foreground">
         Export the PDF (Save as PDF in the print dialog), then load it here to
         confirm the text extracts correctly.
       </p>
-      <Button onClick={() => fileRef.current?.click()} disabled={busy}>
+      <Button
+        variant="outline"
+        onClick={() => fileRef.current?.click()}
+        disabled={busy}
+      >
         {busy ? 'Reading…' : 'Load exported PDF'}
       </Button>
       <input
@@ -119,10 +128,10 @@ export function AtsPanel({
         onChange={onFile}
       />
 
-      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+      {error && <p className="mt-2 text-sm text-destructive">{error}</p>}
       {extraction && (
         <div className="mt-3">
-          <p className="mb-2 text-xs text-slate-500">
+          <p className="mb-2 text-xs text-muted-foreground">
             Extracted {extraction.charCount.toLocaleString()} characters.
           </p>
           <CheckList checks={extraction.checks} />

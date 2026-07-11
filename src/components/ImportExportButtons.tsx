@@ -1,7 +1,9 @@
 import { useRef, useState } from 'react'
+import { Download, RotateCcw, Upload } from 'lucide-react'
 import { useStore } from '../store/useStore'
 import { downloadJson, importJson } from '../lib/io'
 import { APP_DATA_VERSION } from '../schema'
+import { Button } from '@/components/ui/button'
 
 export function ImportExportButtons() {
   const profile = useStore((s) => s.profile)
@@ -39,47 +41,46 @@ export function ImportExportButtons() {
       return
     }
     replaceAll(result.data)
-    flash(
-      `Imported ${result.data.variants.length} variant(s) and profile.`,
-    )
+    flash(`Imported ${result.data.variants.length} variant(s) and profile.`)
   }
 
   return (
     <div className="flex items-center gap-2">
       {message && (
-        <span className="text-xs font-medium text-green-700">{message}</span>
+        <span className="text-xs font-medium text-muted-foreground">
+          {message}
+        </span>
       )}
       {error && (
-        <span className="max-w-xs truncate text-xs font-medium text-red-600" title={error}>
+        <span
+          className="max-w-xs truncate text-xs font-medium text-destructive"
+          title={error}
+        >
           {error}
         </span>
       )}
-      <button
-        onClick={onExport}
-        className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
-      >
+      <Button variant="outline" onClick={onExport}>
+        <Download />
         Export JSON
-      </button>
-      <button
-        onClick={onPickFile}
-        className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
-      >
+      </Button>
+      <Button variant="outline" onClick={onPickFile}>
+        <Upload />
         Import JSON
-      </button>
-      <button
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon"
+        aria-label="Reset to sample data"
+        title="Reset to sample data"
         onClick={() => {
-          if (
-            confirm('Replace all current data with the built-in sample?')
-          ) {
+          if (confirm('Replace all current data with the built-in sample?')) {
             resetToSample()
             flash('Loaded sample data.')
           }
         }}
-        className="rounded-md px-2 py-1.5 text-xs text-slate-400 hover:text-slate-600"
-        title="Reset to sample data"
       >
-        Reset
-      </button>
+        <RotateCcw />
+      </Button>
       <input
         ref={fileRef}
         type="file"

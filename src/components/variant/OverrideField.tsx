@@ -1,5 +1,8 @@
 import { useStore } from '../../store/useStore'
-import { Field, TextArea, TextInput, Button } from '../ui'
+import { Field } from '@/components/app-ui'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { StringListEditor } from '../editors/StringListEditor'
 
 /**
@@ -29,7 +32,6 @@ export function OverrideText({
   const has = override && field in override
   const value = has ? String(override[field] ?? '') : ''
 
-  const Input = multiline ? TextArea : TextInput
   return (
     <Field
       label={
@@ -37,16 +39,27 @@ export function OverrideText({
       }
     >
       <div className="flex items-start gap-2">
-        <Input
-          value={value}
-          placeholder={masterValue || '-'}
-          onChange={(e) =>
-            setOverride(variantId, itemId, field, e.target.value)
-          }
-        />
+        {multiline ? (
+          <Textarea
+            value={value}
+            placeholder={masterValue || '-'}
+            onChange={(e) =>
+              setOverride(variantId, itemId, field, e.target.value)
+            }
+          />
+        ) : (
+          <Input
+            value={value}
+            placeholder={masterValue || '-'}
+            onChange={(e) =>
+              setOverride(variantId, itemId, field, e.target.value)
+            }
+          />
+        )}
         {has && (
           <Button
             variant="ghost"
+            size="sm"
             onClick={() => clearOverride(variantId, itemId, field)}
           >
             Reset
@@ -81,13 +94,14 @@ export function OverrideList({
   return (
     <div>
       <div className="mb-1 flex items-center justify-between">
-        <span className="text-xs font-medium text-slate-600">
+        <span className="text-xs font-medium text-muted-foreground">
           {label}
           {has && ' (overridden)'}
         </span>
         {has && (
           <Button
             variant="ghost"
+            size="sm"
             onClick={() => clearOverride(variantId, itemId, field)}
           >
             Reset to master

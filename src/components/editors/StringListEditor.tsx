@@ -1,4 +1,7 @@
-import { TextInput, Button } from '../ui'
+import { ChevronDown, ChevronUp, Plus, X } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 
 /**
  * Edits an ordered list of plain strings (bullet highlights, skill tags).
@@ -31,49 +34,62 @@ export function StringListEditor({
 
   return (
     <div>
-      <span className="mb-1 block text-xs font-medium text-slate-600">
-        {label}
-      </span>
+      {label && (
+        <Label asChild>
+          <span className="mb-1.5 block text-xs text-muted-foreground">
+            {label}
+          </span>
+        </Label>
+      )}
       <div className="space-y-2">
         {values.map((v, i) => (
           <div key={i} className="flex items-center gap-1">
-            <TextInput
+            <Input
               value={v}
               placeholder={placeholder}
               onChange={(e) => update(i, e.target.value)}
             />
-            <button
+            <Button
+              variant="ghost"
+              size="icon-sm"
               onClick={() => move(i, -1)}
               disabled={i === 0}
+              aria-label="Move up"
               title="Move up"
-              className="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 disabled:opacity-30"
             >
-              ↑
-            </button>
-            <button
+              <ChevronUp />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon-sm"
               onClick={() => move(i, 1)}
               disabled={i === values.length - 1}
+              aria-label="Move down"
               title="Move down"
-              className="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 disabled:opacity-30"
             >
-              ↓
-            </button>
-            <button
+              <ChevronDown />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon-sm"
               onClick={() => remove(i)}
+              aria-label="Remove"
               title="Remove"
-              className="rounded p-1 text-slate-400 hover:bg-red-50 hover:text-red-600"
+              className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
             >
-              ✕
-            </button>
+              <X />
+            </Button>
           </div>
         ))}
       </div>
       <Button
         variant="ghost"
+        size="sm"
         className="mt-2"
         onClick={() => onChange([...values, ''])}
       >
-        + {addLabel}
+        <Plus />
+        {addLabel}
       </Button>
     </div>
   )

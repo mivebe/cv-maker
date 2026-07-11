@@ -1,5 +1,9 @@
+import { Plus } from 'lucide-react'
 import { useStore } from '../../store/useStore'
-import { Button, Field, SectionCard, TextArea, TextInput, EmptyHint } from '../ui'
+import { EmptyHint, Field, SectionCard } from '@/components/app-ui'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { ItemFrame } from './ItemFrame'
 
 export function EducationEditor() {
@@ -13,8 +17,9 @@ export function EducationEditor() {
     <SectionCard
       title="Education"
       action={
-        <Button variant="primary" onClick={() => addItem('education')}>
-          + Add education
+        <Button variant="default" onClick={() => addItem('education')}>
+          <Plus />
+          Add education
         </Button>
       }
     >
@@ -34,7 +39,7 @@ export function EducationEditor() {
           >
             <div className="grid gap-3 sm:grid-cols-2">
               <Field label="Degree / qualification">
-                <TextInput
+                <Input
                   value={item.degree}
                   onChange={(e) =>
                     updateItem('education', item.id, { degree: e.target.value })
@@ -42,7 +47,7 @@ export function EducationEditor() {
                 />
               </Field>
               <Field label="Institution">
-                <TextInput
+                <Input
                   value={item.institution}
                   onChange={(e) =>
                     updateItem('education', item.id, {
@@ -52,7 +57,7 @@ export function EducationEditor() {
                 />
               </Field>
               <Field label="Location">
-                <TextInput
+                <Input
                   value={item.location}
                   onChange={(e) =>
                     updateItem('education', item.id, {
@@ -63,7 +68,7 @@ export function EducationEditor() {
               </Field>
               <div className="grid grid-cols-2 gap-3">
                 <Field label="Start">
-                  <TextInput
+                  <Input
                     value={item.startDate}
                     placeholder="2011"
                     onChange={(e) =>
@@ -74,7 +79,7 @@ export function EducationEditor() {
                   />
                 </Field>
                 <Field label="End">
-                  <TextInput
+                  <Input
                     value={item.endDate}
                     placeholder="2015"
                     onChange={(e) =>
@@ -88,7 +93,7 @@ export function EducationEditor() {
             </div>
             <div className="mt-3">
               <Field label="Details" hint="Honors, focus, GPA, etc.">
-                <TextArea
+                <Textarea
                   value={item.details}
                   onChange={(e) =>
                     updateItem('education', item.id, {

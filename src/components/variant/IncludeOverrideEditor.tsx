@@ -1,7 +1,11 @@
 import { useState } from 'react'
 import type { CVVariant } from '../../schema'
 import { useStore } from '../../store/useStore'
-import { SectionCard, EmptyHint } from '../ui'
+import { SectionCard, EmptyHint } from '@/components/app-ui'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
+import { cn } from '@/lib/utils'
 import { OverrideList, OverrideText } from './OverrideField'
 
 /** A single toggleable master item with an expandable per-variant override panel. */
@@ -26,45 +30,38 @@ function ItemRow({
     Object.keys(variant.overrides[itemId]).length > 0
 
   return (
-    <div className="rounded-md border border-slate-200">
+    <div className="rounded-md border">
       <div className="flex items-center gap-3 px-3 py-2">
-        <input
-          type="checkbox"
+        <Checkbox
           checked={included}
-          onChange={(e) =>
-            setVariantInclude(variant.id, itemId, e.target.checked)
+          onCheckedChange={(v) =>
+            setVariantInclude(variant.id, itemId, v === true)
           }
         />
         <div className="min-w-0 flex-1">
           <div
-            className={`truncate text-sm font-medium ${
-              included ? 'text-slate-800' : 'text-slate-400'
-            }`}
+            className={cn(
+              'truncate text-sm font-medium',
+              !included && 'text-muted-foreground',
+            )}
           >
             {title || 'Untitled'}
           </div>
           {subtitle && (
-            <div className="truncate text-xs text-slate-500">{subtitle}</div>
+            <div className="truncate text-xs text-muted-foreground">
+              {subtitle}
+            </div>
           )}
         </div>
-        {overridden && (
-          <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-700">
-            tailored
-          </span>
-        )}
+        {overridden && <Badge variant="secondary">tailored</Badge>}
         {children && (
-          <button
-            onClick={() => setOpen((o) => !o)}
-            className="rounded px-2 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50"
-          >
+          <Button variant="ghost" size="sm" onClick={() => setOpen((o) => !o)}>
             {open ? 'Close' : 'Tailor'}
-          </button>
+          </Button>
         )}
       </div>
       {open && children && (
-        <div className="space-y-3 border-t border-slate-100 bg-slate-50/60 p-3">
-          {children}
-        </div>
+        <div className="space-y-3 border-t bg-muted/40 p-3">{children}</div>
       )}
     </div>
   )
@@ -73,7 +70,7 @@ function ItemRow({
 function Group({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+      <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
         {title}
       </h3>
       <div className="space-y-2">{children}</div>

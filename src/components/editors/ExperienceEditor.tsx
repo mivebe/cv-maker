@@ -1,5 +1,10 @@
+import { Plus } from 'lucide-react'
 import { useStore } from '../../store/useStore'
-import { Button, Field, SectionCard, TextArea, TextInput, EmptyHint } from '../ui'
+import { EmptyHint, Field, SectionCard } from '@/components/app-ui'
+import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { ItemFrame } from './ItemFrame'
 import { StringListEditor } from './StringListEditor'
 
@@ -15,8 +20,9 @@ export function ExperienceEditor() {
       title="Experience"
       description="Roles, most recent first."
       action={
-        <Button variant="primary" onClick={() => addItem('experience')}>
-          + Add role
+        <Button variant="default" onClick={() => addItem('experience')}>
+          <Plus />
+          Add role
         </Button>
       }
     >
@@ -36,7 +42,7 @@ export function ExperienceEditor() {
           >
             <div className="grid gap-3 sm:grid-cols-2">
               <Field label="Role / title">
-                <TextInput
+                <Input
                   value={item.role}
                   onChange={(e) =>
                     updateItem('experience', item.id, { role: e.target.value })
@@ -44,7 +50,7 @@ export function ExperienceEditor() {
                 />
               </Field>
               <Field label="Organization">
-                <TextInput
+                <Input
                   value={item.organization}
                   onChange={(e) =>
                     updateItem('experience', item.id, {
@@ -54,7 +60,7 @@ export function ExperienceEditor() {
                 />
               </Field>
               <Field label="Location">
-                <TextInput
+                <Input
                   value={item.location}
                   onChange={(e) =>
                     updateItem('experience', item.id, {
@@ -65,7 +71,7 @@ export function ExperienceEditor() {
               </Field>
               <div className="grid grid-cols-2 gap-3">
                 <Field label="Start">
-                  <TextInput
+                  <Input
                     value={item.startDate}
                     placeholder="2021"
                     onChange={(e) =>
@@ -76,7 +82,7 @@ export function ExperienceEditor() {
                   />
                 </Field>
                 <Field label="End">
-                  <TextInput
+                  <Input
                     value={item.endDate}
                     placeholder="2023"
                     disabled={item.current}
@@ -89,13 +95,12 @@ export function ExperienceEditor() {
                 </Field>
               </div>
             </div>
-            <label className="mt-2 flex items-center gap-2 text-sm text-slate-600">
-              <input
-                type="checkbox"
+            <label className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
+              <Checkbox
                 checked={item.current}
-                onChange={(e) =>
+                onCheckedChange={(v) =>
                   updateItem('experience', item.id, {
-                    current: e.target.checked,
+                    current: v === true,
                   })
                 }
               />
@@ -103,7 +108,7 @@ export function ExperienceEditor() {
             </label>
             <div className="mt-3">
               <Field label="Summary" hint="Optional one-line role summary.">
-                <TextArea
+                <Textarea
                   value={item.summary}
                   onChange={(e) =>
                     updateItem('experience', item.id, {

@@ -1,6 +1,7 @@
 import { useReactToPrint } from 'react-to-print'
 import type { RefObject } from 'react'
-import { Button } from '../ui'
+import { Printer } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 /**
  * Exports the CV via the browser's native print pipeline. Choosing "Save as
@@ -19,7 +20,8 @@ export function ExportButton({
     documentTitle,
   })
   return (
-    <Button variant="primary" onClick={() => print()}>
+    <Button variant="default" onClick={() => print()}>
+      <Printer />
       Export PDF / Print
     </Button>
   )

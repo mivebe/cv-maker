@@ -1,5 +1,9 @@
+import { Plus } from 'lucide-react'
 import { useStore } from '../../store/useStore'
-import { Button, Field, SectionCard, TextArea, TextInput, EmptyHint } from '../ui'
+import { EmptyHint, Field, SectionCard } from '@/components/app-ui'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { ItemFrame } from './ItemFrame'
 import { StringListEditor } from './StringListEditor'
 
@@ -14,8 +18,9 @@ export function ProjectsEditor() {
     <SectionCard
       title="Projects"
       action={
-        <Button variant="primary" onClick={() => addItem('projects')}>
-          + Add project
+        <Button variant="default" onClick={() => addItem('projects')}>
+          <Plus />
+          Add project
         </Button>
       }
     >
@@ -33,7 +38,7 @@ export function ProjectsEditor() {
           >
             <div className="grid gap-3 sm:grid-cols-2">
               <Field label="Name">
-                <TextInput
+                <Input
                   value={item.name}
                   onChange={(e) =>
                     updateItem('projects', item.id, { name: e.target.value })
@@ -41,7 +46,7 @@ export function ProjectsEditor() {
                 />
               </Field>
               <Field label="URL">
-                <TextInput
+                <Input
                   value={item.url}
                   placeholder="https://…"
                   onChange={(e) =>
@@ -52,7 +57,7 @@ export function ProjectsEditor() {
             </div>
             <div className="mt-3">
               <Field label="Description">
-                <TextArea
+                <Textarea
                   value={item.description}
                   onChange={(e) =>
                     updateItem('projects', item.id, {

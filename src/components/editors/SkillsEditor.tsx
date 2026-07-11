@@ -1,5 +1,8 @@
+import { Plus } from 'lucide-react'
 import { useStore } from '../../store/useStore'
-import { Button, Field, SectionCard, TextInput, EmptyHint } from '../ui'
+import { EmptyHint, Field, SectionCard } from '@/components/app-ui'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { ItemFrame } from './ItemFrame'
 import { StringListEditor } from './StringListEditor'
 
@@ -15,8 +18,9 @@ export function SkillsEditor() {
       title="Skills"
       description="Grouped by category (e.g. Languages, Frontend)."
       action={
-        <Button variant="primary" onClick={() => addItem('skills')}>
-          + Add group
+        <Button variant="default" onClick={() => addItem('skills')}>
+          <Plus />
+          Add group
         </Button>
       }
     >
@@ -34,7 +38,7 @@ export function SkillsEditor() {
           >
             <div className="grid gap-3">
               <Field label="Group name">
-                <TextInput
+                <Input
                   value={group.name}
                   placeholder="Languages"
                   onChange={(e) =>

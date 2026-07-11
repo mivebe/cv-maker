@@ -3,7 +3,6 @@ import { Layout } from './components/Layout'
 import { ProfilePage } from './pages/ProfilePage'
 import { VariantsPage } from './pages/VariantsPage'
 import { VariantEditorPage } from './pages/VariantEditorPage'
-import ListPage from './pages/ListPage'
 
 // HashRouter keeps deep links working when the app is opened from the
 // filesystem or served statically without server-side routing config.
@@ -12,7 +11,6 @@ export const router = createHashRouter([
     path: '/',
     element: <Layout />,
     children: [
-      { path: 'list', element: <ListPage /> },
       { index: true, element: <Navigate to="/profile" replace /> },
       { path: 'profile', element: <ProfilePage /> },
       { path: 'variants', element: <VariantsPage /> },

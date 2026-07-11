@@ -9,10 +9,8 @@ export function ProfilePage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-          Master Profile
-        </h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <h1 className="text-2xl font-bold tracking-tight">Master Profile</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
           Your complete CV content, entered once. Every variant draws from this.
           Changes save automatically.
         </p>

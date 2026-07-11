@@ -1,6 +1,18 @@
 import type { CVVariant, ThemePreset } from '../../schema'
 import { useStore } from '../../store/useStore'
-import { Field, SectionCard, Button } from '../ui'
+import { Field, SectionCard } from '@/components/app-ui'
+import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Slider } from '@/components/ui/slider'
 import {
   THEME_PRESETS,
   THEME_PRESET_LABELS,
@@ -21,7 +33,7 @@ const FONT_FAMILIES: { label: string; value: string }[] = [
   },
 ]
 
-function Slider({
+function SliderField({
   label,
   value,
   min,
@@ -40,14 +52,12 @@ function Slider({
 }) {
   return (
     <Field label={`${label}: ${value}${suffix ?? ''}`}>
-      <input
-        type="range"
+      <Slider
         min={min}
         max={max}
         step={step}
-        value={value}
-        onChange={(e) => onChange(Number(e.target.value))}
-        className="w-full accent-blue-600"
+        value={[value]}
+        onValueChange={([n]) => onChange(n)}
       />
     </Field>
   )
@@ -69,13 +79,13 @@ function ColorField({
           type="color"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="h-9 w-12 cursor-pointer rounded border border-slate-300"
+          className="h-9 w-12 cursor-pointer rounded border"
         />
-        <input
+        <Input
           type="text"
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="w-24 rounded-md border border-slate-300 px-2 py-1.5 text-sm"
+          className="w-24"
         />
       </div>
     </Field>
@@ -99,7 +109,7 @@ export function ThemeEditor({ variant }: { variant: CVVariant }) {
             {(Object.keys(THEME_PRESETS) as ThemePreset[]).map((p) => (
               <Button
                 key={p}
-                variant={t.preset === p ? 'primary' : 'default'}
+                variant={t.preset === p ? 'default' : 'outline'}
                 onClick={() => set(themeFromPreset(p))}
               >
                 {THEME_PRESET_LABELS[p]}
@@ -110,31 +120,37 @@ export function ThemeEditor({ variant }: { variant: CVVariant }) {
 
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Font family">
-            <select
+            <Select
               value={t.fontFamily}
-              onChange={(e) => set({ fontFamily: e.target.value })}
-              className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
+              onValueChange={(fontFamily) => set({ fontFamily })}
             >
-              {FONT_FAMILIES.map((f) => (
-                <option key={f.value} value={f.value}>
-                  {f.label}
-                </option>
-              ))}
-              {!FONT_FAMILIES.some((f) => f.value === t.fontFamily) && (
-                <option value={t.fontFamily}>Custom</option>
-              )}
-            </select>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {FONT_FAMILIES.map((f) => (
+                  <SelectItem key={f.value} value={f.value}>
+                    {f.label}
+                  </SelectItem>
+                ))}
+                {/* Radix rejects an empty value, so only offer Custom for a real font. */}
+                {t.fontFamily &&
+                  !FONT_FAMILIES.some((f) => f.value === t.fontFamily) && (
+                    <SelectItem value={t.fontFamily}>Custom</SelectItem>
+                  )}
+              </SelectContent>
+            </Select>
           </Field>
           <Field label="Columns">
             <div className="flex gap-2">
               <Button
-                variant={t.columns === 1 ? 'primary' : 'default'}
+                variant={t.columns === 1 ? 'default' : 'outline'}
                 onClick={() => set({ columns: 1 })}
               >
                 One
               </Button>
               <Button
-                variant={t.columns === 2 ? 'primary' : 'default'}
+                variant={t.columns === 2 ? 'default' : 'outline'}
                 onClick={() => set({ columns: 2 })}
               >
                 Two
@@ -144,7 +160,7 @@ export function ThemeEditor({ variant }: { variant: CVVariant }) {
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <Slider
+          <SliderField
             label="Font size"
             value={t.fontSize}
             min={8}
@@ -153,7 +169,7 @@ export function ThemeEditor({ variant }: { variant: CVVariant }) {
             suffix="pt"
             onChange={(fontSize) => set({ fontSize })}
           />
-          <Slider
+          <SliderField
             label="Line height"
             value={t.lineHeight}
             min={1}
@@ -161,7 +177,7 @@ export function ThemeEditor({ variant }: { variant: CVVariant }) {
             step={0.05}
             onChange={(lineHeight) => set({ lineHeight })}
           />
-          <Slider
+          <SliderField
             label="Density"
             value={t.density}
             min={0.6}
@@ -169,7 +185,7 @@ export function ThemeEditor({ variant }: { variant: CVVariant }) {
             step={0.05}
             onChange={(density) => set({ density })}
           />
-          <Slider
+          <SliderField
             label="Page margin"
             value={t.pageMargin}
             min={8}
@@ -199,22 +215,20 @@ export function ThemeEditor({ variant }: { variant: CVVariant }) {
         </div>
 
         <div className="flex flex-wrap gap-4">
-          <label className="flex items-center gap-2 text-sm text-slate-600">
-            <input
-              type="checkbox"
+          <Label className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Checkbox
               checked={t.uppercaseHeadings}
-              onChange={(e) => set({ uppercaseHeadings: e.target.checked })}
+              onCheckedChange={(v) => set({ uppercaseHeadings: v === true })}
             />
             Uppercase section headings
-          </label>
-          <label className="flex items-center gap-2 text-sm text-slate-600">
-            <input
-              type="checkbox"
+          </Label>
+          <Label className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Checkbox
               checked={t.headingRule}
-              onChange={(e) => set({ headingRule: e.target.checked })}
+              onCheckedChange={(v) => set({ headingRule: v === true })}
             />
             Rule under headings
-          </label>
+          </Label>
         </div>
       </div>
     </SectionCard>

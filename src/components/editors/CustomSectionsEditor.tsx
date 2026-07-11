@@ -1,5 +1,9 @@
+import { Plus } from 'lucide-react'
 import { useStore } from '../../store/useStore'
-import { Button, Field, SectionCard, TextArea, TextInput, EmptyHint, ItemControls } from '../ui'
+import { EmptyHint, Field, ItemControls, SectionCard } from '@/components/app-ui'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { ItemFrame } from './ItemFrame'
 import { StringListEditor } from './StringListEditor'
 
@@ -19,8 +23,9 @@ export function CustomSectionsEditor() {
       title="Custom sections"
       description="Anything the standard sections don't cover - awards, talks, certifications."
       action={
-        <Button variant="primary" onClick={addCustomSection}>
-          + Add section
+        <Button variant="default" onClick={addCustomSection}>
+          <Plus />
+          Add section
         </Button>
       }
     >
@@ -29,12 +34,9 @@ export function CustomSectionsEditor() {
       )}
       <div className="space-y-5">
         {sections.map((section, si) => (
-          <div
-            key={section.id}
-            className="rounded-md border border-slate-200 p-4"
-          >
+          <div key={section.id} className="rounded-md border p-4">
             <div className="mb-3 flex items-center gap-2">
-              <TextInput
+              <Input
                 value={section.title}
                 placeholder="Section title"
                 onChange={(e) =>
@@ -63,7 +65,7 @@ export function CustomSectionsEditor() {
                 >
                   <div className="grid gap-3 sm:grid-cols-2">
                     <Field label="Title">
-                      <TextInput
+                      <Input
                         value={item.title}
                         onChange={(e) =>
                           updateCustomItem(section.id, item.id, {
@@ -73,7 +75,7 @@ export function CustomSectionsEditor() {
                       />
                     </Field>
                     <Field label="Subtitle">
-                      <TextInput
+                      <Input
                         value={item.subtitle}
                         onChange={(e) =>
                           updateCustomItem(section.id, item.id, {
@@ -83,7 +85,7 @@ export function CustomSectionsEditor() {
                       />
                     </Field>
                     <Field label="Date">
-                      <TextInput
+                      <Input
                         value={item.date}
                         onChange={(e) =>
                           updateCustomItem(section.id, item.id, {
@@ -95,7 +97,7 @@ export function CustomSectionsEditor() {
                   </div>
                   <div className="mt-3">
                     <Field label="Description">
-                      <TextArea
+                      <Textarea
                         value={item.description}
                         onChange={(e) =>
                           updateCustomItem(section.id, item.id, {
@@ -124,7 +126,8 @@ export function CustomSectionsEditor() {
               className="mt-3"
               onClick={() => addCustomItem(section.id)}
             >
-              + Add item
+              <Plus />
+              Add item
             </Button>
           </div>
         ))}

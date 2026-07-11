@@ -1,5 +1,9 @@
+import { Plus } from 'lucide-react'
 import { useStore } from '../../store/useStore'
-import { Button, Field, ItemControls, SectionCard, TextArea, TextInput } from '../ui'
+import { Field, ItemControls, SectionCard } from '@/components/app-ui'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 
 export function BasicsEditor() {
   const basics = useStore((s) => s.profile.basics)
@@ -16,21 +20,21 @@ export function BasicsEditor() {
     >
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Full name">
-          <TextInput
+          <Input
             value={basics.name}
             onChange={(e) => updateBasics({ name: e.target.value })}
             placeholder="Alex Rivera"
           />
         </Field>
         <Field label="Headline">
-          <TextInput
+          <Input
             value={basics.headline}
             onChange={(e) => updateBasics({ headline: e.target.value })}
             placeholder="Senior Software Engineer"
           />
         </Field>
         <Field label="Email">
-          <TextInput
+          <Input
             type="email"
             value={basics.email}
             onChange={(e) => updateBasics({ email: e.target.value })}
@@ -38,14 +42,14 @@ export function BasicsEditor() {
           />
         </Field>
         <Field label="Phone">
-          <TextInput
+          <Input
             value={basics.phone}
             onChange={(e) => updateBasics({ phone: e.target.value })}
             placeholder="+1 (555) 000-0000"
           />
         </Field>
         <Field label="Location">
-          <TextInput
+          <Input
             value={basics.location}
             onChange={(e) => updateBasics({ location: e.target.value })}
             placeholder="City, Country"
@@ -55,7 +59,7 @@ export function BasicsEditor() {
 
       <div className="mt-4">
         <Field label="Summary" hint="A short professional summary (2–4 sentences).">
-          <TextArea
+          <Textarea
             value={basics.summary}
             onChange={(e) => updateBasics({ summary: e.target.value })}
           />
@@ -64,21 +68,22 @@ export function BasicsEditor() {
 
       <div className="mt-5">
         <div className="mb-2 flex items-center justify-between">
-          <span className="text-xs font-medium text-slate-600">Links</span>
+          <span className="text-xs font-medium text-muted-foreground">Links</span>
           <Button variant="ghost" onClick={addLink}>
-            + Add link
+            <Plus />
+            Add link
           </Button>
         </div>
         <div className="space-y-2">
           {basics.links.map((link, i) => (
             <div key={link.id} className="flex items-center gap-2">
-              <TextInput
+              <Input
                 className="max-w-[160px]"
                 value={link.label}
                 placeholder="Label (GitHub)"
                 onChange={(e) => updateLink(link.id, { label: e.target.value })}
               />
-              <TextInput
+              <Input
                 value={link.url}
                 placeholder="https://…"
                 onChange={(e) => updateLink(link.id, { url: e.target.value })}
