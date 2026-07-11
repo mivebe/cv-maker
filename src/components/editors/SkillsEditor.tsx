@@ -1,8 +1,8 @@
 import { Plus } from 'lucide-react'
 import { useStore } from '../../store/useStore'
 import { EmptyHint, Field, SectionCard } from '@/components/app-ui'
+import { SuggestInput } from '@/components/SuggestInput'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { ItemFrame } from './ItemFrame'
 import { StringListEditor } from './StringListEditor'
 
@@ -38,12 +38,11 @@ export function SkillsEditor() {
           >
             <div className="grid gap-3">
               <Field label="Group name">
-                <Input
+                <SuggestInput
+                  kind="skillGroup"
                   value={group.name}
                   placeholder="Languages"
-                  onChange={(e) =>
-                    updateItem('skills', group.id, { name: e.target.value })
-                  }
+                  onChange={(name) => updateItem('skills', group.id, { name })}
                 />
               </Field>
               <StringListEditor
@@ -51,6 +50,7 @@ export function SkillsEditor() {
                 values={group.skills}
                 placeholder="TypeScript"
                 addLabel="Add skill"
+                suggestionKind="skill"
                 onChange={(skills) =>
                   updateItem('skills', group.id, { skills })
                 }

@@ -1,6 +1,7 @@
 import type { CVVariant } from '../../schema'
 import { useStore } from '../../store/useStore'
 import { Field, SectionCard } from '@/components/app-ui'
+import { SuggestInput } from '@/components/SuggestInput'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 
@@ -18,7 +19,9 @@ export function VariantMetaEditor({ variant }: { variant: CVVariant }) {
         <Field label="Variant name">
           <Input
             value={variant.name}
-            onChange={(e) => updateVariantMeta(variant.id, { name: e.target.value })}
+            onChange={(e) =>
+              updateVariantMeta(variant.id, { name: e.target.value })
+            }
           />
         </Field>
         <Field label="Target role">
@@ -37,12 +40,13 @@ export function VariantMetaEditor({ variant }: { variant: CVVariant }) {
           label="Headline override"
           hint={`Leave blank to use master: "${profile.basics.headline || '-'}"`}
         >
-          <Input
+          <SuggestInput
+            kind="role"
             value={variant.basicsOverride.headline ?? ''}
             placeholder={profile.basics.headline}
-            onChange={(e) =>
+            onChange={(headline) =>
               updateVariantBasics(variant.id, {
-                headline: e.target.value || undefined,
+                headline: headline || undefined,
               })
             }
           />

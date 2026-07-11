@@ -1,6 +1,7 @@
 import { Plus } from 'lucide-react'
 import { useStore } from '../../store/useStore'
 import { Field, ItemControls, SectionCard } from '@/components/app-ui'
+import { SuggestInput } from '@/components/SuggestInput'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -27,9 +28,10 @@ export function BasicsEditor() {
           />
         </Field>
         <Field label="Headline">
-          <Input
+          <SuggestInput
+            kind="role"
             value={basics.headline}
-            onChange={(e) => updateBasics({ headline: e.target.value })}
+            onChange={(headline) => updateBasics({ headline })}
             placeholder="Senior Software Engineer"
           />
         </Field>
@@ -49,16 +51,20 @@ export function BasicsEditor() {
           />
         </Field>
         <Field label="Location">
-          <Input
+          <SuggestInput
+            kind="location"
             value={basics.location}
-            onChange={(e) => updateBasics({ location: e.target.value })}
+            onChange={(location) => updateBasics({ location })}
             placeholder="City, Country"
           />
         </Field>
       </div>
 
       <div className="mt-4">
-        <Field label="Summary" hint="A short professional summary (2–4 sentences).">
+        <Field
+          label="Summary"
+          hint="A short professional summary (2–4 sentences)."
+        >
           <Textarea
             value={basics.summary}
             onChange={(e) => updateBasics({ summary: e.target.value })}
@@ -68,7 +74,9 @@ export function BasicsEditor() {
 
       <div className="mt-5">
         <div className="mb-2 flex items-center justify-between">
-          <span className="text-xs font-medium text-muted-foreground">Links</span>
+          <span className="text-xs font-medium text-muted-foreground">
+            Links
+          </span>
           <Button variant="ghost" onClick={addLink}>
             <Plus />
             Add link
@@ -78,11 +86,12 @@ export function BasicsEditor() {
           {basics.links.map((link, i) => (
             // Narrow: label takes its own row, URL + controls share the next.
             <div key={link.id} className="flex flex-wrap items-center gap-2">
-              <Input
+              <SuggestInput
+                kind="linkLabel"
                 className="w-full sm:w-40"
                 value={link.label}
                 placeholder="Label (GitHub)"
-                onChange={(e) => updateLink(link.id, { label: e.target.value })}
+                onChange={(label) => updateLink(link.id, { label })}
               />
               <Input
                 className="min-w-0 flex-1"

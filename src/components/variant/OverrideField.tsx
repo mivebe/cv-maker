@@ -1,8 +1,10 @@
 import { useStore } from '../../store/useStore'
 import { Field } from '@/components/app-ui'
+import { SuggestInput } from '@/components/SuggestInput'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
+import type { SuggestionKind } from '@/lib/suggestions'
 import { StringListEditor } from '../editors/StringListEditor'
 
 /**
@@ -18,6 +20,7 @@ export function OverrideText({
   masterValue,
   override,
   multiline,
+  suggestionKind,
 }: {
   variantId: string
   itemId: string
@@ -26,6 +29,7 @@ export function OverrideText({
   masterValue: string
   override: Record<string, unknown> | undefined
   multiline?: boolean
+  suggestionKind?: SuggestionKind
 }) {
   const setOverride = useStore((s) => s.setOverride)
   const clearOverride = useStore((s) => s.clearOverride)
@@ -33,11 +37,7 @@ export function OverrideText({
   const value = has ? String(override[field] ?? '') : ''
 
   return (
-    <Field
-      label={
-        (has ? `${label} (overridden)` : label) as string
-      }
-    >
+    <Field label={(has ? `${label} (overridden)` : label) as string}>
       <div className="flex items-start gap-2">
         {multiline ? (
           <Textarea
@@ -47,6 +47,14 @@ export function OverrideText({
             onChange={(e) =>
               setOverride(variantId, itemId, field, e.target.value)
             }
+          />
+        ) : suggestionKind ? (
+          <SuggestInput
+            kind={suggestionKind}
+            className="min-w-0 flex-1"
+            value={value}
+            placeholder={masterValue || '-'}
+            onChange={(next) => setOverride(variantId, itemId, field, next)}
           />
         ) : (
           <Input
@@ -81,6 +89,7 @@ export function OverrideList({
   label,
   masterValue,
   override,
+  suggestionKind,
 }: {
   variantId: string
   itemId: string
@@ -88,6 +97,7 @@ export function OverrideList({
   label: string
   masterValue: string[]
   override: Record<string, unknown> | undefined
+  suggestionKind?: SuggestionKind
 }) {
   const setOverride = useStore((s) => s.setOverride)
   const clearOverride = useStore((s) => s.clearOverride)
@@ -116,6 +126,7 @@ export function OverrideList({
         label=""
         values={value}
         addLabel="Add"
+        suggestionKind={suggestionKind}
         onChange={(next) => setOverride(variantId, itemId, field, next)}
       />
     </div>

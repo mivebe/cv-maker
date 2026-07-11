@@ -1,6 +1,7 @@
 import { Plus } from 'lucide-react'
 import { useStore } from '../../store/useStore'
 import { EmptyHint, Field, SectionCard } from '@/components/app-ui'
+import { SuggestInput } from '@/components/SuggestInput'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -39,30 +40,29 @@ export function EducationEditor() {
           >
             <div className="grid gap-3 sm:grid-cols-2">
               <Field label="Degree / qualification">
-                <Input
+                <SuggestInput
+                  kind="degree"
                   value={item.degree}
-                  onChange={(e) =>
-                    updateItem('education', item.id, { degree: e.target.value })
+                  onChange={(degree) =>
+                    updateItem('education', item.id, { degree })
                   }
                 />
               </Field>
               <Field label="Institution">
-                <Input
+                <SuggestInput
+                  kind="institution"
                   value={item.institution}
-                  onChange={(e) =>
-                    updateItem('education', item.id, {
-                      institution: e.target.value,
-                    })
+                  onChange={(institution) =>
+                    updateItem('education', item.id, { institution })
                   }
                 />
               </Field>
               <Field label="Location">
-                <Input
+                <SuggestInput
+                  kind="location"
                   value={item.location}
-                  onChange={(e) =>
-                    updateItem('education', item.id, {
-                      location: e.target.value,
-                    })
+                  onChange={(location) =>
+                    updateItem('education', item.id, { location })
                   }
                 />
               </Field>

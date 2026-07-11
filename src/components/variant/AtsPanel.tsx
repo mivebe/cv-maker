@@ -14,7 +14,8 @@ import { Separator } from '@/components/ui/separator'
 
 function CheckIcon({ level }: { level: AtsCheck['level'] }) {
   const cls = 'size-4 shrink-0'
-  if (level === 'pass') return <CircleCheck className={`${cls} text-green-600`} />
+  if (level === 'pass')
+    return <CircleCheck className={`${cls} text-green-600`} />
   if (level === 'warn')
     return <TriangleAlert className={`${cls} text-amber-500`} />
   return <CircleX className={`${cls} text-destructive`} />

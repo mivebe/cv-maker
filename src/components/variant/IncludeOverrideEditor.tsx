@@ -77,7 +77,13 @@ function ItemRow({
   )
 }
 
-function Group({ title, children }: { title: string; children: React.ReactNode }) {
+function Group({
+  title,
+  children,
+}: {
+  title: string
+  children: React.ReactNode
+}) {
   return (
     <div>
       <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -125,6 +131,7 @@ export function IncludeOverrideEditor({ variant }: { variant: CVVariant }) {
                   label="Role"
                   masterValue={it.role}
                   override={ov[it.id]}
+                  suggestionKind="role"
                 />
                 <OverrideText
                   variantId={variant.id}

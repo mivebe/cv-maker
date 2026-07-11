@@ -1,6 +1,7 @@
 import { Plus } from 'lucide-react'
 import { useStore } from '../../store/useStore'
 import { EmptyHint, Field, SectionCard } from '@/components/app-ui'
+import { SuggestInput } from '@/components/SuggestInput'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
@@ -42,30 +43,29 @@ export function ExperienceEditor() {
           >
             <div className="grid gap-3 sm:grid-cols-2">
               <Field label="Role / title">
-                <Input
+                <SuggestInput
+                  kind="role"
                   value={item.role}
-                  onChange={(e) =>
-                    updateItem('experience', item.id, { role: e.target.value })
+                  onChange={(role) =>
+                    updateItem('experience', item.id, { role })
                   }
                 />
               </Field>
               <Field label="Organization">
-                <Input
+                <SuggestInput
+                  kind="organization"
                   value={item.organization}
-                  onChange={(e) =>
-                    updateItem('experience', item.id, {
-                      organization: e.target.value,
-                    })
+                  onChange={(organization) =>
+                    updateItem('experience', item.id, { organization })
                   }
                 />
               </Field>
               <Field label="Location">
-                <Input
+                <SuggestInput
+                  kind="location"
                   value={item.location}
-                  onChange={(e) =>
-                    updateItem('experience', item.id, {
-                      location: e.target.value,
-                    })
+                  onChange={(location) =>
+                    updateItem('experience', item.id, { location })
                   }
                 />
               </Field>

@@ -1,12 +1,17 @@
 import { ChevronDown, ChevronUp, Plus, X } from 'lucide-react'
+import { SuggestInput } from '@/components/SuggestInput'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import type { SuggestionKind } from '@/lib/suggestions'
 
 /**
  * Edits an ordered list of plain strings (bullet highlights, skill tags).
  * Operates on the whole array via onChange so callers can persist it in one
  * store update.
+ *
+ * Pass `suggestionKind` for lists with a controlled vocabulary (skills); rows
+ * then autocomplete. Freeform lists (highlights) leave it off.
  */
 export function StringListEditor({
   label,
@@ -14,12 +19,14 @@ export function StringListEditor({
   onChange,
   placeholder,
   addLabel = 'Add',
+  suggestionKind,
 }: {
   label: string
   values: string[]
   onChange: (next: string[]) => void
   placeholder?: string
   addLabel?: string
+  suggestionKind?: SuggestionKind
 }) {
   const update = (i: number, v: string) =>
     onChange(values.map((x, idx) => (idx === i ? v : x)))
@@ -44,12 +51,22 @@ export function StringListEditor({
       <div className="space-y-2">
         {values.map((v, i) => (
           <div key={i} className="flex items-center gap-1">
-            <Input
-              className="min-w-0 flex-1"
-              value={v}
-              placeholder={placeholder}
-              onChange={(e) => update(i, e.target.value)}
-            />
+            {suggestionKind ? (
+              <SuggestInput
+                kind={suggestionKind}
+                className="min-w-0 flex-1"
+                value={v}
+                placeholder={placeholder}
+                onChange={(next) => update(i, next)}
+              />
+            ) : (
+              <Input
+                className="min-w-0 flex-1"
+                value={v}
+                placeholder={placeholder}
+                onChange={(e) => update(i, e.target.value)}
+              />
+            )}
             <Button
               variant="ghost"
               size="icon-sm"

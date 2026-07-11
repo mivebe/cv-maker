@@ -1,6 +1,11 @@
 import { Plus } from 'lucide-react'
 import { useStore } from '../../store/useStore'
-import { EmptyHint, Field, ItemControls, SectionCard } from '@/components/app-ui'
+import {
+  EmptyHint,
+  Field,
+  ItemControls,
+  SectionCard,
+} from '@/components/app-ui'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -29,9 +34,7 @@ export function CustomSectionsEditor() {
         </Button>
       }
     >
-      {sections.length === 0 && (
-        <EmptyHint>No custom sections yet.</EmptyHint>
-      )}
+      {sections.length === 0 && <EmptyHint>No custom sections yet.</EmptyHint>}
       <div className="space-y-5">
         {sections.map((section, si) => (
           <div key={section.id} className="rounded-md border p-3 sm:p-4">
