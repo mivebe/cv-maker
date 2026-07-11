@@ -50,7 +50,7 @@ export const CVPreview = forwardRef<
   return (
     <div
       ref={containerRef}
-      className="w-full overflow-auto rounded-lg bg-slate-200 p-4"
+      className="w-full overflow-auto rounded-lg bg-slate-200 p-2 sm:p-4"
     >
       <div style={{ height: pageHeight ?? undefined }}>
         <div

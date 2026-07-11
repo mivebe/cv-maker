@@ -34,9 +34,10 @@ export function CustomSectionsEditor() {
       )}
       <div className="space-y-5">
         {sections.map((section, si) => (
-          <div key={section.id} className="rounded-md border p-4">
+          <div key={section.id} className="rounded-md border p-3 sm:p-4">
             <div className="mb-3 flex items-center gap-2">
               <Input
+                className="min-w-0 flex-1"
                 value={section.title}
                 placeholder="Section title"
                 onChange={(e) =>

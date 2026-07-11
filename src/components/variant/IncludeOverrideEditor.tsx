@@ -31,8 +31,9 @@ function ItemRow({
 
   return (
     <div className="rounded-md border">
-      <div className="flex items-center gap-3 px-3 py-2">
+      <div className="flex items-center gap-2 px-3 py-2 sm:gap-3">
         <Checkbox
+          className="shrink-0"
           checked={included}
           onCheckedChange={(v) =>
             setVariantInclude(variant.id, itemId, v === true)
@@ -53,9 +54,18 @@ function ItemRow({
             </div>
           )}
         </div>
-        {overridden && <Badge variant="secondary">tailored</Badge>}
+        {overridden && (
+          <Badge variant="secondary" className="shrink-0">
+            tailored
+          </Badge>
+        )}
         {children && (
-          <Button variant="ghost" size="sm" onClick={() => setOpen((o) => !o)}>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="shrink-0"
+            onClick={() => setOpen((o) => !o)}
+          >
             {open ? 'Close' : 'Tailor'}
           </Button>
         )}

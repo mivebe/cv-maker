@@ -23,10 +23,10 @@ export function SectionOrderEditor({ variant }: { variant: CVVariant }) {
         {order.map((key, i) => {
           const isHidden = hidden.has(key)
           return (
-            <li key={key} className="flex items-center gap-3 py-2">
+            <li key={key} className="flex items-center gap-1 py-2 sm:gap-2">
               <span
                 className={cn(
-                  'flex-1 text-sm font-medium',
+                  'min-w-0 flex-1 truncate text-sm font-medium',
                   isHidden && 'text-muted-foreground line-through',
                 )}
               >
@@ -35,10 +35,14 @@ export function SectionOrderEditor({ variant }: { variant: CVVariant }) {
               <Button
                 variant="ghost"
                 size="sm"
+                className="shrink-0"
+                aria-label={isHidden ? 'Show section' : 'Hide section'}
                 onClick={() => toggleSectionHidden(variant.id, key)}
               >
                 {isHidden ? <Eye /> : <EyeOff />}
-                {isHidden ? 'Show' : 'Hide'}
+                <span className="hidden sm:inline">
+                  {isHidden ? 'Show' : 'Hide'}
+                </span>
               </Button>
               <Button
                 variant="ghost"

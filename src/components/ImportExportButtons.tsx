@@ -45,27 +45,38 @@ export function ImportExportButtons() {
   }
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex min-w-0 items-center justify-end gap-1.5 sm:gap-2">
       {message && (
-        <span className="text-xs font-medium text-muted-foreground">
+        <span className="max-w-[38vw] truncate text-xs font-medium text-muted-foreground sm:max-w-xs">
           {message}
         </span>
       )}
       {error && (
         <span
-          className="max-w-xs truncate text-xs font-medium text-destructive"
+          className="max-w-[38vw] truncate text-xs font-medium text-destructive sm:max-w-xs"
           title={error}
         >
           {error}
         </span>
       )}
-      <Button variant="outline" onClick={onExport}>
+      {/* Labels collapse to icons on mobile so the header stays one row. */}
+      <Button
+        variant="outline"
+        onClick={onExport}
+        aria-label="Export JSON"
+        title="Export JSON"
+      >
         <Download />
-        Export JSON
+        <span className="hidden sm:inline">Export JSON</span>
       </Button>
-      <Button variant="outline" onClick={onPickFile}>
+      <Button
+        variant="outline"
+        onClick={onPickFile}
+        aria-label="Import JSON"
+        title="Import JSON"
+      >
         <Upload />
-        Import JSON
+        <span className="hidden sm:inline">Import JSON</span>
       </Button>
       <Button
         variant="ghost"

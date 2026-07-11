@@ -20,9 +20,9 @@ export function ItemFrame({
   children: ReactNode
 }) {
   return (
-    <div className="rounded-lg border bg-muted/30 p-4">
+    <div className="rounded-lg border bg-muted/30 p-3 sm:p-4">
       <div className="mb-3 flex items-center justify-between gap-2">
-        <span className="truncate text-sm font-medium">
+        <span className="min-w-0 flex-1 truncate text-sm font-medium">
           {title || <span className="text-muted-foreground">Untitled</span>}
         </span>
         <ItemControls

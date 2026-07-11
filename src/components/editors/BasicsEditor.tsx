@@ -76,14 +76,16 @@ export function BasicsEditor() {
         </div>
         <div className="space-y-2">
           {basics.links.map((link, i) => (
-            <div key={link.id} className="flex items-center gap-2">
+            // Narrow: label takes its own row, URL + controls share the next.
+            <div key={link.id} className="flex flex-wrap items-center gap-2">
               <Input
-                className="max-w-[160px]"
+                className="w-full sm:w-40"
                 value={link.label}
                 placeholder="Label (GitHub)"
                 onChange={(e) => updateLink(link.id, { label: e.target.value })}
               />
               <Input
+                className="min-w-0 flex-1"
                 value={link.url}
                 placeholder="https://…"
                 onChange={(e) => updateLink(link.id, { url: e.target.value })}

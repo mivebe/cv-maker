@@ -57,7 +57,7 @@ export function ItemControls({
   disableDown?: boolean
 }) {
   return (
-    <div className="flex items-center gap-1">
+    <div className="flex shrink-0 items-center gap-1">
       <Button
         variant="ghost"
         size="icon-sm"

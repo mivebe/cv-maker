@@ -45,6 +45,7 @@ export function StringListEditor({
         {values.map((v, i) => (
           <div key={i} className="flex items-center gap-1">
             <Input
+              className="min-w-0 flex-1"
               value={v}
               placeholder={placeholder}
               onChange={(e) => update(i, e.target.value)}

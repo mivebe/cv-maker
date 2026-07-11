@@ -20,9 +20,13 @@ export function ExportButton({
     documentTitle,
   })
   return (
-    <Button variant="default" onClick={() => print()}>
+    <Button
+      variant="default"
+      className="h-9 self-start"
+      onClick={() => print()}
+    >
       <Printer />
-      Export PDF / Print
+      Export PDF <span className="hidden sm:inline">/ Print</span>
     </Button>
   )
 }

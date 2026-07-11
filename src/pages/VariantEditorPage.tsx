@@ -37,8 +37,8 @@ export function VariantEditorPage() {
 
   return (
     <div>
-      <div className="no-print mb-4 flex items-center justify-between gap-4">
-        <div>
+      <div className="no-print mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+        <div className="min-w-0">
           <Link
             to="/variants"
             className="inline-flex items-center gap-1 text-sm text-primary"
@@ -46,7 +46,9 @@ export function VariantEditorPage() {
             <ArrowLeft className="size-4" />
             Variants
           </Link>
-          <h1 className="text-xl font-bold">{variant.name}</h1>
+          <h1 className="truncate text-lg font-bold sm:text-xl">
+            {variant.name}
+          </h1>
         </div>
         <ExportButton
           docRef={docRef}
@@ -54,10 +56,10 @@ export function VariantEditorPage() {
         />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-2 lg:gap-6">
         {/* Controls */}
-        <Tabs defaultValue="content" className="no-print space-y-4">
-          <TabsList>
+        <Tabs defaultValue="content" className="no-print min-w-0 space-y-4">
+          <TabsList className="w-full sm:w-fit">
             <TabsTrigger value="content">Content</TabsTrigger>
             <TabsTrigger value="design">Design</TabsTrigger>
             <TabsTrigger value="ats">ATS</TabsTrigger>
@@ -77,7 +79,7 @@ export function VariantEditorPage() {
         </Tabs>
 
         {/* Live preview */}
-        <div className="lg:sticky lg:top-20 lg:self-start">
+        <div className="min-w-0 lg:sticky lg:top-20 lg:self-start">
           <div className="no-print mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
             Live preview
           </div>

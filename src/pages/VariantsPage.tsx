@@ -27,15 +27,17 @@ export function VariantsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Variants</h1>
+          <h1 className="text-xl font-bold tracking-tight sm:text-2xl">
+            Variants
+          </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Role-specific CVs built from your master profile. Each one picks its
             own sections, ordering, wording, and design.
           </p>
         </div>
-        <Button variant="default" onClick={onCreate}>
+        <Button variant="default" className="h-9 self-start" onClick={onCreate}>
           <Plus />
           New variant
         </Button>
@@ -47,16 +49,18 @@ export function VariantsPage() {
         </EmptyHint>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
         {variants.map((v) => (
           <Card key={v.id} className="flex flex-col">
             <CardHeader>
               <button
                 onClick={() => navigate(`/variant/${v.id}`)}
-                className="text-left"
+                className="min-w-0 text-left"
               >
-                <CardTitle className="hover:text-primary">{v.name}</CardTitle>
-                <CardDescription className="mt-0.5 text-xs">
+                <CardTitle className="truncate hover:text-primary">
+                  {v.name}
+                </CardTitle>
+                <CardDescription className="mt-0.5 truncate text-xs">
                   {v.targetRole || 'No target role set'}
                 </CardDescription>
               </button>
@@ -66,7 +70,7 @@ export function VariantsPage() {
                 {THEME_PRESET_LABELS[v.theme.preset]}
               </p>
             </CardContent>
-            <CardFooter className="mt-auto flex items-center gap-2 border-t pt-3">
+            <CardFooter className="mt-auto flex flex-wrap items-center gap-2 border-t pt-3">
               <Button
                 variant="outline"
                 onClick={() => navigate(`/variant/${v.id}`)}

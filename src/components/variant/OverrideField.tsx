@@ -41,6 +41,7 @@ export function OverrideText({
       <div className="flex items-start gap-2">
         {multiline ? (
           <Textarea
+            className="min-w-0 flex-1"
             value={value}
             placeholder={masterValue || '-'}
             onChange={(e) =>
@@ -49,6 +50,7 @@ export function OverrideText({
           />
         ) : (
           <Input
+            className="min-w-0 flex-1"
             value={value}
             placeholder={masterValue || '-'}
             onChange={(e) =>
@@ -60,6 +62,7 @@ export function OverrideText({
           <Button
             variant="ghost"
             size="sm"
+            className="shrink-0"
             onClick={() => clearOverride(variantId, itemId, field)}
           >
             Reset
@@ -93,8 +96,8 @@ export function OverrideList({
 
   return (
     <div>
-      <div className="mb-1 flex items-center justify-between">
-        <span className="text-xs font-medium text-muted-foreground">
+      <div className="mb-1 flex items-center justify-between gap-2">
+        <span className="min-w-0 truncate text-xs font-medium text-muted-foreground">
           {label}
           {has && ' (overridden)'}
         </span>
@@ -102,6 +105,7 @@ export function OverrideList({
           <Button
             variant="ghost"
             size="sm"
+            className="shrink-0"
             onClick={() => clearOverride(variantId, itemId, field)}
           >
             Reset to master
