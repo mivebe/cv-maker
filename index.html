@@ -5,6 +5,22 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CV Maker</title>
+    <script>
+      // Set the dark class before first paint so dark-mode users never see a
+      // white flash. Reads the same localStorage key zustand persists to in
+      // src/store/useAppearance.ts - keep the key in sync.
+      try {
+        var raw = localStorage.getItem('cv-maker:appearance:v1')
+        var mode = raw ? JSON.parse(raw).state.mode : 'system'
+        var dark =
+          mode === 'dark' ||
+          (mode !== 'light' &&
+            matchMedia('(prefers-color-scheme: dark)').matches)
+        document.documentElement.classList.toggle('dark', dark)
+      } catch (e) {
+        /* storage blocked or corrupt - fall back to light */
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

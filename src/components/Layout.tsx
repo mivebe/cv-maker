@@ -1,5 +1,6 @@
 import { NavLink, Outlet } from 'react-router-dom'
 import { FileText } from 'lucide-react'
+import { AppearanceToggle } from './AppearanceToggle'
 import { ImportExportButtons } from './ImportExportButtons'
 import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -23,8 +24,9 @@ export function Layout() {
             </span>
           </div>
           {/* Actions sit beside the logo on mobile; the nav wraps below them. */}
-          <div className="order-2 ml-auto min-w-0 sm:order-3">
+          <div className="order-2 ml-auto flex min-w-0 items-center gap-1 sm:order-3 sm:gap-2">
             <ImportExportButtons />
+            <AppearanceToggle />
           </div>
           <nav className="order-3 flex w-full items-center gap-1 sm:order-2 sm:w-auto">
             <NavLink to="/profile" className={navLinkClass}>

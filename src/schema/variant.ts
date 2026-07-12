@@ -31,6 +31,19 @@ export type AvatarShape = z.infer<typeof avatarShapeSchema>
 export const chipStyleSchema = z.enum(['pill', 'box', 'plain'])
 export const skillStyleSchema = z.enum(['chips', 'inline'])
 
+/** Marker drawn in front of each highlight. `none` indents with no marker. */
+export const bulletStyleSchema = z.enum([
+  'disc',
+  'circle',
+  'square',
+  'dash',
+  'arrow',
+  'chevron',
+  'check',
+  'none',
+])
+export type BulletStyle = z.infer<typeof bulletStyleSchema>
+
 /**
  * Design tokens for a variant's CV document. These map directly to CSS custom
  * properties / data attributes consumed by cv.css, so adding a token here and
@@ -100,6 +113,12 @@ export const themeConfigSchema = z.object({
   brandColorIcons: z.boolean().default(true),
   chipStyle: chipStyleSchema.default('pill'),
   skillStyle: skillStyleSchema.default('chips'),
+  /** Marker in front of each highlight bullet. */
+  bulletStyle: bulletStyleSchema.default('disc'),
+  /** Marker color. Empty = the muted body color. */
+  bulletColor: z.string().default(''),
+  /** Indent of the bullet list, in em of body text. */
+  bulletIndent: z.number().default(1.1),
   /** Dashed separator between items in a section. */
   itemDivider: z.boolean().default(true),
   /** Color of item titles (role / project name). Empty = fall back to accent. */

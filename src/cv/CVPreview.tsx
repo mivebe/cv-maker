@@ -50,7 +50,9 @@ export const CVPreview = forwardRef<
   return (
     <div
       ref={containerRef}
-      className="w-full overflow-auto rounded-lg bg-slate-200 p-2 sm:p-4"
+      // The backdrop the page sits on. It darkens with the app, but the page
+      // itself stays white in both modes - it is paper, and it prints as paper.
+      className="w-full overflow-auto rounded-lg bg-slate-200 p-2 sm:p-4 dark:bg-slate-900"
     >
       <div style={{ height: pageHeight ?? undefined }}>
         <div

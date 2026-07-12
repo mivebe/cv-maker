@@ -414,18 +414,19 @@ export const useStore = create<AppState>()(
     }),
     {
       name: 'cv-maker:v1',
-      version: 2,
+      version: 3,
       partialize: (s) => ({ profile: s.profile, variants: s.variants }),
       /**
-       * v1 state predates icons/avatar/chips/totals/placement. Every field added
-       * since has a Zod default, so re-parsing the persisted state through the
-       * schemas is the migration: it backfills the new fields and leaves the
-       * user's content untouched. Without this, already-saved profiles would hit
-       * the renderer with `undefined` where it expects arrays.
+       * Older state predates icons/avatar/chips/totals/placement/bullets. Every
+       * field added since has a Zod default, so re-parsing the persisted state
+       * through the schemas is the migration: it backfills the new fields and
+       * leaves the user's content untouched. Without this, already-saved profiles
+       * would hit the renderer with `undefined` where it expects a theme token.
+       * Bump `version` whenever a token is added, so saved themes get the default.
        */
       migrate: (persisted, version): PersistedState => {
         const asIs = persisted as PersistedState
-        if (version >= 2) return asIs
+        if (version >= 3) return asIs
 
         const profile = masterProfileSchema.safeParse(asIs?.profile)
         const variants = parseVariants(asIs?.variants)

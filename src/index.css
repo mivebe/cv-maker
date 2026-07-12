@@ -72,6 +72,11 @@ body {
   .no-print {
     display: none !important;
   }
+  /* The CV always prints on white paper, whatever the app appearance is. */
+  :root,
+  .dark {
+    color-scheme: light;
+  }
 }
 /*
  ---break---
@@ -122,6 +127,8 @@ body {
  ---break---
  */
 .dark {
+  /* Native controls, scrollbars and form widgets follow the app, not the OS. */
+  color-scheme: dark;
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);

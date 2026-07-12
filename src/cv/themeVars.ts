@@ -34,6 +34,9 @@ export function themeToStyle(theme: ThemeConfig): CSSProperties {
     '--cv-avatar-backdrop': theme.avatarBackdrop || 'transparent',
 
     '--cv-totals-cols': String(theme.totalsColumns),
+
+    '--cv-bullet': theme.bulletColor || 'var(--cv-muted)',
+    '--cv-bullet-indent': `${theme.bulletIndent}em`,
   } as CSSProperties
 }
 
@@ -46,6 +49,7 @@ export function themeDataAttrs(theme: ThemeConfig) {
     'data-icons': String(theme.showIcons),
     'data-brand-icons': String(theme.brandColorIcons),
     'data-chips': theme.chipStyle,
+    'data-bullets': theme.bulletStyle,
     'data-skills': theme.skillStyle,
     'data-divider': String(theme.itemDivider),
     'data-header-align': theme.headerAlign,

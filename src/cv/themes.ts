@@ -47,6 +47,9 @@ const BASE: Omit<ThemeConfig, 'preset'> = {
   brandColorIcons: true,
   chipStyle: 'pill',
   skillStyle: 'chips',
+  bulletStyle: 'disc',
+  bulletColor: '',
+  bulletIndent: 1.1,
   itemDivider: true,
   titleColor: '',
   linkColor: '',
@@ -120,6 +123,9 @@ export const THEME_PRESETS: Record<ThemePreset, ThemeConfig> = {
     showIcons: false,
     chipStyle: 'plain',
     skillStyle: 'inline',
+    // A plain disc is the one marker every PDF text extractor turns back into a
+    // list item; a glyph like → or ✓ can come out as mojibake.
+    bulletStyle: 'disc',
     itemDivider: false,
     totalsColumns: 3,
   },

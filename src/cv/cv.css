@@ -334,15 +334,46 @@
   margin: 0.35em 0 0;
   font-size: 0.95em;
 }
+/*
+ * Highlights. The app's CSS reset zeroes list markers on every `ul`, so the
+ * marker has to be re-declared here - otherwise highlights print as bare
+ * indented lines. `list-style-type` carries the choice: a string marker is a
+ * real marker, so it stays outside the text block and wraps like a disc does.
+ */
 .cv-bullets {
   margin: 0.35em 0 0;
-  padding-left: 1.1em;
+  padding-left: var(--cv-bullet-indent);
+  list-style-position: outside;
+  list-style-type: disc;
 }
 .cv-bullets li {
   margin-bottom: 0.2em;
 }
 .cv-bullets li::marker {
-  color: var(--cv-muted);
+  color: var(--cv-bullet);
+}
+
+.cv-root[data-bullets='circle'] .cv-bullets {
+  list-style-type: circle;
+}
+.cv-root[data-bullets='square'] .cv-bullets {
+  list-style-type: square;
+}
+.cv-root[data-bullets='dash'] .cv-bullets {
+  list-style-type: '–  ';
+}
+.cv-root[data-bullets='arrow'] .cv-bullets {
+  list-style-type: '→  ';
+}
+.cv-root[data-bullets='chevron'] .cv-bullets {
+  list-style-type: '›  ';
+}
+.cv-root[data-bullets='check'] .cv-bullets {
+  list-style-type: '✓  ';
+}
+/* No marker, but keep the indent: the block still reads as a list. */
+.cv-root[data-bullets='none'] .cv-bullets {
+  list-style-type: none;
 }
 
 /* Inline rich text -------------------------------------------------------- */

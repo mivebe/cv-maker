@@ -1,5 +1,11 @@
-import type { AvatarShape, CVVariant, ThemePreset } from '../../schema'
+import type {
+  AvatarShape,
+  BulletStyle,
+  CVVariant,
+  ThemePreset,
+} from '../../schema'
 import { useStore } from '../../store/useStore'
+import { useColorHistory } from '../../store/useColorHistory'
 import { Field, SectionCard } from '@/components/app-ui'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -53,6 +59,18 @@ const AVATAR_SHAPES: { label: string; value: AvatarShape }[] = [
   { label: 'Cut-out (no frame)', value: 'none' },
 ]
 
+/** `marker` previews the glyph cv.css draws for each choice. */
+const BULLET_STYLES: { label: string; value: BulletStyle; marker: string }[] = [
+  { label: 'Dot', value: 'disc', marker: '•' },
+  { label: 'Ring', value: 'circle', marker: '◦' },
+  { label: 'Square', value: 'square', marker: '▪' },
+  { label: 'Dash', value: 'dash', marker: '–' },
+  { label: 'Arrow', value: 'arrow', marker: '→' },
+  { label: 'Chevron', value: 'chevron', marker: '›' },
+  { label: 'Check', value: 'check', marker: '✓' },
+  { label: 'None', value: 'none', marker: ' ' },
+]
+
 /** Frame proportion, width ÷ height — the shape's corner cut is separate. */
 const AVATAR_RATIOS: { label: string; value: number }[] = [
   { label: 'Square 1:1', value: 1 },
@@ -102,6 +120,12 @@ function ColorField({
   onChange: (v: string) => void
   placeholder?: string
 }) {
+  const recent = useColorHistory((s) => s.recent)
+  const rememberColor = useColorHistory((s) => s.rememberColor)
+
+  // The picker streams a color per drag step; only the one left behind counts.
+  const remember = () => rememberColor(value)
+
   return (
     <Field label={label}>
       <div className="flex items-center gap-2">
@@ -109,6 +133,7 @@ function ColorField({
           type="color"
           value={value || '#000000'}
           onChange={(e) => onChange(e.target.value)}
+          onBlur={remember}
           className="h-9 w-12 cursor-pointer rounded border"
         />
         <Input
@@ -116,8 +141,22 @@ function ColorField({
           value={value}
           placeholder={placeholder}
           onChange={(e) => onChange(e.target.value)}
+          onBlur={remember}
           className="w-24"
         />
+      </div>
+      <div className="mt-2 flex gap-1.5">
+        {recent.map((c) => (
+          <button
+            key={c}
+            type="button"
+            title={c}
+            aria-label={`Use ${c}`}
+            onClick={() => onChange(c)}
+            style={{ background: c }}
+            className="h-5 w-5 cursor-pointer rounded-sm border transition-transform hover:scale-110"
+          />
+        ))}
       </div>
     </Field>
   )
@@ -542,6 +581,44 @@ export function ThemeEditor({ variant }: { variant: CVVariant }) {
               { label: '4', value: 4 },
             ]}
             onChange={(totalsColumns) => set({ totalsColumns })}
+          />
+        </div>
+
+        {/* ---- highlight bullets ---- */}
+        <Field
+          label="Bullets"
+          hint="Highlights on experience, projects and custom items. The ATS-safe preset wants a plain dot — glyph markers can garble when a parser extracts the PDF's text."
+        >
+          <div className="flex flex-wrap gap-2">
+            {BULLET_STYLES.map((b) => (
+              <Button
+                key={b.value}
+                variant={t.bulletStyle === b.value ? 'default' : 'outline'}
+                onClick={() => set({ bulletStyle: b.value })}
+              >
+                <span className="font-mono">{b.marker}</span>
+                {b.label}
+              </Button>
+            ))}
+          </div>
+        </Field>
+        <div className="grid gap-4 sm:grid-cols-2">
+          {t.bulletStyle !== 'none' && (
+            <ColorField
+              label="Bullet color"
+              value={t.bulletColor}
+              placeholder="muted"
+              onChange={(bulletColor) => set({ bulletColor })}
+            />
+          )}
+          <SliderField
+            label="Bullet indent"
+            value={t.bulletIndent}
+            min={0}
+            max={2.5}
+            step={0.1}
+            suffix="em"
+            onChange={(bulletIndent) => set({ bulletIndent })}
           />
         </div>
 

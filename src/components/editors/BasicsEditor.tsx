@@ -1,6 +1,7 @@
 import { Plus, Upload, X } from 'lucide-react'
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { useStore } from '../../store/useStore'
+import { useAvatarHistory } from '../../store/useAvatarHistory'
 import { Field, ItemControls, SectionCard } from '@/components/app-ui'
 import { IconPicker } from '@/components/IconPicker'
 import { SuggestInput } from '@/components/SuggestInput'
@@ -14,6 +15,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import { fileToAvatarDataUrl } from '../../lib/image'
 import { DIAL_CODES } from '../../lib/phone'
 
 /** Radix rejects an empty option value; this stands in for "no dialing code". */
@@ -26,17 +28,27 @@ export function BasicsEditor() {
   const updateLink = useStore((s) => s.updateLink)
   const removeLink = useStore((s) => s.removeLink)
   const moveLink = useStore((s) => s.moveLink)
+  const recentAvatars = useAvatarHistory((s) => s.recent)
+  const rememberAvatar = useAvatarHistory((s) => s.rememberAvatar)
+  const forgetAvatar = useAvatarHistory((s) => s.forgetAvatar)
   const fileInput = useRef<HTMLInputElement>(null)
+  const [photoError, setPhotoError] = useState('')
 
-  // Store the upload as a data URL, not an object URL: only a data URL survives
-  // a JSON export / reload.
-  const readFile = (file: File) => {
-    const reader = new FileReader()
-    reader.onload = () => {
-      if (typeof reader.result === 'string')
-        updateBasics({ photo: reader.result })
+  const applyPhoto = (photo: string) => {
+    updateBasics({ photo })
+    rememberAvatar(photo)
+  }
+
+  // Store the upload as a downscaled data URL, not an object URL: only a data
+  // URL survives a JSON export / reload, and only a downscaled one fits in
+  // localStorage alongside the rest of the profile.
+  const readFile = async (file: File) => {
+    try {
+      applyPhoto(await fileToAvatarDataUrl(file))
+      setPhotoError('')
+    } catch {
+      setPhotoError(`Could not read ${file.name}.`)
     }
-    reader.readAsDataURL(file)
   }
 
   return (
@@ -140,7 +152,7 @@ export function BasicsEditor() {
                 className="hidden"
                 onChange={(e) => {
                   const file = e.target.files?.[0]
-                  if (file) readFile(file)
+                  if (file) void readFile(file)
                   // Allow re-picking the same file.
                   e.target.value = ''
                 }}
@@ -158,7 +170,12 @@ export function BasicsEditor() {
                   variant="ghost"
                   size="sm"
                   className="text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                  onClick={() => updateBasics({ photo: '' })}
+                  onClick={() => {
+                    // Park it in the history on the way out, so removing a
+                    // photo is undoable even if it was never re-uploaded here.
+                    rememberAvatar(basics.photo)
+                    updateBasics({ photo: '' })
+                  }}
                 >
                   <X />
                   Remove photo
@@ -176,7 +193,12 @@ export function BasicsEditor() {
                 value={basics.photo}
                 placeholder="…or paste an image URL"
                 onChange={(e) => updateBasics({ photo: e.target.value })}
+                // A URL is remembered once it's settled, not per keystroke.
+                onBlur={(e) => rememberAvatar(e.target.value)}
               />
+            )}
+            {photoError && (
+              <p className="text-xs text-destructive">{photoError}</p>
             )}
             <Input
               value={basics.photoAlt}
@@ -185,6 +207,37 @@ export function BasicsEditor() {
             />
           </div>
         </div>
+
+        {recentAvatars.length > 0 && (
+          <div className="mt-3">
+            <span className="mb-1.5 block text-xs text-muted-foreground">
+              Recent photos
+            </span>
+            <div className="flex flex-wrap gap-2">
+              {recentAvatars.map((src) => (
+                <div key={src} className="group relative">
+                  <button
+                    type="button"
+                    aria-label="Use this photo"
+                    aria-pressed={basics.photo === src}
+                    onClick={() => applyPhoto(src)}
+                    className="size-12 cursor-pointer overflow-hidden rounded-md border transition-transform hover:scale-105 aria-pressed:ring-2 aria-pressed:ring-ring"
+                  >
+                    <img src={src} alt="" className="size-full object-cover" />
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="Forget this photo"
+                    onClick={() => forgetAvatar(src)}
+                    className="absolute -right-1.5 -top-1.5 hidden size-4 cursor-pointer place-items-center rounded-full border bg-background text-muted-foreground hover:text-destructive group-hover:grid focus-visible:grid"
+                  >
+                    <X className="size-2.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="mt-5">
