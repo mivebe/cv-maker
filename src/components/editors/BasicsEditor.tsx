@@ -76,7 +76,7 @@ export function BasicsEditor() {
                 updateBasics({ phoneCode: v === NO_CODE ? '' : v })
               }
             >
-              <SelectTrigger className="w-28 shrink-0">
+              <SelectTrigger className="w-20 shrink-0 px-2">
                 {/* The trigger is narrow: show the code, not the country. */}
                 <SelectValue>{basics.phoneCode || 'Code'}</SelectValue>
               </SelectTrigger>

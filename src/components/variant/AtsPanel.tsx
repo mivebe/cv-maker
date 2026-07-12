@@ -58,7 +58,7 @@ export function AtsPanel({
   const [showText, setShowText] = useState(false)
 
   const structural = atsChecks(cv, theme)
-  const linear = atsLinearText(cv)
+  const linear = atsLinearText(cv, theme)
 
   const onFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]

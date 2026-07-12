@@ -9,6 +9,7 @@ import type {
 } from '../schema'
 import type { ResolvedCV, ResolvedSection } from '../lib/resolve'
 import { displayPhone, telHref } from '../lib/phone'
+import { formatDate, type DateFormat } from '../lib/dates'
 import { paginate } from './layout'
 import { CVIcon } from './icons'
 import { RichText } from './RichText'
@@ -23,9 +24,18 @@ import './cv.css'
  * every icon is decorative and contributes no text to the exported PDF.
  */
 
-function formatRange(start: string, end: string, current = false): string {
-  const right = current ? 'Present' : end
-  return [start, right].filter(Boolean).join(' – ')
+/**
+ * `format` is the variant's date format; "Present" and any other text the date
+ * parser doesn't recognise passes through as typed (see lib/dates).
+ */
+function formatRange(
+  start: string,
+  end: string,
+  format: DateFormat,
+  current = false,
+): string {
+  const right = current ? 'Present' : formatDate(end, format)
+  return [formatDate(start, format), right].filter(Boolean).join(' – ')
 }
 
 /** Links read better without the scheme: `github.com/mivebe`, not `https://…`. */
@@ -96,13 +106,19 @@ function MetaRow({
   )
 }
 
-function ExperienceBlock({ item }: { item: ExperienceItem }) {
+function ExperienceBlock({
+  item,
+  format,
+}: {
+  item: ExperienceItem
+  format: DateFormat
+}) {
   return (
     <article className="cv-item">
       <h3 className="cv-item-title">{item.role}</h3>
       {item.organization && <div className="cv-item-org">{item.organization}</div>}
       <MetaRow
-        date={formatRange(item.startDate, item.endDate, item.current)}
+        date={formatRange(item.startDate, item.endDate, format, item.current)}
         location={item.location}
       />
       {item.summary && (
@@ -146,7 +162,13 @@ function ProjectBlock({ item }: { item: ProjectItem }) {
   )
 }
 
-function CustomBlock({ item }: { item: CustomItem }) {
+function CustomBlock({
+  item,
+  format,
+}: {
+  item: CustomItem
+  format: DateFormat
+}) {
   return (
     <article className="cv-item">
       <div className="cv-title-row">
@@ -157,7 +179,7 @@ function CustomBlock({ item }: { item: CustomItem }) {
         {item.meta && <span className="cv-item-meta">{item.meta}</span>}
       </div>
       {item.subtitle && <div className="cv-item-org">{item.subtitle}</div>}
-      <MetaRow date={item.date} />
+      <MetaRow date={formatDate(item.date, format)} />
       <ChipGroup legend={item.tagsLabel} items={item.tags} />
       {item.description && (
         <p className="cv-item-summary">
@@ -219,7 +241,9 @@ function SectionBlock({
       )}
 
       {section.kind === 'experience' &&
-        section.items.map((it) => <ExperienceBlock key={it.id} item={it} />)}
+        section.items.map((it) => (
+          <ExperienceBlock key={it.id} item={it} format={theme.dateFormat} />
+        ))}
 
       {section.kind === 'education' &&
         section.items.map((it) => (
@@ -229,7 +253,7 @@ function SectionBlock({
               <div className="cv-item-org">{it.institution}</div>
             )}
             <MetaRow
-              date={formatRange(it.startDate, it.endDate)}
+              date={formatRange(it.startDate, it.endDate, theme.dateFormat)}
               location={it.location}
             />
             {it.details && (
@@ -256,7 +280,9 @@ function SectionBlock({
         section.items.map((it) => <ProjectBlock key={it.id} item={it} />)}
 
       {section.kind === 'custom' &&
-        section.items.map((it) => <CustomBlock key={it.id} item={it} />)}
+        section.items.map((it) => (
+          <CustomBlock key={it.id} item={it} format={theme.dateFormat} />
+        ))}
 
       {section.kind === 'totals' && (
         <TotalsGrid items={section.items} columns={theme.totalsColumns} />

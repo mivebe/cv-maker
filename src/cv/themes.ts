@@ -19,6 +19,7 @@ const BASE: Omit<ThemeConfig, 'preset'> = {
   headingColor: '#111827',
   columns: 1,
   pageMargin: 18,
+  dateFormat: 'MMM yyyy',
   uppercaseHeadings: true,
   uppercaseName: false,
   headingRule: true,

@@ -50,6 +50,10 @@ export const themeConfigSchema = z.object({
   columns: z.union([z.literal(1), z.literal(2)]),
   /** Page margin in millimetres. */
   pageMargin: z.number(),
+  /** How stored dates are rendered; unparseable text ("Present") is untouched. */
+  dateFormat: z
+    .enum(['MMM yyyy', 'MMMM yyyy', 'MM/yyyy', 'yyyy-MM', 'yyyy'])
+    .default('MMM yyyy'),
   /** Uppercase section headings. */
   uppercaseHeadings: z.boolean(),
   /** Uppercase the name in the header. */

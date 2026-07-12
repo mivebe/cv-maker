@@ -1,6 +1,7 @@
 import { Plus } from 'lucide-react'
 import { useStore } from '../../store/useStore'
 import { EmptyHint, Field, SectionCard } from '@/components/app-ui'
+import { DateInput } from '@/components/DateInput'
 import { SuggestInput } from '@/components/SuggestInput'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -71,25 +72,21 @@ export function ExperienceEditor() {
               </Field>
               <div className="grid grid-cols-2 gap-3">
                 <Field label="Start">
-                  <Input
+                  <DateInput
                     value={item.startDate}
-                    placeholder="2021"
-                    onChange={(e) =>
-                      updateItem('experience', item.id, {
-                        startDate: e.target.value,
-                      })
+                    placeholder="2021-03"
+                    onChange={(startDate) =>
+                      updateItem('experience', item.id, { startDate })
                     }
                   />
                 </Field>
                 <Field label="End">
-                  <Input
+                  <DateInput
                     value={item.endDate}
-                    placeholder="2023"
+                    placeholder="2023-06"
                     disabled={item.current}
-                    onChange={(e) =>
-                      updateItem('experience', item.id, {
-                        endDate: e.target.value,
-                      })
+                    onChange={(endDate) =>
+                      updateItem('experience', item.id, { endDate })
                     }
                   />
                 </Field>

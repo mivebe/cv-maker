@@ -15,6 +15,11 @@ import {
 } from '@/components/ui/select'
 import { Slider } from '@/components/ui/slider'
 import {
+  DATE_FORMATS,
+  DATE_FORMAT_LABELS,
+  type DateFormat,
+} from '../../lib/dates'
+import {
   THEME_PRESETS,
   THEME_PRESET_LABELS,
   themeFromPreset,
@@ -226,6 +231,26 @@ export function ThemeEditor({ variant }: { variant: CVVariant }) {
             ]}
             onChange={(columns) => set({ columns })}
           />
+          <Field
+            label="Date format"
+            hint="Text the date parser doesn't recognise (“Present”, “Summer 2020”) prints as typed."
+          >
+            <Select
+              value={t.dateFormat}
+              onValueChange={(v) => set({ dateFormat: v as DateFormat })}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {DATE_FORMATS.map((f) => (
+                  <SelectItem key={f} value={f}>
+                    {DATE_FORMAT_LABELS[f]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">

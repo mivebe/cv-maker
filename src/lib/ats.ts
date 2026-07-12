@@ -2,6 +2,7 @@ import type { ThemeConfig } from '../schema'
 import type { ResolvedCV } from './resolve'
 import { stripInline } from '../cv/RichText'
 import { displayPhone } from './phone'
+import { formatDate } from './dates'
 
 /**
  * ATS tooling. Applicant-tracking systems read a PDF as a stream of text in one
@@ -16,9 +17,10 @@ import { displayPhone } from './phone'
  * only exists visually (icons, chip borders, badges, the avatar) contributes
  * nothing here - chips flatten to a comma list, inline markup is stripped.
  */
-export function atsLinearText(cv: ResolvedCV): string {
+export function atsLinearText(cv: ResolvedCV, theme: ThemeConfig): string {
   const lines: string[] = []
   const { basics, sections } = cv
+  const date = (raw: string) => formatDate(raw, theme.dateFormat)
   const bullets = (items: string[]) =>
     items
       .filter((h) => h.trim())
@@ -47,7 +49,7 @@ export function atsLinearText(cv: ResolvedCV): string {
     if (section.kind === 'experience') {
       for (const it of section.items) {
         lines.push(
-          `${it.role}${it.organization ? ` - ${it.organization}` : ''} (${[it.startDate, it.current ? 'Present' : it.endDate].filter(Boolean).join('–')})`,
+          `${it.role}${it.organization ? ` - ${it.organization}` : ''} (${[date(it.startDate), it.current ? 'Present' : date(it.endDate)].filter(Boolean).join('–')})`,
         )
         if (it.summary) lines.push(stripInline(it.summary))
         chips(it.tagsLabel, it.tags)
@@ -55,7 +57,12 @@ export function atsLinearText(cv: ResolvedCV): string {
       }
     } else if (section.kind === 'education') {
       for (const it of section.items) {
-        lines.push(`${it.degree}${it.institution ? ` - ${it.institution}` : ''}`)
+        const range = [date(it.startDate), date(it.endDate)]
+          .filter(Boolean)
+          .join('–')
+        lines.push(
+          `${it.degree}${it.institution ? ` - ${it.institution}` : ''}${range ? ` (${range})` : ''}`,
+        )
         if (it.details) lines.push(stripInline(it.details))
       }
     } else if (section.kind === 'skills') {
@@ -74,7 +81,7 @@ export function atsLinearText(cv: ResolvedCV): string {
         lines.push(
           `${it.title}${it.subtitle ? ` - ${it.subtitle}` : ''}${it.meta ? ` (${it.meta})` : ''}`,
         )
-        if (it.date) lines.push(it.date)
+        if (it.date) lines.push(date(it.date))
         if (it.description) lines.push(stripInline(it.description))
         chips(it.tagsLabel, it.tags)
         bullets(it.highlights)

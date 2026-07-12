@@ -312,8 +312,75 @@ const LINK_LABELS: Suggestion[] = [
   { value: 'YouTube' },
 ]
 
+/**
+ * Work arrangements first (they're what a CV line most often says), then the
+ * hubs a CV is most often written from or for. A city the list misses is one
+ * "Add to suggestions" away, and after that it outranks everything here.
+ */
+const LOCATIONS: Suggestion[] = [
+  { value: 'Remote' },
+  { value: 'Hybrid' },
+  { value: 'On-site' },
+
+  { value: 'Sofia, Bulgaria' },
+  { value: 'Plovdiv, Bulgaria' },
+  { value: 'Varna, Bulgaria' },
+  { value: 'Burgas, Bulgaria' },
+
+  { value: 'London, United Kingdom', aliases: ['UK'] },
+  { value: 'Manchester, United Kingdom', aliases: ['UK'] },
+  { value: 'Dublin, Ireland' },
+  { value: 'Amsterdam, Netherlands' },
+  { value: 'Rotterdam, Netherlands' },
+  { value: 'Berlin, Germany' },
+  { value: 'Munich, Germany', aliases: ['München'] },
+  { value: 'Hamburg, Germany' },
+  { value: 'Paris, France' },
+  { value: 'Madrid, Spain' },
+  { value: 'Barcelona, Spain' },
+  { value: 'Lisbon, Portugal' },
+  { value: 'Milan, Italy' },
+  { value: 'Zurich, Switzerland' },
+  { value: 'Vienna, Austria' },
+  { value: 'Brussels, Belgium' },
+  { value: 'Copenhagen, Denmark' },
+  { value: 'Stockholm, Sweden' },
+  { value: 'Oslo, Norway' },
+  { value: 'Helsinki, Finland' },
+  { value: 'Warsaw, Poland' },
+  { value: 'Kraków, Poland', aliases: ['Krakow'] },
+  { value: 'Prague, Czechia' },
+  { value: 'Bucharest, Romania' },
+  { value: 'Budapest, Hungary' },
+  { value: 'Athens, Greece' },
+  { value: 'Belgrade, Serbia' },
+  { value: 'Zagreb, Croatia' },
+  { value: 'Istanbul, Türkiye', aliases: ['Turkey'] },
+  { value: 'Kyiv, Ukraine', aliases: ['Kiev'] },
+
+  { value: 'New York, NY', aliases: ['NYC'] },
+  { value: 'San Francisco, CA', aliases: ['SF', 'Bay Area'] },
+  { value: 'Seattle, WA' },
+  { value: 'Austin, TX' },
+  { value: 'Boston, MA' },
+  { value: 'Chicago, IL' },
+  { value: 'Los Angeles, CA', aliases: ['LA'] },
+  { value: 'Denver, CO' },
+  { value: 'Toronto, Canada' },
+  { value: 'Vancouver, Canada' },
+
+  { value: 'Dubai, United Arab Emirates', aliases: ['UAE'] },
+  { value: 'Tel Aviv, Israel' },
+  { value: 'Singapore' },
+  { value: 'Bangalore, India', aliases: ['Bengaluru'] },
+  { value: 'Sydney, Australia' },
+  { value: 'Melbourne, Australia' },
+  { value: 'Tokyo, Japan' },
+  { value: 'São Paulo, Brazil', aliases: ['Sao Paulo'] },
+]
+
 /** Built-in pool per kind. Kinds with no useful universal vocabulary
- *  (employers, schools, cities) start empty and fill up from user additions. */
+ *  (employers, schools) start empty and fill up from user additions. */
 export const DEFAULT_SUGGESTIONS: Record<SuggestionKind, Suggestion[]> = {
   skill: SKILLS,
   skillGroup: SKILL_GROUPS,
@@ -321,7 +388,7 @@ export const DEFAULT_SUGGESTIONS: Record<SuggestionKind, Suggestion[]> = {
   organization: [],
   degree: DEGREES,
   institution: [],
-  location: [],
+  location: LOCATIONS,
   linkLabel: LINK_LABELS,
 }
 

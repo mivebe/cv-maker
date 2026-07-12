@@ -1,6 +1,7 @@
 import { Plus } from 'lucide-react'
 import { useStore } from '../../store/useStore'
 import type { CustomSection } from '../../schema/profile'
+import { DateInput } from '@/components/DateInput'
 import { Field, ItemControls } from '@/components/app-ui'
 import { IconPicker } from '@/components/IconPicker'
 import { Button } from '@/components/ui/button'
@@ -153,12 +154,10 @@ export function CustomSectionCard({
                   />
                 </Field>
                 <Field label="Date">
-                  <Input
+                  <DateInput
                     value={item.date}
-                    onChange={(e) =>
-                      updateCustomItem(section.id, item.id, {
-                        date: e.target.value,
-                      })
+                    onChange={(date) =>
+                      updateCustomItem(section.id, item.id, { date })
                     }
                   />
                 </Field>

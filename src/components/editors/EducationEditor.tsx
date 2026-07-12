@@ -1,9 +1,9 @@
 import { Plus } from 'lucide-react'
 import { useStore } from '../../store/useStore'
 import { EmptyHint, Field, SectionCard } from '@/components/app-ui'
+import { DateInput } from '@/components/DateInput'
 import { SuggestInput } from '@/components/SuggestInput'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { ItemFrame } from './ItemFrame'
 
@@ -68,24 +68,20 @@ export function EducationEditor() {
               </Field>
               <div className="grid grid-cols-2 gap-3">
                 <Field label="Start">
-                  <Input
+                  <DateInput
                     value={item.startDate}
                     placeholder="2011"
-                    onChange={(e) =>
-                      updateItem('education', item.id, {
-                        startDate: e.target.value,
-                      })
+                    onChange={(startDate) =>
+                      updateItem('education', item.id, { startDate })
                     }
                   />
                 </Field>
                 <Field label="End">
-                  <Input
+                  <DateInput
                     value={item.endDate}
                     placeholder="2015"
-                    onChange={(e) =>
-                      updateItem('education', item.id, {
-                        endDate: e.target.value,
-                      })
+                    onChange={(endDate) =>
+                      updateItem('education', item.id, { endDate })
                     }
                   />
                 </Field>
