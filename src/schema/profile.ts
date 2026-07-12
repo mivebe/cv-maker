@@ -8,22 +8,37 @@ import { z } from 'zod'
  * Dates are freeform strings ("2021", "Jan 2020", "Present") on purpose:
  * users and ATS parsers both tolerate varied formats, and strict date
  * parsing would only get in the way of a personal tool.
+ *
+ * Presentation-only fields (`icon`, `badge`, `tags`, ...) live on the content
+ * model rather than the theme because they are per-item facts ("this portfolio
+ * entry is a GitHub repo and is live"), not styling choices. Every one of them
+ * has a Zod default so older exports and older persisted state still parse.
  */
+
+/** An icon reference: a registry key (see cv/icons.tsx) or an image URL/data URL. */
+export const iconRef = z.string().default('')
 
 export const linkSchema = z.object({
   id: z.string(),
   label: z.string(),
   url: z.string(),
+  /** Icon shown before the link in the header (e.g. `github`, `linkedin`). */
+  icon: iconRef,
 })
 
 export const basicsSchema = z.object({
   name: z.string(),
   headline: z.string(),
   email: z.string(),
+  /** Dialing code, stored apart from the number so it can be picked, e.g. `+44`. */
+  phoneCode: z.string().default(''),
   phone: z.string(),
   location: z.string(),
   summary: z.string(),
   links: z.array(linkSchema),
+  /** Avatar as a data URL (survives JSON export) or a remote image URL. */
+  photo: z.string().default(''),
+  photoAlt: z.string().default(''),
 })
 
 export const experienceItemSchema = z.object({
@@ -36,6 +51,9 @@ export const experienceItemSchema = z.object({
   current: z.boolean(),
   summary: z.string(),
   highlights: z.array(z.string()),
+  /** Optional chip group rendered under the header (e.g. a tech stack). */
+  tagsLabel: z.string().default(''),
+  tags: z.array(z.string()).default([]),
 })
 
 export const educationItemSchema = z.object({
@@ -60,6 +78,12 @@ export const projectItemSchema = z.object({
   url: z.string(),
   description: z.string(),
   highlights: z.array(z.string()),
+  /** Icon before the project name (e.g. `github`, `globe`). */
+  icon: iconRef,
+  /** Small pill next to the name, e.g. "live". */
+  badge: z.string().default(''),
+  /** Right-aligned note on the title row, e.g. "iOS AppStore". */
+  meta: z.string().default(''),
 })
 
 export const customItemSchema = z.object({
@@ -69,12 +93,33 @@ export const customItemSchema = z.object({
   date: z.string(),
   description: z.string(),
   highlights: z.array(z.string()),
+  icon: iconRef,
+  /** Right-aligned note on the title row, e.g. "AltStore & SideStore". */
+  meta: z.string().default(''),
+  /** Legend of the chip group, e.g. "TechStack". Empty = no legend. */
+  tagsLabel: z.string().default(''),
+  tags: z.array(z.string()).default([]),
 })
 
 export const customSectionSchema = z.object({
   id: z.string(),
   title: z.string(),
   items: z.array(customItemSchema),
+  /** Small line under the section title. */
+  subtitle: z.string().default(''),
+  /**
+   * `items` renders a normal section; `banner` renders just the title/subtitle
+   * as a centered full-width heading (used for a page-2 title block).
+   */
+  display: z.enum(['items', 'banner']).default('items'),
+})
+
+/** One cell of the TOTALS grid: an icon, a label and a value ("7y"). */
+export const totalItemSchema = z.object({
+  id: z.string(),
+  label: z.string(),
+  value: z.string(),
+  icon: iconRef,
 })
 
 export const masterProfileSchema = z.object({
@@ -84,6 +129,7 @@ export const masterProfileSchema = z.object({
   skills: z.array(skillGroupSchema),
   projects: z.array(projectItemSchema),
   custom: z.array(customSectionSchema),
+  totals: z.array(totalItemSchema).default([]),
 })
 
 export type Link = z.infer<typeof linkSchema>
@@ -94,4 +140,5 @@ export type SkillGroup = z.infer<typeof skillGroupSchema>
 export type ProjectItem = z.infer<typeof projectItemSchema>
 export type CustomItem = z.infer<typeof customItemSchema>
 export type CustomSection = z.infer<typeof customSectionSchema>
+export type TotalItem = z.infer<typeof totalItemSchema>
 export type MasterProfile = z.infer<typeof masterProfileSchema>

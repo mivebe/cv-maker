@@ -1,14 +1,15 @@
-import type { MasterProfile } from '../schema'
+import type { MasterProfile, SectionPlacement } from '../schema'
 
 /**
- * Section keys identify orderable/hideable sections in a variant. Standard
- * sections use fixed keys; user-defined custom sections use `custom:<id>`.
+ * Section keys identify orderable/hideable/placeable sections in a variant.
+ * Standard sections use fixed keys; user-defined custom sections use `custom:<id>`.
  */
 export const STANDARD_SECTIONS = [
   'experience',
   'education',
   'skills',
   'projects',
+  'totals',
 ] as const
 
 export type StandardSectionKey = (typeof STANDARD_SECTIONS)[number]
@@ -18,6 +19,24 @@ export const STANDARD_SECTION_LABELS: Record<StandardSectionKey, string> = {
   education: 'Education',
   skills: 'Skills',
   projects: 'Projects',
+  totals: 'Totals',
+}
+
+/**
+ * Where each section lands when a variant has not said otherwise. Mirrors the
+ * reference layout: experience runs down the main column, the supporting
+ * sections stack in the sidebar, and the totals grid spans the full width.
+ */
+const DEFAULT_PLACEMENTS: Record<string, SectionPlacement> = {
+  experience: { column: 'main', pageBreakBefore: false },
+  education: { column: 'side', pageBreakBefore: false },
+  skills: { column: 'side', pageBreakBefore: false },
+  projects: { column: 'side', pageBreakBefore: false },
+  totals: { column: 'full', pageBreakBefore: false },
+}
+
+export function defaultPlacement(key: string): SectionPlacement {
+  return DEFAULT_PLACEMENTS[key] ?? { column: 'main', pageBreakBefore: false }
 }
 
 export function customSectionKey(id: string): string {

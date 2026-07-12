@@ -7,20 +7,37 @@ import type {
   MasterProfile,
   ProjectItem,
   SkillGroup,
+  TotalItem,
 } from '../schema'
 import {
   customIdFromKey,
+  defaultPlacement,
   isCustomSectionKey,
   reconcileSectionOrder,
   sectionLabel,
 } from './sections'
 
-export type ResolvedSection =
-  | { key: string; kind: 'experience'; label: string; items: ExperienceItem[] }
-  | { key: string; kind: 'education'; label: string; items: EducationItem[] }
-  | { key: string; kind: 'skills'; label: string; items: SkillGroup[] }
-  | { key: string; kind: 'projects'; label: string; items: ProjectItem[] }
-  | { key: string; kind: 'custom'; label: string; items: CustomItem[] }
+/** Placement + presentation facts every resolved section carries. */
+interface SectionBase {
+  key: string
+  label: string
+  /** Sub-line under the section title (custom sections only). */
+  subtitle: string
+  column: 'main' | 'side' | 'full'
+  pageBreakBefore: boolean
+}
+
+export type ResolvedSection = SectionBase &
+  (
+    | { kind: 'experience'; items: ExperienceItem[] }
+    | { kind: 'education'; items: EducationItem[] }
+    | { kind: 'skills'; items: SkillGroup[] }
+    | { kind: 'projects'; items: ProjectItem[] }
+    | { kind: 'custom'; items: CustomItem[] }
+    | { kind: 'totals'; items: TotalItem[] }
+    /** A title/subtitle block with no items (e.g. a page-2 banner heading). */
+    | { kind: 'banner'; items: never[] }
+  )
 
 export interface ResolvedCV {
   basics: Basics
@@ -43,8 +60,9 @@ function applyOverride<T extends { id: string }>(
 
 /**
  * Compute the effective CV for a variant: apply basics overrides, filter to
- * included items, apply per-item overrides, and order/hide sections. Empty
- * sections are dropped so the rendered document never shows a bare heading.
+ * included items, apply per-item overrides, and order/place/hide sections. Empty
+ * sections are dropped so the document never shows a bare heading - except
+ * banners, which are *defined* as heading-only.
  */
 export function resolveVariant(
   profile: MasterProfile,
@@ -62,35 +80,44 @@ export function resolveVariant(
   const sections: ResolvedSection[] = []
   for (const key of order) {
     if (hidden.has(key)) continue
-    const label = sectionLabel(key, profile)
+
+    const placement = variant.sectionLayout[key] ?? defaultPlacement(key)
+    const base = {
+      key,
+      label: variant.sectionTitles[key]?.trim() || sectionLabel(key, profile),
+      subtitle: '',
+      column: placement.column,
+      pageBreakBefore: placement.pageBreakBefore,
+    }
+
+    const pick = <T extends { id: string }>(list: T[]): T[] =>
+      list.filter((i) => isIncluded(variant, i.id)).map((i) => applyOverride(variant, i))
 
     if (key === 'experience') {
-      const items = profile.experience
-        .filter((i) => isIncluded(variant, i.id))
-        .map((i) => applyOverride(variant, i))
-      if (items.length) sections.push({ key, kind: 'experience', label, items })
+      const items = pick(profile.experience)
+      if (items.length) sections.push({ ...base, kind: 'experience', items })
     } else if (key === 'education') {
-      const items = profile.education
-        .filter((i) => isIncluded(variant, i.id))
-        .map((i) => applyOverride(variant, i))
-      if (items.length) sections.push({ key, kind: 'education', label, items })
+      const items = pick(profile.education)
+      if (items.length) sections.push({ ...base, kind: 'education', items })
     } else if (key === 'skills') {
-      const items = profile.skills
-        .filter((i) => isIncluded(variant, i.id))
-        .map((i) => applyOverride(variant, i))
-      if (items.length) sections.push({ key, kind: 'skills', label, items })
+      const items = pick(profile.skills)
+      if (items.length) sections.push({ ...base, kind: 'skills', items })
     } else if (key === 'projects') {
-      const items = profile.projects
-        .filter((i) => isIncluded(variant, i.id))
-        .map((i) => applyOverride(variant, i))
-      if (items.length) sections.push({ key, kind: 'projects', label, items })
+      const items = pick(profile.projects)
+      if (items.length) sections.push({ ...base, kind: 'projects', items })
+    } else if (key === 'totals') {
+      const items = pick(profile.totals)
+      if (items.length) sections.push({ ...base, kind: 'totals', items })
     } else if (isCustomSectionKey(key)) {
       const sec = profile.custom.find((s) => s.id === customIdFromKey(key))
       if (!sec) continue
-      const items = sec.items
-        .filter((i) => isIncluded(variant, i.id))
-        .map((i) => applyOverride(variant, i))
-      if (items.length) sections.push({ key, kind: 'custom', label, items })
+      const withSubtitle = { ...base, subtitle: sec.subtitle }
+      if (sec.display === 'banner') {
+        sections.push({ ...withSubtitle, kind: 'banner', items: [] })
+        continue
+      }
+      const items = pick(sec.items)
+      if (items.length) sections.push({ ...withSubtitle, kind: 'custom', items })
     }
   }
 

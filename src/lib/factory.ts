@@ -8,6 +8,7 @@ import type {
   MasterProfile,
   ProjectItem,
   SkillGroup,
+  TotalItem,
 } from '../schema'
 import { newId } from './id'
 import { allSectionKeys } from './sections'
@@ -19,21 +20,25 @@ export function emptyProfile(): MasterProfile {
       name: '',
       headline: '',
       email: '',
+      phoneCode: '',
       phone: '',
       location: '',
       summary: '',
       links: [],
+      photo: '',
+      photoAlt: '',
     },
     experience: [],
     education: [],
     skills: [],
     projects: [],
     custom: [],
+    totals: [],
   }
 }
 
 export function newLink(): Link {
-  return { id: newId('lnk'), label: '', url: '' }
+  return { id: newId('lnk'), label: '', url: '', icon: 'link' }
 }
 
 export function newExperience(): ExperienceItem {
@@ -47,6 +52,8 @@ export function newExperience(): ExperienceItem {
     current: false,
     summary: '',
     highlights: [],
+    tagsLabel: '',
+    tags: [],
   }
 }
 
@@ -73,6 +80,9 @@ export function newProject(): ProjectItem {
     url: '',
     description: '',
     highlights: [],
+    icon: 'globe',
+    badge: '',
+    meta: '',
   }
 }
 
@@ -84,11 +94,25 @@ export function newCustomItem(): CustomItem {
     date: '',
     description: '',
     highlights: [],
+    icon: '',
+    meta: '',
+    tagsLabel: '',
+    tags: [],
   }
 }
 
 export function newCustomSection(): CustomSection {
-  return { id: newId('csec'), title: 'New Section', items: [] }
+  return {
+    id: newId('csec'),
+    title: 'New Section',
+    items: [],
+    subtitle: '',
+    display: 'items',
+  }
+}
+
+export function newTotal(): TotalItem {
+  return { id: newId('tot'), label: '', value: '', icon: '' }
 }
 
 export function newVariant(
@@ -102,8 +126,10 @@ export function newVariant(
     include: {},
     sectionOrder: allSectionKeys(profile),
     hiddenSections: [],
+    sectionTitles: {},
+    sectionLayout: {},
     overrides: {},
     basicsOverride: {},
-    theme: themeFromPreset('classic'),
+    theme: themeFromPreset('showcase'),
   }
 }

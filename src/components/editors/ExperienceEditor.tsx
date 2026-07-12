@@ -129,6 +129,32 @@ export function ExperienceEditor() {
                 }
               />
             </div>
+            <div className="mt-3">
+              <Field
+                label="Tags legend"
+                hint="Chips render under the item header; the legend is optional."
+              >
+                <Input
+                  value={item.tagsLabel}
+                  placeholder="TechStack"
+                  onChange={(e) =>
+                    updateItem('experience', item.id, {
+                      tagsLabel: e.target.value,
+                    })
+                  }
+                />
+              </Field>
+            </div>
+            <div className="mt-3">
+              <StringListEditor
+                label="Tags"
+                values={item.tags}
+                placeholder="TypeScript"
+                addLabel="Add tag"
+                suggestionKind="skill"
+                onChange={(tags) => updateItem('experience', item.id, { tags })}
+              />
+            </div>
           </ItemFrame>
         ))}
       </div>

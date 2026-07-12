@@ -59,7 +59,6 @@ export const CVPreview = forwardRef<
             transform: `scale(${scale})`,
             transformOrigin: 'top left',
             width: PAGE_WIDTH_PX,
-            boxShadow: '0 1px 8px rgba(0,0,0,0.15)',
           }}
         >
           <CVDocument ref={docRef} cv={cv} theme={theme} />

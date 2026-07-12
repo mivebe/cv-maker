@@ -1,5 +1,7 @@
 import type { ThemeConfig } from '../schema'
 import type { ResolvedCV } from './resolve'
+import { stripInline } from '../cv/RichText'
+import { displayPhone } from './phone'
 
 /**
  * ATS tooling. Applicant-tracking systems read a PDF as a stream of text in one
@@ -9,32 +11,52 @@ import type { ResolvedCV } from './resolve'
  * "does the file we produced come back out as the structured text we expect?"
  */
 
-/** The plain text an ATS should see, in logical reading order. */
+/**
+ * The plain text an ATS should see, in logical reading order. Decoration that
+ * only exists visually (icons, chip borders, badges, the avatar) contributes
+ * nothing here - chips flatten to a comma list, inline markup is stripped.
+ */
 export function atsLinearText(cv: ResolvedCV): string {
   const lines: string[] = []
   const { basics, sections } = cv
+  const bullets = (items: string[]) =>
+    items
+      .filter((h) => h.trim())
+      .forEach((h) => lines.push(`• ${stripInline(h)}`))
+  const chips = (label: string, tags: string[]) => {
+    const shown = tags.filter((t) => t.trim())
+    if (shown.length) lines.push(`${label || 'Tech'}: ${shown.join(', ')}`)
+  }
+
   if (basics.name) lines.push(basics.name)
   if (basics.headline) lines.push(basics.headline)
-  const contact = [basics.email, basics.phone, basics.location]
+  const contact = [
+    basics.email,
+    displayPhone(basics.phoneCode, basics.phone),
+    basics.location,
+  ]
     .filter(Boolean)
     .concat(basics.links.map((l) => l.url))
   if (contact.length) lines.push(contact.join(' · '))
-  if (basics.summary) lines.push('', basics.summary)
+  if (basics.summary) lines.push('', stripInline(basics.summary))
 
   for (const section of sections) {
     lines.push('', section.label.toUpperCase())
+    if (section.subtitle) lines.push(section.subtitle)
+
     if (section.kind === 'experience') {
       for (const it of section.items) {
         lines.push(
           `${it.role}${it.organization ? ` - ${it.organization}` : ''} (${[it.startDate, it.current ? 'Present' : it.endDate].filter(Boolean).join('–')})`,
         )
-        if (it.summary) lines.push(it.summary)
-        it.highlights.filter((h) => h.trim()).forEach((h) => lines.push(`• ${h}`))
+        if (it.summary) lines.push(stripInline(it.summary))
+        chips(it.tagsLabel, it.tags)
+        bullets(it.highlights)
       }
     } else if (section.kind === 'education') {
       for (const it of section.items) {
         lines.push(`${it.degree}${it.institution ? ` - ${it.institution}` : ''}`)
-        if (it.details) lines.push(it.details)
+        if (it.details) lines.push(stripInline(it.details))
       }
     } else if (section.kind === 'skills') {
       for (const g of section.items) {
@@ -42,16 +64,23 @@ export function atsLinearText(cv: ResolvedCV): string {
       }
     } else if (section.kind === 'projects') {
       for (const it of section.items) {
-        lines.push(it.name)
-        if (it.description) lines.push(it.description)
-        it.highlights.filter((h) => h.trim()).forEach((h) => lines.push(`• ${h}`))
+        lines.push(`${it.name}${it.meta ? ` - ${it.meta}` : ''}`)
+        if (it.url) lines.push(it.url)
+        if (it.description) lines.push(stripInline(it.description))
+        bullets(it.highlights)
       }
     } else if (section.kind === 'custom') {
       for (const it of section.items) {
-        lines.push(`${it.title}${it.subtitle ? ` - ${it.subtitle}` : ''}`)
-        if (it.description) lines.push(it.description)
-        it.highlights.filter((h) => h.trim()).forEach((h) => lines.push(`• ${h}`))
+        lines.push(
+          `${it.title}${it.subtitle ? ` - ${it.subtitle}` : ''}${it.meta ? ` (${it.meta})` : ''}`,
+        )
+        if (it.date) lines.push(it.date)
+        if (it.description) lines.push(stripInline(it.description))
+        chips(it.tagsLabel, it.tags)
+        bullets(it.highlights)
       }
+    } else if (section.kind === 'totals') {
+      for (const it of section.items) lines.push(`${it.label}: ${it.value}`)
     }
   }
   return lines.join('\n')
@@ -117,11 +146,25 @@ export function atsChecks(cv: ResolvedCV, theme: ThemeConfig): AtsCheck[] {
         },
   )
 
-  const empty = sections.filter((s) => s.items.length === 0).length
+  // Banners are heading-only by design, so they are not "empty sections".
+  const empty = sections.filter(
+    (s) => s.kind !== 'banner' && s.items.length === 0,
+  ).length
   checks.push(
     empty === 0
       ? { level: 'pass', label: 'No empty sections' }
       : { level: 'warn', label: `${empty} empty section(s)` },
+  )
+
+  checks.push(
+    !theme.showAvatar || !basics.photo
+      ? { level: 'pass', label: 'No photo' }
+      : {
+          level: 'warn',
+          label: 'Photo included',
+          detail:
+            'Images are ignored by ATS parsers and are discouraged in some markets. It costs you nothing textually, but the ATS-safe preset drops it.',
+        },
   )
 
   const hasExperience = sections.some((s) => s.kind === 'experience')
@@ -191,14 +234,16 @@ export function validateExtraction(
   return { charCount: extractedText.length, checks }
 }
 
+/** A body-text sample to look for in the exported PDF, with markup stripped:
+ *  the PDF contains "20 games", never "**20 games**". */
 function firstBodyProbe(cv: ResolvedCV): string | null {
   for (const s of cv.sections) {
     if (s.kind === 'experience') {
       for (const it of s.items) {
-        if (it.highlights[0]?.trim()) return it.highlights[0]
-        if (it.summary?.trim()) return it.summary
+        if (it.highlights[0]?.trim()) return stripInline(it.highlights[0])
+        if (it.summary?.trim()) return stripInline(it.summary)
       }
     }
   }
-  return cv.basics.summary || null
+  return cv.basics.summary ? stripInline(cv.basics.summary) : null
 }

@@ -1,7 +1,8 @@
 /*
  * CV document styling - deliberately NOT Tailwind. Every visual property is
- * driven by CSS custom properties set from a variant's ThemeConfig, so the
- * same markup renders every theme and the print output stays predictable.
+ * driven by CSS custom properties / data attributes set from a variant's
+ * ThemeConfig (see themeVars.ts), so the same markup renders every theme and the
+ * print output stays predictable.
  *
  * Units: the page is sized in inches (US Letter). Margins come from a token so
  * they are identical on screen and in print. @page margin is 0; the visible
@@ -15,14 +16,35 @@
   --cv-accent: #1f2937;
   --cv-text: #111827;
   --cv-heading: #111827;
+  --cv-title: var(--cv-accent);
+  --cv-link: var(--cv-accent);
+  --cv-badge: #16a34a;
   --cv-margin: 18mm;
   --cv-gap: 12px;
   --cv-section-gap: 18px;
+  --cv-column-gap: 28px;
+  --cv-cols-template: 1fr 0.62fr;
+  --cv-border: #d7dbe0;
+  --cv-muted: #6b7280;
+  --cv-avatar-size: 30mm;
+  --cv-avatar-height: 30mm;
+  --cv-avatar-ring: 0px;
+  --cv-avatar-ring-color: #e5e7eb;
+  --cv-avatar-backdrop: transparent;
+  --cv-totals-cols: 4;
 
   font-family: var(--cv-font-family);
   font-size: var(--cv-font-size);
   line-height: var(--cv-line-height);
   color: var(--cv-text);
+}
+
+/* Brand colors are the point of the icons, so never let the print pipeline
+   "helpfully" drop them. */
+.cv-root,
+.cv-root * {
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
 }
 
 .cv-page {
@@ -32,71 +54,232 @@
   padding: var(--cv-margin);
   background: #fff;
   margin: 0 auto;
+  /* Screen affordance only - the print block below strips it. */
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.15);
+}
+.cv-page + .cv-page {
+  margin-top: 16px;
+}
+
+/* Icons ------------------------------------------------------------------- */
+.cv-icon {
+  display: inline-block;
+  vertical-align: -0.12em;
+  flex: none;
+}
+.cv-icon-img {
+  object-fit: contain;
+}
+/* Fallback mark for a brand we do not ship a glyph for. */
+.cv-icon-mono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 22%;
+  color: #fff;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+.cv-root[data-icons='false'] .cv-icon {
+  display: none;
+}
+.cv-root[data-brand-icons='false'] .cv-icon {
+  fill: currentColor !important;
+}
+.cv-root[data-brand-icons='false'] .cv-icon-mono {
+  background: currentColor !important;
 }
 
 /* Header ------------------------------------------------------------------ */
 .cv-header {
   margin-bottom: var(--cv-section-gap);
 }
+.cv-header-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.4em;
+}
+.cv-identity {
+  flex: 1 1 auto;
+  min-width: 0;
+}
 .cv-name {
-  font-size: 1.9em;
-  font-weight: 700;
+  font-size: 2.1em;
+  font-weight: 800;
   color: var(--cv-heading);
   margin: 0;
   letter-spacing: -0.01em;
+  line-height: 1.1;
+}
+.cv-root[data-uppercase-name='true'] .cv-name {
+  text-transform: uppercase;
 }
 .cv-headline {
   font-size: 1.05em;
+  font-weight: 700;
   color: var(--cv-accent);
-  margin: 0.15em 0 0;
+  margin: 0.25em 0 0;
 }
 .cv-contact {
-  margin-top: 0.5em;
-  font-size: 0.85em;
-  color: var(--cv-text);
+  flex: 0 0 auto;
+  list-style: none;
+  margin: 0;
+  padding: 0;
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.35em 0.9em;
+  flex-direction: column;
+  gap: 0.3em;
+  font-size: 0.82em;
 }
-.cv-contact a {
-  color: var(--cv-accent);
-  text-decoration: none;
+.cv-contact li {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+}
+/* With an avatar in the row, the contact column is the middle of three blocks:
+   let it own the free space so it sits centered between the name and the photo,
+   both across (auto margins) and down (align-self). Without an avatar it stays
+   hard right against the page edge, as before. */
+.cv-header-row:has(.cv-avatar) .cv-identity {
+  flex: 0 1 auto;
+}
+.cv-header-row:has(.cv-avatar) .cv-contact {
+  margin-inline: auto;
+  align-self: center;
 }
 .cv-summary {
-  margin-top: 0.6em;
+  margin: 0.8em 0 0;
   font-size: 0.95em;
 }
 
-/* Body layout ------------------------------------------------------------- */
-.cv-body {
-  display: block;
+.cv-root[data-avatar-pos='left'] .cv-avatar {
+  order: -1;
 }
-.cv-body.cv-two-col {
+.cv-root[data-header-align='center'] .cv-header-row {
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.cv-root[data-header-align='center'] .cv-contact {
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.3em 1em;
+}
+.cv-root[data-header-align='center'] .cv-avatar {
+  order: -1;
+}
+.cv-root[data-header-align='center'] .cv-summary {
+  text-align: center;
+}
+
+/* Avatar ------------------------------------------------------------------ */
+.cv-avatar {
+  flex: 0 0 auto;
+  width: var(--cv-avatar-size);
+  height: var(--cv-avatar-height);
+  overflow: hidden;
+  background: var(--cv-avatar-backdrop);
+  box-shadow: 0 0 0 var(--cv-avatar-ring) var(--cv-avatar-ring-color);
+}
+.cv-avatar img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.cv-avatar[data-shape='circle'] {
+  border-radius: 50%;
+}
+.cv-avatar[data-shape='rounded'] {
+  border-radius: 12%;
+}
+.cv-avatar[data-shape='squircle'] {
+  border-radius: 28%;
+}
+.cv-avatar[data-shape='square'] {
+  border-radius: 0;
+}
+.cv-avatar[data-shape='arch'] {
+  border-radius: 50% 50% 6% 6%;
+}
+.cv-avatar[data-shape='blob'] {
+  border-radius: 62% 38% 54% 46% / 45% 55% 45% 55%;
+}
+/* `none` = cut-out portrait: no frame, no crop - the image (typically a
+   background-removed PNG) is allowed to sit on the page as-is. */
+.cv-avatar[data-shape='none'] {
+  overflow: visible;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  height: auto;
+}
+.cv-avatar[data-shape='none'] img {
+  height: auto;
+  object-fit: contain;
+}
+.cv-root[data-avatar-gray='true'] .cv-avatar img {
+  filter: grayscale(1);
+}
+
+/* Body layout ------------------------------------------------------------- */
+.cv-cols {
   display: grid;
-  grid-template-columns: 1.9fr 1fr;
-  gap: calc(var(--cv-section-gap) * 1.4);
+  grid-template-columns: var(--cv-cols-template);
+  gap: var(--cv-column-gap);
+  align-items: start;
+}
+.cv-col {
+  min-width: 0;
 }
 
 /* Sections ---------------------------------------------------------------- */
 .cv-section {
   margin-bottom: var(--cv-section-gap);
-  break-inside: avoid-column;
+}
+.cv-section:last-child {
+  margin-bottom: 0;
 }
 .cv-section-title {
-  font-size: 0.95em;
-  font-weight: 700;
+  font-size: 1.15em;
+  font-weight: 800;
   color: var(--cv-heading);
-  margin: 0 0 0.5em;
-  letter-spacing: 0.03em;
+  margin: 0 0 0.6em;
+  letter-spacing: 0.02em;
 }
 .cv-root[data-uppercase='true'] .cv-section-title {
   text-transform: uppercase;
 }
-.cv-root[data-rule='true'] .cv-section-title {
-  border-bottom: 1px solid var(--cv-accent);
-  padding-bottom: 0.2em;
+.cv-root[data-rule='true'] .cv-section-title:not([data-align='center']) {
+  border-bottom: 2px solid var(--cv-heading);
+  padding-bottom: 0.25em;
+}
+/* Centered heading flanked by rules - used by TOTALS and banner sections. */
+.cv-section-title[data-align='center'] {
+  display: flex;
+  align-items: center;
+  gap: 0.8em;
+  text-align: center;
+}
+.cv-section-title[data-align='center']::before,
+.cv-section-title[data-align='center']::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--cv-border);
+}
+.cv-section-subtitle {
+  margin: -0.3em 0 0.8em;
+  font-size: 0.82em;
+  color: var(--cv-muted);
+  text-align: center;
+}
+.cv-section[data-kind='banner'] .cv-section-title {
+  font-size: 1.35em;
 }
 
+/* Items ------------------------------------------------------------------- */
 .cv-item {
   margin-bottom: var(--cv-gap);
   break-inside: avoid;
@@ -104,47 +287,212 @@
 .cv-item:last-child {
   margin-bottom: 0;
 }
-.cv-item-head {
+.cv-root[data-divider='true'] .cv-item + .cv-item {
+  border-top: 1px dashed var(--cv-border);
+  padding-top: var(--cv-gap);
+}
+.cv-title-row {
   display: flex;
-  justify-content: space-between;
   align-items: baseline;
-  gap: 1em;
+  gap: 0.5em;
 }
 .cv-item-title {
+  font-size: 1em;
+  font-weight: 700;
+  color: var(--cv-title);
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+}
+.cv-item-org {
   font-weight: 700;
   color: var(--cv-heading);
-}
-.cv-item-sub {
-  color: var(--cv-accent);
+  font-size: 0.92em;
+  margin-top: 0.1em;
 }
 .cv-item-meta {
-  font-size: 0.85em;
-  color: var(--cv-text);
+  margin-left: auto;
+  font-size: 0.8em;
+  color: var(--cv-muted);
   white-space: nowrap;
-  opacity: 0.85;
+}
+.cv-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3em 1.4em;
+  margin-top: 0.25em;
+  font-size: 0.8em;
+  color: var(--cv-muted);
+}
+.cv-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
 }
 .cv-item-summary {
-  margin: 0.2em 0;
+  margin: 0.35em 0 0;
   font-size: 0.95em;
 }
 .cv-bullets {
-  margin: 0.3em 0 0;
+  margin: 0.35em 0 0;
   padding-left: 1.1em;
 }
 .cv-bullets li {
-  margin-bottom: 0.15em;
+  margin-bottom: 0.2em;
+}
+.cv-bullets li::marker {
+  color: var(--cv-muted);
 }
 
-/* Skills ------------------------------------------------------------------ */
-.cv-skillgroup {
-  margin-bottom: 0.5em;
+/* Inline rich text -------------------------------------------------------- */
+.cv-link {
+  color: var(--cv-link);
+  text-decoration: none;
+}
+.cv-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.9em;
+  background: #f3f4f6;
+  border-radius: 3px;
+  padding: 0 0.25em;
+}
+.cv-badge {
+  background: var(--cv-badge);
+  color: #fff;
+  border-radius: 3px;
+  padding: 0.05em 0.4em;
+  font-size: 0.68em;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+/* Chips ------------------------------------------------------------------- */
+.cv-chipgroup {
+  position: relative;
+  margin: 0.6em 0 0.2em;
+  padding: 0.75em 0.5em 0.5em;
+  border: 1px solid var(--cv-border);
+  border-radius: 6px;
+  break-inside: avoid;
+}
+.cv-chipgroup[data-legend='false'] {
+  border: none;
+  padding: 0.35em 0 0;
+}
+.cv-chipgroup-legend {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #fff;
+  padding: 0 0.5em;
+  font-size: 0.75em;
+  color: var(--cv-muted);
+  white-space: nowrap;
+}
+.cv-chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.35em;
+}
+.cv-chip {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--cv-border);
+  border-radius: 999px;
+  padding: 0.15em 0.6em;
+  font-size: 0.78em;
+  white-space: nowrap;
+}
+.cv-root[data-chips='box'] .cv-chip {
+  border-radius: 3px;
+}
+.cv-root[data-chips='plain'] .cv-chip {
+  border: none;
+  padding: 0.15em 0.25em;
+}
+.cv-root[data-chips='plain'] .cv-chip::after {
+  content: '·';
+  margin-left: 0.5em;
+  color: var(--cv-muted);
+}
+.cv-root[data-chips='plain'] .cv-chip:last-child::after {
+  content: '';
+}
+
+/* Skills: chips vs. one inline line per group. */
+.cv-skillgroup-inline {
+  display: none;
+}
+.cv-root[data-skills='inline'] .cv-skillgroup .cv-chipgroup {
+  display: none;
+}
+.cv-root[data-skills='inline'] .cv-skillgroup-inline {
+  display: block;
+  margin-bottom: 0.4em;
 }
 .cv-skillgroup-name {
   font-weight: 700;
   color: var(--cv-heading);
 }
-.cv-skillgroup-list {
-  color: var(--cv-text);
+
+/* Portfolios -------------------------------------------------------------- */
+.cv-portfolio {
+  display: flex;
+  gap: 0.6em;
+  align-items: flex-start;
+}
+.cv-portfolio-icon {
+  display: flex;
+  padding-top: 0.15em;
+}
+.cv-portfolio-body {
+  flex: 1;
+  min-width: 0;
+}
+.cv-portfolio .cv-link {
+  font-size: 0.82em;
+  word-break: break-all;
+}
+
+/* Totals ------------------------------------------------------------------ */
+.cv-totals {
+  display: grid;
+  grid-template-columns: repeat(var(--cv-totals-cols), minmax(0, 1fr));
+  /* No column gap: the cells' own inline padding is the gutter, which puts the
+     divider rule exactly halfway between two cells. */
+  gap: 0.8em 0;
+  break-inside: avoid;
+}
+.cv-total {
+  display: flex;
+  align-items: center;
+  gap: 0.55em;
+  min-width: 0;
+  padding-inline: 0.9em;
+}
+/* Flush the grid's outer edges with the rest of the section. */
+.cv-total[data-row-start='true'] {
+  padding-left: 0;
+}
+.cv-total[data-row-end='true'] {
+  padding-right: 0;
+}
+.cv-root[data-totals-divider='true'] .cv-total:not([data-row-start='true']) {
+  border-left: 1px solid var(--cv-border);
+}
+.cv-total-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cv-total-value {
+  font-weight: 700;
+  color: var(--cv-accent);
 }
 
 /* Print ------------------------------------------------------------------- */
@@ -158,6 +506,11 @@
     min-height: auto;
     box-shadow: none;
     margin: 0;
+  }
+  /* One printed sheet per explicit page (a section with pageBreakBefore). */
+  .cv-page + .cv-page {
+    margin-top: 0;
+    break-before: page;
   }
   a {
     color: inherit;

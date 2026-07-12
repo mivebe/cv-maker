@@ -1,6 +1,7 @@
 import { Plus } from 'lucide-react'
 import { useStore } from '../../store/useStore'
 import { EmptyHint, Field, SectionCard } from '@/components/app-ui'
+import { IconPicker } from '@/components/IconPicker'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -51,6 +52,33 @@ export function ProjectsEditor() {
                   placeholder="https://…"
                   onChange={(e) =>
                     updateItem('projects', item.id, { url: e.target.value })
+                  }
+                />
+              </Field>
+            </div>
+            <div className="mt-3 grid gap-3 sm:grid-cols-3">
+              <Field label="Icon">
+                <IconPicker
+                  className="w-full"
+                  value={item.icon}
+                  onChange={(icon) => updateItem('projects', item.id, { icon })}
+                />
+              </Field>
+              <Field label="Badge" hint="Short pill, e.g. “live”.">
+                <Input
+                  value={item.badge}
+                  placeholder="live"
+                  onChange={(e) =>
+                    updateItem('projects', item.id, { badge: e.target.value })
+                  }
+                />
+              </Field>
+              <Field label="Meta" hint="Right-aligned note.">
+                <Input
+                  value={item.meta}
+                  placeholder="iOS AppStore"
+                  onChange={(e) =>
+                    updateItem('projects', item.id, { meta: e.target.value })
                   }
                 />
               </Field>

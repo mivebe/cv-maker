@@ -3,6 +3,7 @@ import type { ThemeConfig } from '../schema'
 
 /** Map a ThemeConfig to the CSS custom properties consumed by cv.css. */
 export function themeToStyle(theme: ThemeConfig): CSSProperties {
+  const d = theme.density
   return {
     '--cv-font-family': theme.fontFamily,
     '--cv-font-size': `${theme.fontSize}pt`,
@@ -11,15 +12,45 @@ export function themeToStyle(theme: ThemeConfig): CSSProperties {
     '--cv-text': theme.textColor,
     '--cv-heading': theme.headingColor,
     '--cv-margin': `${theme.pageMargin}mm`,
-    '--cv-gap': `${(12 * theme.density).toFixed(1)}px`,
-    '--cv-section-gap': `${(18 * theme.density).toFixed(1)}px`,
+
+    // Spacing: the explicit tokens, scaled by the density multiplier.
+    '--cv-gap': `${(theme.itemGap * d).toFixed(1)}px`,
+    '--cv-section-gap': `${(theme.sectionGap * d).toFixed(1)}px`,
+    '--cv-column-gap': `${theme.columnGap}px`,
+    // Built here, not in CSS: `calc()` cannot multiply an `fr` unit.
+    '--cv-cols-template': `1fr ${theme.sideColumnRatio}fr`,
+
+    // Item titles and links fall back to the accent when left unset.
+    '--cv-title': theme.titleColor || theme.accentColor,
+    '--cv-link': theme.linkColor || theme.accentColor,
+    '--cv-badge': theme.badgeColor,
+
+    '--cv-avatar-size': `${theme.avatarSize}mm`,
+    // Height comes from the frame ratio (width ÷ height), so a rectangle frame
+    // is just a ratio away from the square default.
+    '--cv-avatar-height': `${(theme.avatarSize / (theme.avatarRatio || 1)).toFixed(1)}mm`,
+    '--cv-avatar-ring': `${theme.avatarRing}px`,
+    '--cv-avatar-ring-color': theme.avatarRingColor,
+    '--cv-avatar-backdrop': theme.avatarBackdrop || 'transparent',
+
+    '--cv-totals-cols': String(theme.totalsColumns),
   } as CSSProperties
 }
 
-/** Data attributes that toggle boolean style rules in cv.css. */
+/** Data attributes that toggle boolean/enum style rules in cv.css. */
 export function themeDataAttrs(theme: ThemeConfig) {
   return {
     'data-uppercase': String(theme.uppercaseHeadings),
+    'data-uppercase-name': String(theme.uppercaseName),
     'data-rule': String(theme.headingRule),
+    'data-icons': String(theme.showIcons),
+    'data-brand-icons': String(theme.brandColorIcons),
+    'data-chips': theme.chipStyle,
+    'data-skills': theme.skillStyle,
+    'data-divider': String(theme.itemDivider),
+    'data-header-align': theme.headerAlign,
+    'data-avatar-pos': theme.avatarPosition,
+    'data-avatar-gray': String(theme.avatarGrayscale),
+    'data-totals-divider': String(theme.totalsDivider),
   }
 }

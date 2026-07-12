@@ -1,10 +1,11 @@
-import type { CVVariant, ThemePreset } from '../../schema'
+import type { AvatarShape, CVVariant, ThemePreset } from '../../schema'
 import { useStore } from '../../store/useStore'
 import { Field, SectionCard } from '@/components/app-ui'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Separator } from '@/components/ui/separator'
 import {
   Select,
   SelectContent,
@@ -23,6 +24,10 @@ const FONT_FAMILIES: { label: string; value: string }[] = [
   { label: 'Georgia (serif)', value: 'Georgia, "Times New Roman", serif' },
   { label: 'Times (serif)', value: '"Times New Roman", Times, serif' },
   {
+    label: 'Geist (sans)',
+    value: '"Geist Variable", "Helvetica Neue", Arial, system-ui, sans-serif',
+  },
+  {
     label: 'Helvetica / Arial (sans)',
     value: '"Helvetica Neue", Arial, system-ui, sans-serif',
   },
@@ -31,6 +36,24 @@ const FONT_FAMILIES: { label: string; value: string }[] = [
     label: 'System UI (sans)',
     value: 'system-ui, -apple-system, Segoe UI, Roboto, sans-serif',
   },
+]
+
+const AVATAR_SHAPES: { label: string; value: AvatarShape }[] = [
+  { label: 'Rounded', value: 'rounded' },
+  { label: 'Circle', value: 'circle' },
+  { label: 'Squircle', value: 'squircle' },
+  { label: 'Sharp corners', value: 'square' },
+  { label: 'Arch', value: 'arch' },
+  { label: 'Blob', value: 'blob' },
+  { label: 'Cut-out (no frame)', value: 'none' },
+]
+
+/** Frame proportion, width ÷ height — the shape's corner cut is separate. */
+const AVATAR_RATIOS: { label: string; value: number }[] = [
+  { label: 'Square 1:1', value: 1 },
+  { label: 'Portrait 3:4', value: 0.75 },
+  { label: 'Portrait 2:3', value: 0.667 },
+  { label: 'Landscape 4:3', value: 1.333 },
 ]
 
 function SliderField({
@@ -67,23 +90,26 @@ function ColorField({
   label,
   value,
   onChange,
+  placeholder,
 }: {
   label: string
   value: string
   onChange: (v: string) => void
+  placeholder?: string
 }) {
   return (
     <Field label={label}>
       <div className="flex items-center gap-2">
         <input
           type="color"
-          value={value}
+          value={value || '#000000'}
           onChange={(e) => onChange(e.target.value)}
           className="h-9 w-12 cursor-pointer rounded border"
         />
         <Input
           type="text"
           value={value}
+          placeholder={placeholder}
           onChange={(e) => onChange(e.target.value)}
           className="w-24"
         />
@@ -92,8 +118,58 @@ function ColorField({
   )
 }
 
+/** A row of mutually exclusive buttons - cheaper to scan than a Select. */
+function Choice<T extends string | number>({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string
+  value: T
+  options: { label: string; value: T }[]
+  onChange: (v: T) => void
+}) {
+  return (
+    <Field label={label}>
+      <div className="flex flex-wrap gap-2">
+        {options.map((o) => (
+          <Button
+            key={String(o.value)}
+            variant={value === o.value ? 'default' : 'outline'}
+            onClick={() => onChange(o.value)}
+          >
+            {o.label}
+          </Button>
+        ))}
+      </div>
+    </Field>
+  )
+}
+
+function Toggle({
+  label,
+  checked,
+  onChange,
+}: {
+  label: string
+  checked: boolean
+  onChange: (v: boolean) => void
+}) {
+  return (
+    <Label className="flex items-center gap-2 text-sm text-muted-foreground">
+      <Checkbox
+        checked={checked}
+        onCheckedChange={(v) => onChange(v === true)}
+      />
+      {label}
+    </Label>
+  )
+}
+
 export function ThemeEditor({ variant }: { variant: CVVariant }) {
   const updateVariantTheme = useStore((s) => s.updateVariantTheme)
+  const hasPhoto = useStore((s) => Boolean(s.profile.basics.photo))
   const t = variant.theme
   const set = (patch: Partial<CVVariant['theme']>) =>
     updateVariantTheme(variant.id, patch)
@@ -101,7 +177,7 @@ export function ThemeEditor({ variant }: { variant: CVVariant }) {
   return (
     <SectionCard
       title="Design"
-      description="Restyle this variant. The ATS-safe preset stays single-column with standard fonts for clean parsing."
+      description="Restyle this variant. The ATS-safe preset stays single-column with standard fonts, no icons and no photo, for clean parsing."
     >
       <div className="space-y-4">
         <Field label="Preset">
@@ -141,22 +217,15 @@ export function ThemeEditor({ variant }: { variant: CVVariant }) {
               </SelectContent>
             </Select>
           </Field>
-          <Field label="Columns">
-            <div className="flex gap-2">
-              <Button
-                variant={t.columns === 1 ? 'default' : 'outline'}
-                onClick={() => set({ columns: 1 })}
-              >
-                One
-              </Button>
-              <Button
-                variant={t.columns === 2 ? 'default' : 'outline'}
-                onClick={() => set({ columns: 2 })}
-              >
-                Two
-              </Button>
-            </div>
-          </Field>
+          <Choice
+            label="Columns"
+            value={t.columns}
+            options={[
+              { label: 'One', value: 1 as const },
+              { label: 'Two', value: 2 as const },
+            ]}
+            onChange={(columns) => set({ columns })}
+          />
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
@@ -178,14 +247,6 @@ export function ThemeEditor({ variant }: { variant: CVVariant }) {
             onChange={(lineHeight) => set({ lineHeight })}
           />
           <SliderField
-            label="Density"
-            value={t.density}
-            min={0.6}
-            max={1.6}
-            step={0.05}
-            onChange={(density) => set({ density })}
-          />
-          <SliderField
             label="Page margin"
             value={t.pageMargin}
             min={8}
@@ -194,8 +255,201 @@ export function ThemeEditor({ variant }: { variant: CVVariant }) {
             suffix="mm"
             onChange={(pageMargin) => set({ pageMargin })}
           />
+          <SliderField
+            label="Density"
+            value={t.density}
+            min={0.6}
+            max={1.6}
+            step={0.05}
+            onChange={(density) => set({ density })}
+          />
         </div>
 
+        <Separator />
+
+        {/* ---- spacing ---- */}
+        <p className="text-xs font-medium text-muted-foreground">Spacing</p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <SliderField
+            label="Between sections"
+            value={t.sectionGap}
+            min={6}
+            max={40}
+            step={1}
+            suffix="px"
+            onChange={(sectionGap) => set({ sectionGap })}
+          />
+          <SliderField
+            label="Between items"
+            value={t.itemGap}
+            min={4}
+            max={30}
+            step={1}
+            suffix="px"
+            onChange={(itemGap) => set({ itemGap })}
+          />
+          {t.columns === 2 && (
+            <>
+              <SliderField
+                label="Column gap"
+                value={t.columnGap}
+                min={8}
+                max={60}
+                step={1}
+                suffix="px"
+                onChange={(columnGap) => set({ columnGap })}
+              />
+              <SliderField
+                label="Side column width"
+                value={t.sideColumnRatio}
+                min={0.3}
+                max={1.2}
+                step={0.02}
+                suffix="× main"
+                onChange={(sideColumnRatio) => set({ sideColumnRatio })}
+              />
+            </>
+          )}
+        </div>
+
+        <Separator />
+
+        {/* ---- header & avatar ---- */}
+        <p className="text-xs font-medium text-muted-foreground">
+          Header & avatar
+        </p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Choice
+            label="Header alignment"
+            value={t.headerAlign}
+            options={[
+              { label: 'Left', value: 'left' as const },
+              { label: 'Centered', value: 'center' as const },
+            ]}
+            onChange={(headerAlign) => set({ headerAlign })}
+          />
+          <Choice
+            label="Avatar side"
+            value={t.avatarPosition}
+            options={[
+              { label: 'Right', value: 'right' as const },
+              { label: 'Left', value: 'left' as const },
+            ]}
+            onChange={(avatarPosition) => set({ avatarPosition })}
+          />
+        </div>
+
+        <Toggle
+          label="Show avatar"
+          checked={t.showAvatar}
+          onChange={(showAvatar) => set({ showAvatar })}
+        />
+        {t.showAvatar && !hasPhoto && (
+          <p className="text-xs text-muted-foreground/70">
+            No photo on the master profile yet — add one in Profile → Basics.
+          </p>
+        )}
+
+        {t.showAvatar && (
+          <>
+            <Field label="Shape">
+              <div className="flex flex-wrap gap-2">
+                {AVATAR_SHAPES.map((s) => (
+                  <Button
+                    key={s.value}
+                    variant={t.avatarShape === s.value ? 'default' : 'outline'}
+                    onClick={() => set({ avatarShape: s.value })}
+                  >
+                    {s.label}
+                  </Button>
+                ))}
+              </div>
+            </Field>
+
+            {/* A cut-out has no frame, so its proportions come from the image. */}
+            {t.avatarShape !== 'none' && (
+              <Choice
+                label="Frame"
+                value={t.avatarRatio}
+                options={AVATAR_RATIOS}
+                onChange={(avatarRatio) => set({ avatarRatio })}
+              />
+            )}
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <SliderField
+                label="Width"
+                value={t.avatarSize}
+                min={16}
+                max={55}
+                step={1}
+                suffix="mm"
+                onChange={(avatarSize) => set({ avatarSize })}
+              />
+              <SliderField
+                label="Zoom"
+                value={t.avatarZoom}
+                min={1}
+                max={2.5}
+                step={0.05}
+                suffix="×"
+                onChange={(avatarZoom) => set({ avatarZoom })}
+              />
+              <SliderField
+                label="Framing — horizontal"
+                value={t.avatarOffsetX}
+                min={0}
+                max={100}
+                step={1}
+                suffix="%"
+                onChange={(avatarOffsetX) => set({ avatarOffsetX })}
+              />
+              <SliderField
+                label="Framing — vertical"
+                value={t.avatarOffsetY}
+                min={0}
+                max={100}
+                step={1}
+                suffix="%"
+                onChange={(avatarOffsetY) => set({ avatarOffsetY })}
+              />
+              <SliderField
+                label="Ring"
+                value={t.avatarRing}
+                min={0}
+                max={8}
+                step={1}
+                suffix="px"
+                onChange={(avatarRing) => set({ avatarRing })}
+              />
+              {t.avatarRing > 0 && (
+                <ColorField
+                  label="Ring color"
+                  value={t.avatarRingColor}
+                  onChange={(avatarRingColor) => set({ avatarRingColor })}
+                />
+              )}
+              {/* A cut-out portrait (transparent PNG) usually wants a plate behind it. */}
+              <ColorField
+                label="Backdrop"
+                value={t.avatarBackdrop}
+                placeholder="none"
+                onChange={(avatarBackdrop) => set({ avatarBackdrop })}
+              />
+            </div>
+
+            <Toggle
+              label="Grayscale photo"
+              checked={t.avatarGrayscale}
+              onChange={(avatarGrayscale) => set({ avatarGrayscale })}
+            />
+          </>
+        )}
+
+        <Separator />
+
+        {/* ---- color ---- */}
+        <p className="text-xs font-medium text-muted-foreground">Color</p>
         <div className="grid gap-4 sm:grid-cols-3">
           <ColorField
             label="Accent"
@@ -212,23 +466,98 @@ export function ThemeEditor({ variant }: { variant: CVVariant }) {
             value={t.headingColor}
             onChange={(headingColor) => set({ headingColor })}
           />
+          <ColorField
+            label="Item titles"
+            value={t.titleColor}
+            placeholder="accent"
+            onChange={(titleColor) => set({ titleColor })}
+          />
+          <ColorField
+            label="Links"
+            value={t.linkColor}
+            placeholder="accent"
+            onChange={(linkColor) => set({ linkColor })}
+          />
+          <ColorField
+            label="Badges"
+            value={t.badgeColor}
+            onChange={(badgeColor) => set({ badgeColor })}
+          />
+        </div>
+
+        <Separator />
+
+        {/* ---- decoration ---- */}
+        <p className="text-xs font-medium text-muted-foreground">Decoration</p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Choice
+            label="Chips"
+            value={t.chipStyle}
+            options={[
+              { label: 'Pill', value: 'pill' as const },
+              { label: 'Box', value: 'box' as const },
+              { label: 'Plain', value: 'plain' as const },
+            ]}
+            onChange={(chipStyle) => set({ chipStyle })}
+          />
+          <Choice
+            label="Skills as"
+            value={t.skillStyle}
+            options={[
+              { label: 'Chip groups', value: 'chips' as const },
+              { label: 'Inline list', value: 'inline' as const },
+            ]}
+            onChange={(skillStyle) => set({ skillStyle })}
+          />
+          <Choice
+            label="Totals columns"
+            value={t.totalsColumns}
+            options={[
+              { label: '3', value: 3 },
+              { label: '4', value: 4 },
+            ]}
+            onChange={(totalsColumns) => set({ totalsColumns })}
+          />
         </div>
 
         <div className="flex flex-wrap gap-4">
-          <Label className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Checkbox
-              checked={t.uppercaseHeadings}
-              onCheckedChange={(v) => set({ uppercaseHeadings: v === true })}
+          <Toggle
+            label="Uppercase name"
+            checked={t.uppercaseName}
+            onChange={(uppercaseName) => set({ uppercaseName })}
+          />
+          <Toggle
+            label="Uppercase section headings"
+            checked={t.uppercaseHeadings}
+            onChange={(uppercaseHeadings) => set({ uppercaseHeadings })}
+          />
+          <Toggle
+            label="Rule under headings"
+            checked={t.headingRule}
+            onChange={(headingRule) => set({ headingRule })}
+          />
+          <Toggle
+            label="Divider between items"
+            checked={t.itemDivider}
+            onChange={(itemDivider) => set({ itemDivider })}
+          />
+          <Toggle
+            label="Divider between totals"
+            checked={t.totalsDivider}
+            onChange={(totalsDivider) => set({ totalsDivider })}
+          />
+          <Toggle
+            label="Show icons"
+            checked={t.showIcons}
+            onChange={(showIcons) => set({ showIcons })}
+          />
+          {t.showIcons && (
+            <Toggle
+              label="Brand colors on icons"
+              checked={t.brandColorIcons}
+              onChange={(brandColorIcons) => set({ brandColorIcons })}
             />
-            Uppercase section headings
-          </Label>
-          <Label className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Checkbox
-              checked={t.headingRule}
-              onCheckedChange={(v) => set({ headingRule: v === true })}
-            />
-            Rule under headings
-          </Label>
+          )}
         </div>
       </div>
     </SectionCard>

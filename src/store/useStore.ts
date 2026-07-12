@@ -11,9 +11,12 @@ import type {
   Link,
   MasterProfile,
   ProjectItem,
+  SectionPlacement,
   SkillGroup,
   ThemeConfig,
+  TotalItem,
 } from '../schema'
+import { masterProfileSchema, variantSchema } from '../schema'
 import {
   emptyProfile,
   newCustomItem,
@@ -23,19 +26,26 @@ import {
   newLink,
   newProject,
   newSkillGroup,
+  newTotal,
   newVariant,
 } from '../lib/factory'
 import { sampleData } from '../lib/sample'
-import { reconcileSectionOrder } from '../lib/sections'
+import { defaultPlacement, reconcileSectionOrder } from '../lib/sections'
 
-/** The four standard profile array sections that share generic list ops. */
-export type ListSection = 'experience' | 'education' | 'skills' | 'projects'
+/** The standard profile array sections that share generic list ops. */
+export type ListSection =
+  | 'experience'
+  | 'education'
+  | 'skills'
+  | 'projects'
+  | 'totals'
 
 type ItemOf = {
   experience: ExperienceItem
   education: EducationItem
   skills: SkillGroup
   projects: ProjectItem
+  totals: TotalItem
 }
 
 const FACTORIES: { [K in ListSection]: () => ItemOf[K] } = {
@@ -43,6 +53,7 @@ const FACTORIES: { [K in ListSection]: () => ItemOf[K] } = {
   education: newEducation,
   skills: newSkillGroup,
   projects: newProject,
+  totals: newTotal,
 }
 
 type Direction = 'up' | 'down'
@@ -115,6 +126,12 @@ interface AppState {
   setVariantSectionOrder: (id: string, order: string[]) => void
   moveVariantSection: (id: string, sectionKey: string, dir: Direction) => void
   toggleSectionHidden: (id: string, sectionKey: string) => void
+  setSectionPlacement: (
+    id: string,
+    sectionKey: string,
+    patch: Partial<SectionPlacement>,
+  ) => void
+  setSectionTitle: (id: string, sectionKey: string, title: string) => void
   setOverride: (
     variantId: string,
     itemId: string,
@@ -144,6 +161,21 @@ function patchVariant(
   set((s) => ({
     variants: s.variants.map((v) => (v.id === id ? fn(v) : v)),
   }))
+}
+
+/** What `partialize` writes to localStorage, and what `migrate` must return. */
+type PersistedState = Pick<AppState, 'profile' | 'variants'>
+
+/** Parse a persisted variant array, or null if any entry is unrecoverable. */
+function parseVariants(value: unknown): CVVariant[] | null {
+  if (!Array.isArray(value)) return null
+  const out: CVVariant[] = []
+  for (const v of value) {
+    const parsed = variantSchema.safeParse(v)
+    if (!parsed.success) return null
+    out.push(parsed.data)
+  }
+  return out
 }
 
 const seed = sampleData()
@@ -332,6 +364,26 @@ export const useStore = create<AppState>()(
             ? v.hiddenSections.filter((k) => k !== sectionKey)
             : [...v.hiddenSections, sectionKey],
         })),
+      setSectionPlacement: (id, sectionKey, patch) =>
+        patchVariant(set, id, (v) => ({
+          ...v,
+          sectionLayout: {
+            ...v.sectionLayout,
+            [sectionKey]: {
+              ...(v.sectionLayout[sectionKey] ??
+                defaultPlacement(sectionKey)),
+              ...patch,
+            },
+          },
+        })),
+      setSectionTitle: (id, sectionKey, title) =>
+        patchVariant(set, id, (v) => {
+          const sectionTitles = { ...v.sectionTitles }
+          // An empty rename means "use the default label", not "no heading".
+          if (title.trim()) sectionTitles[sectionKey] = title
+          else delete sectionTitles[sectionKey]
+          return { ...v, sectionTitles }
+        }),
       setOverride: (variantId, itemId, field, value) =>
         patchVariant(set, variantId, (v) => ({
           ...v,
@@ -362,8 +414,27 @@ export const useStore = create<AppState>()(
     }),
     {
       name: 'cv-maker:v1',
-      version: 1,
+      version: 2,
       partialize: (s) => ({ profile: s.profile, variants: s.variants }),
+      /**
+       * v1 state predates icons/avatar/chips/totals/placement. Every field added
+       * since has a Zod default, so re-parsing the persisted state through the
+       * schemas is the migration: it backfills the new fields and leaves the
+       * user's content untouched. Without this, already-saved profiles would hit
+       * the renderer with `undefined` where it expects arrays.
+       */
+      migrate: (persisted, version): PersistedState => {
+        const asIs = persisted as PersistedState
+        if (version >= 2) return asIs
+
+        const profile = masterProfileSchema.safeParse(asIs?.profile)
+        const variants = parseVariants(asIs?.variants)
+        if (!profile.success || !variants) {
+          console.warn('cv-maker: could not migrate saved data; keeping as-is')
+          return asIs
+        }
+        return { profile: profile.data, variants }
+      },
     },
   ),
 )
