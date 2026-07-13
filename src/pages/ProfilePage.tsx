@@ -13,6 +13,7 @@ import {
   useResponsiveColumns,
   type ColumnCount,
 } from '../hooks/useResponsiveColumns'
+import type { CustomSection, MasterProfile } from '../schema/profile'
 import { useStore } from '../store/useStore'
 
 type SectionKey =
@@ -48,21 +49,69 @@ const COLUMN_LAYOUT: Record<ColumnCount, SectionKey[][]> = {
 }
 
 /**
- * Column each custom section is appended to. Round-robin rather than all in one
- * column: custom sections are usually short, so spreading them keeps any single
- * column from running away. Experience already owns the middle column at three,
- * so it is skipped.
+ * Rough card height in "form rows". Only the ratios matter — these numbers feed
+ * the packer below, never the DOM. They count what actually grows a card (items,
+ * highlights, tags), so a card only moves when content is added or removed, not
+ * while you type into it.
  */
-function customSectionColumn(index: number, columns: ColumnCount): number {
-  if (columns === 1) return 0
-  if (columns === 2) return index % 2
-  const spread = [0, 2] // skip the experience column
-  return spread[index % spread.length]
+function builtinWeight(key: SectionKey, profile: MasterProfile): number {
+  switch (key) {
+    case 'basics':
+      return 14 + profile.basics.links.length * 2
+    case 'experience':
+      return (
+        2 +
+        sum(profile.experience, (e) => 9 + e.highlights.length + e.tags.length)
+      )
+    case 'education':
+      return 2 + profile.education.length * 7
+    case 'skills':
+      return 2 + sum(profile.skills, (g) => 3 + g.skills.length)
+    case 'projects':
+      return 2 + sum(profile.projects, (p) => 7 + p.highlights.length)
+    case 'totals':
+      return 2 + profile.totals.length * 2
+  }
+}
+
+function customWeight(section: CustomSection): number {
+  if (section.display === 'banner') return 4
+  return 3 + sum(section.items, (i) => 9 + i.highlights.length + i.tags.length)
+}
+
+function sum<T>(items: T[], weight: (item: T) => number): number {
+  return items.reduce((total, item) => total + weight(item), 0)
+}
+
+/**
+ * Custom sections go to whichever column is shortest so far. The built-in
+ * sections are placed by the fixed table above (a form that reshuffles itself is
+ * worse than an uneven column), so custom sections are the only slack the page
+ * has — and they are the ones that vary wildly in size. Filling the shortest
+ * column means the experience column gets its share once enough custom sections
+ * pile up, instead of every one of them landing beside it.
+ */
+function packCustomSections(
+  custom: CustomSection[],
+  columns: ColumnCount,
+  heights: number[],
+): number[] {
+  const running = [...heights]
+  return custom.map((section) => {
+    if (columns === 1) return 0
+    let target = 0
+    for (let i = 1; i < running.length; i++) {
+      if (running[i] < running[target]) target = i
+    }
+    running[target] += customWeight(section)
+    return target
+  })
 }
 
 export function ProfilePage() {
   const columns = useResponsiveColumns()
-  const custom = useStore((s) => s.profile.custom)
+  const profile = useStore((s) => s.profile)
+  const custom = profile.custom
 
   const layout: ReactNode[][] = COLUMN_LAYOUT[columns].map((column) =>
     column.map((key) => {
@@ -71,8 +120,13 @@ export function ProfilePage() {
     }),
   )
 
-  custom.forEach((section, i) => {
-    layout[customSectionColumn(i, columns)].push(
+  const heights = COLUMN_LAYOUT[columns].map((column) =>
+    sum(column, (key) => builtinWeight(key, profile)),
+  )
+
+  packCustomSections(custom, columns, heights).forEach((column, i) => {
+    const section = custom[i]
+    layout[column].push(
       <CustomSectionCard
         key={section.id}
         section={section}

@@ -19,6 +19,11 @@ export function ExportButton({
   const print = useReactToPrint({
     contentRef: docRef,
     documentTitle,
+    // Stated rather than inherited from the library's default: a zero page margin
+    // is what keeps the browser from stamping its own header and footer (URL,
+    // title, "1/2") on the sheets. The CV's white space is the page's padding,
+    // which cv.css clones onto every fragment. Do not give this a margin.
+    pageStyle: '@page { size: letter; margin: 0; }',
   })
 
   // Brand glyphs are fetched on first draw, and print snapshots the live DOM -

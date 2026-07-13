@@ -5,8 +5,8 @@
  * print output stays predictable.
  *
  * Units: the page is sized in inches (US Letter). Margins come from a token so
- * they are identical on screen and in print. @page margin is 0; the visible
- * margin is the page padding, which the browser's print pipeline preserves.
+ * they are identical on screen and in print: the margin is the page's padding,
+ * and @page has no margin of its own (see the print block for why).
  */
 
 .cv-root {
@@ -37,6 +37,9 @@
   font-size: var(--cv-font-size);
   line-height: var(--cv-line-height);
   color: var(--cv-text);
+  /* Never strand a single line of a paragraph on either side of a page break. */
+  orphans: 2;
+  widows: 2;
 }
 
 /* Brand colors are the point of the icons, so never let the print pipeline
@@ -280,12 +283,30 @@
 }
 
 /* Items ------------------------------------------------------------------- */
+/*
+ * Deliberately NOT `break-inside: avoid`. A role with six highlights is often
+ * taller than what is left on the sheet, and refusing to split it pushes the
+ * whole block to the next page - a blank half-sheet, and a two-page CV turns
+ * into three. So an item may split; what must not split is its head (title,
+ * org, dates) from its body, and a bullet from itself. Those are the rules
+ * below, and they buy the page back.
+ */
 .cv-item {
   margin-bottom: var(--cv-gap);
-  break-inside: avoid;
 }
 .cv-item:last-child {
   margin-bottom: 0;
+}
+.cv-section-title,
+.cv-section-subtitle,
+.cv-title-row,
+.cv-item-title,
+.cv-item-org,
+.cv-meta-row {
+  break-after: avoid;
+}
+.cv-bullets li {
+  break-inside: avoid;
 }
 .cv-root[data-divider='true'] .cv-item + .cv-item {
   border-top: 1px dashed var(--cv-border);
@@ -528,15 +549,30 @@
 
 /* Print ------------------------------------------------------------------- */
 @media print {
+  /*
+   * The page box is the whole sheet, edge to edge. That is deliberate: a browser
+   * draws its own header and footer (the page URL, the document title, "1/2")
+   * *inside* the @page margin, and the only way to be rid of them without making
+   * the reader uncheck "Headers and footers" in the print dialog is to leave no
+   * margin for them to sit in.
+   */
   @page {
     size: letter;
     margin: 0;
   }
+  /*
+   * So the white space around the CV stays what it is on screen - the page's own
+   * padding - and `box-decoration-break: clone` is what makes that survive a
+   * page break: without it, padding renders only at the start and end of the
+   * block, and the second sheet prints flush against the paper edge.
+   */
   .cv-page {
-    width: 100%;
+    width: auto;
     min-height: auto;
     box-shadow: none;
     margin: 0;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
   }
   /* One printed sheet per explicit page (a section with pageBreakBefore). */
   .cv-page + .cv-page {

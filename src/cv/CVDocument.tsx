@@ -384,6 +384,7 @@ export interface CVDocumentProps {
   theme: ThemeConfig
 }
 
+
 export const CVDocument = forwardRef<HTMLDivElement, CVDocumentProps>(
   function CVDocument({ cv, theme }, ref) {
     const { basics, sections } = cv
