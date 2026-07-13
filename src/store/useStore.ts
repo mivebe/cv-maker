@@ -34,11 +34,7 @@ import { defaultPlacement, reconcileSectionOrder } from '../lib/sections'
 
 /** The standard profile array sections that share generic list ops. */
 export type ListSection =
-  | 'experience'
-  | 'education'
-  | 'skills'
-  | 'projects'
-  | 'totals'
+  'experience' | 'education' | 'skills' | 'projects' | 'totals'
 
 type ItemOf = {
   experience: ExperienceItem
@@ -275,7 +271,10 @@ export const useStore = create<AppState>()(
           custom: p.custom.filter((s) => s.id !== id),
         })),
       moveCustomSection: (id, dir) =>
-        patchProfile(set, (p) => ({ ...p, custom: moveById(p.custom, id, dir) })),
+        patchProfile(set, (p) => ({
+          ...p,
+          custom: moveById(p.custom, id, dir),
+        })),
       addCustomItem: (sectionId) =>
         patchProfile(set, (p) => ({
           ...p,
@@ -370,8 +369,7 @@ export const useStore = create<AppState>()(
           sectionLayout: {
             ...v.sectionLayout,
             [sectionKey]: {
-              ...(v.sectionLayout[sectionKey] ??
-                defaultPlacement(sectionKey)),
+              ...(v.sectionLayout[sectionKey] ?? defaultPlacement(sectionKey)),
               ...patch,
             },
           },

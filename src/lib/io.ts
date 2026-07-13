@@ -19,8 +19,7 @@ export function downloadJson(data: AppData, filename = 'cv-data.json') {
 }
 
 export type ImportResult =
-  | { ok: true; data: AppData }
-  | { ok: false; error: string }
+  { ok: true; data: AppData } | { ok: false; error: string }
 
 /**
  * Parse and validate an imported JSON string against the schema. Returns a

@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Check, X } from 'lucide-react'
-import { CVIcon, ICON_GROUPS } from '@/cv/icons'
+import { BRAND_COUNT, CVIcon, ICON_GROUPS, searchIcons } from '@/cv/icons'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -10,11 +10,18 @@ import {
 } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
 
+const LIMIT = 120
+
 /**
- * Picks an icon for a link / portfolio / totals row. The value is just a string,
- * so besides the shipped registry it also accepts a pasted image URL or data URL
- * (for a logo we do not ship) - which is why the search box doubles as a
- * free-text field.
+ * Picks an icon for a link / portfolio / totals row.
+ *
+ * With no query it shows a short curated set; typing searches every brand the
+ * icon fork ships (~3.7k), by slug, title or alias. Results are capped - the
+ * grid only draws what it shows, and each glyph it draws costs one small fetch.
+ *
+ * The value is just a string, so besides the registry it also accepts a pasted
+ * image URL or data URL (for a logo the fork does not have) - which is why the
+ * search box doubles as a free-text field.
  */
 export function IconPicker({
   value,
@@ -29,12 +36,12 @@ export function IconPicker({
   const [query, setQuery] = useState('')
 
   const q = query.trim().toLowerCase()
-  const groups = ICON_GROUPS.map((g) => ({
-    ...g,
-    names: g.names.filter((n) => !q || n.includes(q)),
-  })).filter((g) => g.names.length)
+  const results = useMemo(() => (q ? searchIcons(q, LIMIT + 1) : []), [q])
 
-  const isKnown = ICON_GROUPS.some((g) => g.names.includes(q))
+  const shown = results.slice(0, LIMIT)
+  const truncated = results.length > LIMIT
+  const isKnown = results.includes(q)
+
   const pick = (name: string) => {
     onChange(name)
     setOpen(false)
@@ -63,47 +70,68 @@ export function IconPicker({
         <Input
           autoFocus
           value={query}
-          placeholder="Search, or paste an image URL"
+          placeholder={`Search ${BRAND_COUNT.toLocaleString()} icons, or paste a URL`}
           onChange={(e) => setQuery(e.target.value)}
         />
 
         <div className="max-h-64 space-y-3 overflow-y-auto">
-          {groups.map((g) => (
-            <div key={g.label}>
-              <p className="mb-1.5 text-xs font-medium text-muted-foreground">
-                {g.label}
-              </p>
+          {q ? (
+            <>
               <div className="grid grid-cols-6 gap-1">
-                {g.names.map((name) => (
-                  <button
+                {shown.map((name) => (
+                  <IconCell
                     key={name}
-                    type="button"
-                    title={name}
-                    onClick={() => pick(name)}
-                    className={cn(
-                      'flex h-9 items-center justify-center rounded-md border hover:bg-accent',
-                      value === name && 'ring-2 ring-primary',
-                    )}
-                  >
-                    <CVIcon name={name} size={16} />
-                  </button>
+                    name={name}
+                    selected={value === name}
+                    onPick={pick}
+                  />
                 ))}
               </div>
-            </div>
-          ))}
 
-          {/* Anything the registry does not know still resolves - as a monogram
-              if it is a name, as an <img> if it is a URL. */}
-          {q && !isKnown && (
-            <Button
-              variant="secondary"
-              className="w-full justify-start gap-2"
-              onClick={() => pick(query.trim())}
-            >
-              <CVIcon name={query.trim()} size={16} />
-              <Check className="ml-auto" />
-              Use “{query.trim()}”
-            </Button>
+              {!shown.length && (
+                <p className="text-xs text-muted-foreground">
+                  No icon matches “{query.trim()}”.
+                </p>
+              )}
+
+              {truncated && (
+                <p className="text-xs text-muted-foreground">
+                  Showing the first {LIMIT} matches — keep typing to narrow.
+                </p>
+              )}
+
+              {/* Anything the registry does not know still resolves - as a
+                  monogram if it is a name, as an <img> if it is a URL. */}
+              {!isKnown && (
+                <Button
+                  variant="secondary"
+                  className="w-full justify-start gap-2"
+                  onClick={() => pick(query.trim())}
+                >
+                  <CVIcon name={query.trim()} size={16} />
+                  <Check className="ml-auto" />
+                  Use “{query.trim()}”
+                </Button>
+              )}
+            </>
+          ) : (
+            ICON_GROUPS.map((g) => (
+              <div key={g.label}>
+                <p className="mb-1.5 text-xs font-medium text-muted-foreground">
+                  {g.label}
+                </p>
+                <div className="grid grid-cols-6 gap-1">
+                  {g.names.map((name) => (
+                    <IconCell
+                      key={name}
+                      name={name}
+                      selected={value === name}
+                      onPick={pick}
+                    />
+                  ))}
+                </div>
+              </div>
+            ))
           )}
         </div>
 
@@ -119,5 +147,29 @@ export function IconPicker({
         )}
       </PopoverContent>
     </Popover>
+  )
+}
+
+function IconCell({
+  name,
+  selected,
+  onPick,
+}: {
+  name: string
+  selected: boolean
+  onPick: (name: string) => void
+}) {
+  return (
+    <button
+      type="button"
+      title={name}
+      onClick={() => onPick(name)}
+      className={cn(
+        'flex h-9 items-center justify-center rounded-md border hover:bg-accent',
+        selected && 'ring-2 ring-primary',
+      )}
+    >
+      <CVIcon name={name} size={16} />
+    </button>
   )
 }

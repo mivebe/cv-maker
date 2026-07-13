@@ -91,7 +91,9 @@ export function resolveVariant(
     }
 
     const pick = <T extends { id: string }>(list: T[]): T[] =>
-      list.filter((i) => isIncluded(variant, i.id)).map((i) => applyOverride(variant, i))
+      list
+        .filter((i) => isIncluded(variant, i.id))
+        .map((i) => applyOverride(variant, i))
 
     if (key === 'experience') {
       const items = pick(profile.experience)
@@ -117,7 +119,8 @@ export function resolveVariant(
         continue
       }
       const items = pick(sec.items)
-      if (items.length) sections.push({ ...withSubtitle, kind: 'custom', items })
+      if (items.length)
+        sections.push({ ...withSubtitle, kind: 'custom', items })
     }
   }
 

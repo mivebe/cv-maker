@@ -16,9 +16,13 @@ function CheckIcon({ level }: { level: AtsCheck['level'] }) {
   const cls = 'size-4 shrink-0'
   // Lighter shades on dark: 600-weight green sinks into a dark surface.
   if (level === 'pass')
-    return <CircleCheck className={`${cls} text-green-600 dark:text-green-400`} />
+    return (
+      <CircleCheck className={`${cls} text-green-600 dark:text-green-400`} />
+    )
   if (level === 'warn')
-    return <TriangleAlert className={`${cls} text-amber-500 dark:text-amber-400`} />
+    return (
+      <TriangleAlert className={`${cls} text-amber-500 dark:text-amber-400`} />
+    )
   return <CircleX className={`${cls} text-destructive`} />
 }
 

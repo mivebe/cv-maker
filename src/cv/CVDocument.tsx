@@ -80,13 +80,7 @@ function ChipGroup({ legend, items }: { legend: string; items: string[] }) {
 }
 
 /** Date / location line under an item title. */
-function MetaRow({
-  date,
-  location,
-}: {
-  date?: string
-  location?: string
-}) {
+function MetaRow({ date, location }: { date?: string; location?: string }) {
   if (!date && !location) return null
   return (
     <div className="cv-meta-row">
@@ -116,7 +110,9 @@ function ExperienceBlock({
   return (
     <article className="cv-item">
       <h3 className="cv-item-title">{item.role}</h3>
-      {item.organization && <div className="cv-item-org">{item.organization}</div>}
+      {item.organization && (
+        <div className="cv-item-org">{item.organization}</div>
+      )}
       <MetaRow
         date={formatRange(item.startDate, item.endDate, format, item.current)}
         location={item.location}
@@ -196,7 +192,13 @@ function CustomBlock({
  * outer padding) on the edges: `:nth-child()` cannot take the column count,
  * which is a theme token.
  */
-function TotalsGrid({ items, columns }: { items: TotalItem[]; columns: number }) {
+function TotalsGrid({
+  items,
+  columns,
+}: {
+  items: TotalItem[]
+  columns: number
+}) {
   const cols = Math.max(1, columns)
   return (
     <div className="cv-totals">
@@ -333,7 +335,12 @@ function Header({ basics, theme }: { basics: Basics; theme: ThemeConfig }) {
       text: l.label || prettyUrl(l.url),
       url: l.url ? href(l.url) : '',
     })),
-  ].filter(Boolean) as { key: string; icon: string; text: string; url: string }[]
+  ].filter(Boolean) as {
+    key: string
+    icon: string
+    text: string
+    url: string
+  }[]
 
   return (
     <header className="cv-header">

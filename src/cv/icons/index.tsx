@@ -1,3 +1,4 @@
+import { useEffect, useSyncExternalStore } from 'react'
 import {
   Award,
   Boxes,
@@ -27,13 +28,24 @@ import {
   Zap,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
-import { BRAND_ICONS } from './brandSource'
+import {
+  BRAND_ALIASES,
+  BRAND_ICONS,
+  getBrandPath,
+  loadBrandPath,
+  subscribeToPaths,
+} from './brandSource'
+
+export { iconsSettled } from './brandSource'
 
 /**
- * One icon vocabulary for the whole CV: brand glyphs (from the swappable
- * `brandSource` adapter), generic UI glyphs (lucide), and a monogram fallback so
- * *any* name resolves to something printable. An icon value may also be an image
- * URL or data URL, which is how a user drops in a logo we do not ship.
+ * One icon vocabulary for the whole CV: brand glyphs (all ~3.7k of them, from
+ * the swappable `brandSource` adapter), generic UI glyphs (lucide), and a
+ * monogram fallback so *any* name resolves to something printable. An icon value
+ * may also be an image URL or data URL, which is how a user drops in a logo the
+ * fork does not ship.
+ *
+ * Brand paths are fetched on first draw rather than bundled - see brandSource.
  *
  * Icons are decorative: they are `aria-hidden`, they carry no text nodes, and
  * the ATS preset turns them off entirely - so they never reach the text layer a
@@ -70,41 +82,23 @@ const UI_ICONS: Record<string, LucideIcon> = {
   user: User,
 }
 
-/** Convenient spellings that map onto a canonical registry key. */
+/**
+ * Convenient spellings that map onto a canonical registry key. The brand ones
+ * (`js`, `azure`, ...) ship with the icons themselves; these are for the generic
+ * UI glyphs, which have no package to carry them. A UI name always wins - the
+ * fork has ~3.7k slugs and we do not want one of them shadowing `mail`.
+ */
 const ALIASES: Record<string, string> = {
-  js: 'javascript',
-  ts: 'typescript',
-  html: 'html5',
-  'html/css': 'html5',
-  node: 'nodedotjs',
-  'node.js': 'nodedotjs',
-  nodejs: 'nodedotjs',
-  nest: 'nestjs',
-  'nest.js': 'nestjs',
-  next: 'nextdotjs',
-  'next.js': 'nextdotjs',
-  nextjs: 'nextdotjs',
-  three: 'threedotjs',
-  'three.js': 'threedotjs',
-  threejs: 'threedotjs',
-  'react-native': 'react',
-  reactnative: 'react',
-  rn: 'react',
-  pixi: 'pixijs',
-  'pixi.js': 'pixijs',
-  spine2d: 'spine',
-  'spine 2d': 'spine',
   email: 'mail',
   location: 'map-pin',
   pin: 'map-pin',
   date: 'calendar',
   web: 'globe',
   website: 'globe',
-  in: 'linkedin',
 }
 
 export type IconResolution =
-  | { kind: 'brand'; slug: string; hex: string; path: string; title: string }
+  | { kind: 'brand'; slug: string; hex: string; title: string }
   | { kind: 'ui'; Comp: LucideIcon }
   | { kind: 'image'; src: string }
   | { kind: 'monogram'; text: string; hex: string }
@@ -134,9 +128,9 @@ function monogramText(seed: string): string {
 }
 
 /**
- * Resolve an icon value to something renderable. Unknown names deliberately
- * fall back to a monogram instead of disappearing, so a typo or an
- * as-yet-unshipped brand still prints a sensible mark.
+ * Resolve an icon name to something renderable. Unknown names deliberately fall
+ * back to a monogram instead of disappearing, so a typo - or a brand even the
+ * fork does not have - still prints a sensible mark.
  */
 export function resolveIcon(nameRaw: string): IconResolution {
   const name = nameRaw.trim()
@@ -144,23 +138,25 @@ export function resolveIcon(nameRaw: string): IconResolution {
   if (isImageRef(name)) return { kind: 'image', src: name }
 
   const key = name.toLowerCase()
-  const canonical = ALIASES[key] ?? key.replace(/[\s._]+/g, '')
 
-  const brand = BRAND_ICONS[canonical] ?? BRAND_ICONS[key]
-  if (brand) {
-    return {
-      kind: 'brand',
-      slug: canonical,
-      hex: `#${brand.hex}`,
-      path: brand.path,
-      title: brand.title,
-    }
-  }
-
-  const ui = UI_ICONS[key] ?? UI_ICONS[canonical]
+  // UI glyphs first: they are the small, curated set, and their names must not
+  // be shadowed by a brand slug.
+  const uiKey = ALIASES[key] ?? key
+  const ui = UI_ICONS[uiKey]
   if (ui) return { kind: 'ui', Comp: ui }
 
-  return { kind: 'monogram', text: monogramText(name), hex: monogramColor(name) }
+  const canonical = BRAND_ALIASES[key] ?? key.replace(/[\s._]+/g, '')
+  const brand = BRAND_ICONS[canonical] ?? BRAND_ICONS[key]
+  if (brand) {
+    const slug = BRAND_ICONS[canonical] ? canonical : key
+    return { kind: 'brand', slug, hex: `#${brand.hex}`, title: brand.title }
+  }
+
+  return {
+    kind: 'monogram',
+    text: monogramText(name),
+    hex: monogramColor(name),
+  }
 }
 
 export interface CVIconProps {
@@ -172,8 +168,25 @@ export interface CVIconProps {
   className?: string
 }
 
-export function CVIcon({ name, size = 12, mono = false, className }: CVIconProps) {
+export function CVIcon({
+  name,
+  size = 12,
+  mono = false,
+  className,
+}: CVIconProps) {
   const icon = resolveIcon(name)
+  const slug = icon.kind === 'brand' ? icon.slug : null
+
+  // The path is cached module-side, so every <CVIcon> for the same brand shares
+  // one fetch and they all re-render together when it lands.
+  const path = useSyncExternalStore(subscribeToPaths, () =>
+    slug ? getBrandPath(slug) : undefined,
+  )
+
+  useEffect(() => {
+    if (slug) void loadBrandPath(slug)
+  }, [slug])
+
   const box = { width: size, height: size, flex: `0 0 ${size}px` } as const
 
   switch (icon.kind) {
@@ -192,6 +205,33 @@ export function CVIcon({ name, size = 12, mono = false, className }: CVIconProps
       )
 
     case 'brand':
+      // `undefined` = still fetching: hold the space rather than flash a
+      // monogram we are about to replace. `null` = the fetch failed, so fall
+      // back for real.
+      if (path === undefined) {
+        return (
+          <span
+            aria-hidden
+            className={`cv-icon ${className ?? ''}`}
+            style={box}
+          />
+        )
+      }
+      if (path === null) {
+        return (
+          <span
+            aria-hidden
+            className={`cv-icon cv-icon-mono ${className ?? ''}`}
+            style={{
+              ...box,
+              background: mono ? 'currentColor' : icon.hex,
+              fontSize: size * 0.52,
+            }}
+          >
+            {monogramText(icon.title)}
+          </span>
+        )
+      }
       return (
         <svg
           viewBox="0 0 24 24"
@@ -200,7 +240,7 @@ export function CVIcon({ name, size = 12, mono = false, className }: CVIconProps
           className={`cv-icon ${className ?? ''}`}
           style={{ ...box, fill: mono ? 'currentColor' : icon.hex }}
         >
-          <path d={icon.path} />
+          <path d={path} />
         </svg>
       )
 
@@ -234,7 +274,10 @@ export function CVIcon({ name, size = 12, mono = false, className }: CVIconProps
   }
 }
 
-/** Grouped options for the icon pickers in the editors. */
+/**
+ * The picker's default view: a short, hand-ordered set of the icons a CV
+ * actually reaches for. Everything else in the fork is one search away.
+ */
 export const ICON_GROUPS: { label: string; names: string[] }[] = [
   {
     label: 'Contact & links',
@@ -247,6 +290,7 @@ export const ICON_GROUPS: { label: string; names: string[] }[] = [
       'external-link',
       'github',
       'linkedin',
+      'slack',
       'pastebin',
       'sketchfab',
     ],
@@ -292,8 +336,58 @@ export const ICON_GROUPS: { label: string; names: string[] }[] = [
       'pixijs',
       'spine',
       'gsap',
+      'java',
+      'openai',
+      'amazons3',
+      'microsoftazure',
+      'visualstudiocode',
+      'adobeanimate',
     ],
   },
 ]
 
-export const ALL_ICON_NAMES: string[] = ICON_GROUPS.flatMap((g) => g.names)
+/** How many brands the fork currently ships - shown in the picker. */
+export const BRAND_COUNT = Object.keys(BRAND_ICONS).length
+
+/**
+ * Search every icon the app can draw: the UI glyphs plus all ~3.7k brands, by
+ * slug, by human title ("Node.js"), and by alias ("js"). Ranked so that an exact
+ * hit and a prefix hit beat a substring buried in the middle of a name.
+ */
+export function searchIcons(query: string, limit = 120): string[] {
+  const q = query.trim().toLowerCase()
+  if (!q) return []
+
+  const scored: { name: string; score: number }[] = []
+
+  const consider = (name: string, haystacks: string[]) => {
+    let best = 0
+    for (const h of haystacks) {
+      if (h === q) best = Math.max(best, 3)
+      else if (h.startsWith(q)) best = Math.max(best, 2)
+      else if (h.includes(q)) best = Math.max(best, 1)
+    }
+    if (best) scored.push({ name, score: best })
+  }
+
+  for (const name of Object.keys(UI_ICONS)) consider(name, [name])
+
+  const aliasesOf: Record<string, string[]> = {}
+  for (const [alias, slug] of Object.entries(BRAND_ALIASES)) {
+    ;(aliasesOf[slug] ??= []).push(alias)
+  }
+
+  for (const [slug, meta] of Object.entries(BRAND_ICONS)) {
+    consider(slug, [slug, meta.title.toLowerCase(), ...(aliasesOf[slug] ?? [])])
+  }
+
+  return scored
+    .sort(
+      (a, b) =>
+        b.score - a.score ||
+        a.name.length - b.name.length ||
+        a.name.localeCompare(b.name),
+    )
+    .slice(0, limit)
+    .map((s) => s.name)
+}

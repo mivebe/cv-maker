@@ -16,12 +16,7 @@ import {
 import { useStore } from '../store/useStore'
 
 type SectionKey =
-  | 'basics'
-  | 'experience'
-  | 'education'
-  | 'skills'
-  | 'projects'
-  | 'totals'
+  'basics' | 'experience' | 'education' | 'skills' | 'projects' | 'totals'
 
 const SECTIONS: Record<SectionKey, ComponentType> = {
   basics: BasicsEditor,
@@ -45,7 +40,11 @@ const COLUMN_LAYOUT: Record<ColumnCount, SectionKey[][]> = {
     ['basics', 'experience'],
     ['skills', 'education', 'projects', 'totals'],
   ],
-  3: [['basics', 'skills', 'totals'], ['experience'], ['education', 'projects']],
+  3: [
+    ['basics', 'skills', 'totals'],
+    ['experience'],
+    ['education', 'projects'],
+  ],
 }
 
 /**

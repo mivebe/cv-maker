@@ -1,10 +1,4 @@
-import {
-  forwardRef,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from 'react'
+import { forwardRef, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { ThemeConfig } from '../schema'
 import type { ResolvedCV } from '../lib/resolve'
 import { CVDocument } from './CVDocument'

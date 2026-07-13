@@ -123,7 +123,11 @@ export function atsChecks(cv: ResolvedCV, theme: ThemeConfig): AtsCheck[] {
   checks.push(
     basics.email || basics.phone
       ? { level: 'pass', label: 'Contact details present' }
-      : { level: 'warn', label: 'No email or phone', detail: 'Recruiters may not be able to reach you.' },
+      : {
+          level: 'warn',
+          label: 'No email or phone',
+          detail: 'Recruiters may not be able to reach you.',
+        },
   )
 
   checks.push(
@@ -234,7 +238,9 @@ export function validateExtraction(
     checks.push({
       level: contains(probe) ? 'pass' : 'warn',
       label: 'Body text preserved',
-      detail: contains(probe) ? undefined : `Could not find: "${probe.slice(0, 40)}…"`,
+      detail: contains(probe)
+        ? undefined
+        : `Could not find: "${probe.slice(0, 40)}…"`,
     })
   }
 

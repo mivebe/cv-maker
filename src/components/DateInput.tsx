@@ -3,7 +3,11 @@ import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react'
 import { MONTHS, parseDate, toCanonical } from '@/lib/dates'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
 
 /**
@@ -87,8 +91,7 @@ export function DateInput({
 
           <div className="grid grid-cols-3 gap-1">
             {MONTHS.map((m, i) => {
-              const selected =
-                parsed?.year === year && parsed?.month === i + 1
+              const selected = parsed?.year === year && parsed?.month === i + 1
               return (
                 <Button
                   key={m}
