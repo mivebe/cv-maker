@@ -16,6 +16,7 @@ import {
   reconcileSectionOrder,
   sectionLabel,
 } from '../../lib/sections'
+import { useHighlightNode } from './highlight'
 
 const COLUMNS = [
   { label: 'Main', value: 'main' as const },
@@ -29,6 +30,8 @@ export function SectionOrderEditor({ variant }: { variant: CVVariant }) {
   const toggleSectionHidden = useStore((s) => s.toggleSectionHidden)
   const setSectionPlacement = useStore((s) => s.setSectionPlacement)
   const setSectionTitle = useStore((s) => s.setSectionTitle)
+
+  const hl = useHighlightNode()
 
   const order = reconcileSectionOrder(variant.sectionOrder, profile)
   const hidden = new Set(variant.hiddenSections)
@@ -49,7 +52,11 @@ export function SectionOrderEditor({ variant }: { variant: CVVariant }) {
           const placement = variant.sectionLayout[key] ?? defaultPlacement(key)
 
           return (
-            <li key={key} className="space-y-2 py-3">
+            <li
+              key={key}
+              className="space-y-2 rounded-md px-1 py-3"
+              {...hl(key)}
+            >
               <div className="flex items-center gap-1 sm:gap-2">
                 {/* The heading text is per-variant: "Portfolios" for a human,
                     "Projects" for a parser. Empty falls back to the default. */}

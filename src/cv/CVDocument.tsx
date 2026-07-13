@@ -8,6 +8,7 @@ import type {
   TotalItem,
 } from '../schema'
 import type { ResolvedCV, ResolvedSection } from '../lib/resolve'
+import { BASICS_ID, useHighlightNode } from '../components/variant/highlight'
 import { displayPhone, telHref } from '../lib/phone'
 import { formatDate, type DateFormat } from '../lib/dates'
 import { paginate } from './layout'
@@ -107,8 +108,9 @@ function ExperienceBlock({
   item: ExperienceItem
   format: DateFormat
 }) {
+  const hl = useHighlightNode()
   return (
-    <article className="cv-item">
+    <article className="cv-item" {...hl(item.id)}>
       <h3 className="cv-item-title">{item.role}</h3>
       {item.organization && (
         <div className="cv-item-org">{item.organization}</div>
@@ -129,8 +131,9 @@ function ExperienceBlock({
 }
 
 function ProjectBlock({ item }: { item: ProjectItem }) {
+  const hl = useHighlightNode()
   return (
-    <article className="cv-item cv-portfolio">
+    <article className="cv-item cv-portfolio" {...hl(item.id)}>
       {item.icon && (
         <span className="cv-portfolio-icon">
           <CVIcon name={item.icon} size={14} />
@@ -165,8 +168,9 @@ function CustomBlock({
   item: CustomItem
   format: DateFormat
 }) {
+  const hl = useHighlightNode()
   return (
-    <article className="cv-item">
+    <article className="cv-item" {...hl(item.id)}>
       <div className="cv-title-row">
         <h3 className="cv-item-title">
           {item.icon && <CVIcon name={item.icon} size={13} />}
@@ -200,6 +204,7 @@ function TotalsGrid({
   columns: number
 }) {
   const cols = Math.max(1, columns)
+  const hl = useHighlightNode()
   return (
     <div className="cv-totals">
       {items.map((t, i) => (
@@ -208,6 +213,7 @@ function TotalsGrid({
           className="cv-total"
           data-row-start={String(i % cols === 0)}
           data-row-end={String(i % cols === cols - 1 || i === items.length - 1)}
+          {...hl(t.id)}
         >
           <CVIcon name={t.icon || t.label} size={20} />
           <span className="cv-total-label">{t.label}</span>
@@ -229,9 +235,14 @@ function SectionBlock({
   theme: ThemeConfig
 }) {
   const centered = CENTERED_KINDS.has(section.kind)
+  const hl = useHighlightNode()
 
   return (
-    <section className="cv-section" data-kind={section.kind}>
+    <section
+      className="cv-section"
+      data-kind={section.kind}
+      {...hl(section.key)}
+    >
       <h2
         className="cv-section-title"
         data-align={centered ? 'center' : 'left'}
@@ -249,7 +260,7 @@ function SectionBlock({
 
       {section.kind === 'education' &&
         section.items.map((it) => (
-          <article key={it.id} className="cv-item">
+          <article key={it.id} className="cv-item" {...hl(it.id)}>
             <h3 className="cv-item-title">{it.degree}</h3>
             {it.institution && (
               <div className="cv-item-org">{it.institution}</div>
@@ -268,7 +279,7 @@ function SectionBlock({
 
       {section.kind === 'skills' &&
         section.items.map((g) => (
-          <div key={g.id} className="cv-skillgroup">
+          <div key={g.id} className="cv-skillgroup" {...hl(g.id)}>
             <ChipGroup legend={g.name} items={g.skills} />
             {/* The inline fallback (theme.skillStyle = 'inline'); CSS shows one or the other. */}
             <div className="cv-skillgroup-inline">
@@ -310,6 +321,7 @@ function Avatar({ basics, theme }: { basics: Basics; theme: ThemeConfig }) {
 }
 
 function Header({ basics, theme }: { basics: Basics; theme: ThemeConfig }) {
+  const hl = useHighlightNode()
   const contacts = [
     basics.email && {
       key: 'email',
@@ -343,7 +355,7 @@ function Header({ basics, theme }: { basics: Basics; theme: ThemeConfig }) {
   }[]
 
   return (
-    <header className="cv-header">
+    <header className="cv-header" {...hl(BASICS_ID)}>
       <div className="cv-header-row">
         <div className="cv-identity">
           <h1 className="cv-name">{basics.name || 'Your Name'}</h1>
@@ -383,7 +395,6 @@ export interface CVDocumentProps {
   cv: ResolvedCV
   theme: ThemeConfig
 }
-
 
 export const CVDocument = forwardRef<HTMLDivElement, CVDocumentProps>(
   function CVDocument({ cv, theme }, ref) {

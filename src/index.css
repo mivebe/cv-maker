@@ -1,7 +1,7 @@
 @import 'tailwindcss';
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
-@import "@fontsource-variable/geist";
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
+@import '@fontsource-variable/geist';
 /*
  ---break---
  */
@@ -164,6 +164,31 @@ body {
 /*
  ---break---
  */
+/*
+ * Hover link between the variant editor's controls and the part of the document
+ * they produce (see components/variant/highlight.tsx). Scoped to `.hl-surface`
+ * - a pane of the editor - so it can never follow the document into the print
+ * clone, whose root is the document itself. The accent is fixed rather than
+ * themed: it has to read both on the app chrome and on white paper.
+ */
+@media screen {
+  .hl-surface [data-hl-id] {
+    transition:
+      outline-color 120ms ease,
+      background-color 120ms ease;
+    /* The outline is always there, only its colour changes: it draws outside
+       the box, so a node lighting up never reflows the page it sits on. Radius
+       is left to the node itself - the outline follows it. */
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+  }
+
+  .hl-surface [data-hl='true'] {
+    outline-color: oklch(0.62 0.19 258);
+    background-color: oklch(0.62 0.19 258 / 8%);
+  }
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

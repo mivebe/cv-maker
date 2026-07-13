@@ -10,13 +10,26 @@ import { IncludeOverrideEditor } from '../components/variant/IncludeOverrideEdit
 import { ThemeEditor } from '../components/variant/ThemeEditor'
 import { ExportButton } from '../components/variant/ExportButton'
 import { AtsPanel } from '../components/variant/AtsPanel'
+import {
+  HighlightProvider,
+  useHighlightSurface,
+} from '../components/variant/highlight'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 export function VariantEditorPage() {
+  return (
+    <HighlightProvider>
+      <VariantEditor />
+    </HighlightProvider>
+  )
+}
+
+function VariantEditor() {
   const { id } = useParams<{ id: string }>()
   const variant = useStore((s) => s.variants.find((v) => v.id === id))
   const profile = useStore((s) => s.profile)
   const docRef = useRef<HTMLDivElement>(null)
+  const surface = useHighlightSurface()
 
   if (!variant) {
     return (
@@ -56,9 +69,15 @@ export function VariantEditorPage() {
         />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2 lg:gap-6">
+      {/* Each pane scrolls on its own from lg up, so the controls and the page
+          they describe can be read side by side without dragging one another. */}
+      <div className="grid gap-4 lg:h-[calc(100vh-12rem)] lg:grid-cols-2 lg:gap-6">
         {/* Controls */}
-        <Tabs defaultValue="content" className="no-print min-w-0 space-y-4">
+        <Tabs
+          defaultValue="content"
+          className="hl-surface no-print min-w-0 space-y-4 lg:h-full lg:min-h-0 lg:overflow-y-auto lg:pr-2"
+          {...surface}
+        >
           <TabsList className="w-full sm:w-fit">
             <TabsTrigger value="content">Content</TabsTrigger>
             <TabsTrigger value="design">Design</TabsTrigger>
@@ -79,7 +98,10 @@ export function VariantEditorPage() {
         </Tabs>
 
         {/* Live preview */}
-        <div className="min-w-0 lg:sticky lg:top-20 lg:self-start">
+        <div
+          className="hl-surface min-w-0 lg:h-full lg:min-h-0 lg:overflow-y-auto lg:pr-1"
+          {...surface}
+        >
           <div className="no-print mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
             Live preview
           </div>

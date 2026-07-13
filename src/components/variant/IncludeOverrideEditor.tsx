@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { cn } from '@/lib/utils'
 import { OverrideList, OverrideText } from './OverrideField'
+import { useHighlightNode } from './highlight'
 
 /** A single toggleable master item with an expandable per-variant override panel. */
 function ItemRow({
@@ -23,6 +24,7 @@ function ItemRow({
   children?: React.ReactNode
 }) {
   const setVariantInclude = useStore((s) => s.setVariantInclude)
+  const hl = useHighlightNode()
   const [open, setOpen] = useState(false)
   const included = variant.include[itemId] !== false
   const overridden =
@@ -30,7 +32,7 @@ function ItemRow({
     Object.keys(variant.overrides[itemId]).length > 0
 
   return (
-    <div className="rounded-md border">
+    <div className="rounded-md border" {...hl(itemId)}>
       <div className="flex items-center gap-2 px-3 py-2 sm:gap-3">
         <Checkbox
           className="shrink-0"
