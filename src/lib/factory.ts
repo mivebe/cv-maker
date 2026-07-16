@@ -1,18 +1,24 @@
 import type {
   Branding,
+  ChartItem,
   CustomItem,
-  CustomSection,
   CVVariant,
   EducationItem,
   ExperienceItem,
+  LanguageItem,
   Link,
   MasterProfile,
   ProjectItem,
+  Section,
+  SectionItem,
+  SectionKind,
   SkillGroup,
+  SliderItem,
+  TitleItem,
   TotalItem,
 } from '../schema'
 import { newId } from './id'
-import { allSectionKeys } from './sections'
+import { KIND_LABELS } from './sections'
 import { themeFromPreset } from '../cv/themes'
 
 export function emptyBranding(): Branding {
@@ -46,12 +52,7 @@ export function emptyProfile(): MasterProfile {
       photo: '',
       photoAlt: '',
     },
-    experience: [],
-    education: [],
-    skills: [],
-    projects: [],
-    custom: [],
-    totals: [],
+    sections: [],
     branding: emptyBranding(),
   }
 }
@@ -120,19 +121,57 @@ export function newCustomItem(): CustomItem {
   }
 }
 
-export function newCustomSection(): CustomSection {
-  return {
-    id: newId('csec'),
-    title: 'New Section',
-    items: [],
-    subtitle: '',
-    display: 'items',
-    columns: 1,
-  }
-}
-
 export function newTotal(): TotalItem {
   return { id: newId('tot'), label: '', value: '', icon: '' }
+}
+
+export function newChartItem(): ChartItem {
+  return { id: newId('cht'), title: '', value: 0, icon: '' }
+}
+
+export function newSliderItem(): SliderItem {
+  return { id: newId('sld'), title: '', subtitle: '', value: 1 }
+}
+
+export function newTitleItem(): TitleItem {
+  return { id: newId('ttl'), icon: '', title: '', subtitle: '' }
+}
+
+export function newLanguageItem(): LanguageItem {
+  return { id: newId('lng'), name: '', level: 1 }
+}
+
+/**
+ * Item factory per kind, so the store's generic `addItem(sectionId)` can mint
+ * the right item shape from the section it lands in. `banner` has no items.
+ */
+export const ITEM_FACTORIES: Record<
+  SectionKind,
+  () => SectionItem | null
+> = {
+  experience: newExperience,
+  education: newEducation,
+  skills: newSkillGroup,
+  projects: newProject,
+  totals: newTotal,
+  items: newCustomItem,
+  banner: () => null,
+  chart: newChartItem,
+  sliders: newSliderItem,
+  titleList: newTitleItem,
+  languages: newLanguageItem,
+}
+
+/** A fresh section of the given kind, titled with the kind's default label. */
+export function newSection(kind: SectionKind): Section {
+  return {
+    id: newId('sec'),
+    kind,
+    title: KIND_LABELS[kind],
+    subtitle: '',
+    options: {},
+    items: [],
+  } as Section
 }
 
 export function newVariant(
@@ -144,10 +183,12 @@ export function newVariant(
     name,
     targetRole: '',
     include: {},
-    sectionOrder: allSectionKeys(profile),
+    sectionOrder: profile.sections.map((s) => s.id),
     hiddenSections: [],
     sectionTitles: {},
     sectionLayout: {},
+    optionDefaults: {},
+    sectionOptions: {},
     overrides: {},
     basicsOverride: {},
     theme: themeFromPreset('showcase'),

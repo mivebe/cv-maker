@@ -1,8 +1,10 @@
+import { useState } from 'react'
 import {
   ChevronDown,
   ChevronUp,
   Eye,
   EyeOff,
+  Settings2,
   SquareSplitVertical,
 } from 'lucide-react'
 import type { CVVariant } from '../../schema'
@@ -14,9 +16,11 @@ import { cn } from '@/lib/utils'
 import {
   defaultPlacement,
   reconcileSectionOrder,
+  sectionById,
   sectionLabel,
 } from '../../lib/sections'
 import { useHighlightNode } from './highlight'
+import { PartialOptionsFields } from './VariantOptionsEditor'
 
 const COLUMNS = [
   { label: 'Main', value: 'main' as const },
@@ -30,6 +34,11 @@ export function SectionOrderEditor({ variant }: { variant: CVVariant }) {
   const toggleSectionHidden = useStore((s) => s.toggleSectionHidden)
   const setSectionPlacement = useStore((s) => s.setSectionPlacement)
   const setSectionTitle = useStore((s) => s.setSectionTitle)
+  const setVariantSectionOptions = useStore((s) => s.setVariantSectionOptions)
+  const clearVariantSectionOption = useStore(
+    (s) => s.clearVariantSectionOption,
+  )
+  const [optionsFor, setOptionsFor] = useState<string | null>(null)
 
   const hl = useHighlightNode()
 
@@ -47,16 +56,19 @@ export function SectionOrderEditor({ variant }: { variant: CVVariant }) {
       }
     >
       <ul className="divide-y">
-        {order.map((key, i) => {
-          const isHidden = hidden.has(key)
-          const placement = variant.sectionLayout[key] ?? defaultPlacement(key)
+        {order.map((id, i) => {
+          const section = sectionById(profile, id)
+          if (!section) return null
+          const label = sectionLabel(section)
+          const isHidden = hidden.has(id)
+          const placement =
+            variant.sectionLayout[id] ?? defaultPlacement(profile, id)
+          const overrides = variant.sectionOptions[id] ?? {}
+          const hasOverrides = Object.keys(overrides).length > 0
+          const showOptions = optionsFor === id
 
           return (
-            <li
-              key={key}
-              className="space-y-2 rounded-md px-1 py-3"
-              {...hl(key)}
-            >
+            <li key={id} className="space-y-2 rounded-md px-1 py-3" {...hl(id)}>
               <div className="flex items-center gap-1 sm:gap-2">
                 {/* The heading text is per-variant: "Portfolios" for a human,
                     "Projects" for a parser. Empty falls back to the default. */}
@@ -65,11 +77,11 @@ export function SectionOrderEditor({ variant }: { variant: CVVariant }) {
                     'h-8 min-w-0 flex-1 text-sm font-medium',
                     isHidden && 'text-muted-foreground line-through',
                   )}
-                  value={variant.sectionTitles[key] ?? ''}
-                  placeholder={sectionLabel(key, profile)}
-                  aria-label={`Heading for ${sectionLabel(key, profile)}`}
+                  value={variant.sectionTitles[id] ?? ''}
+                  placeholder={label}
+                  aria-label={`Heading for ${label}`}
                   onChange={(e) =>
-                    setSectionTitle(variant.id, key, e.target.value)
+                    setSectionTitle(variant.id, id, e.target.value)
                   }
                 />
                 <Button
@@ -77,7 +89,7 @@ export function SectionOrderEditor({ variant }: { variant: CVVariant }) {
                   size="sm"
                   className="shrink-0"
                   aria-label={isHidden ? 'Show section' : 'Hide section'}
-                  onClick={() => toggleSectionHidden(variant.id, key)}
+                  onClick={() => toggleSectionHidden(variant.id, id)}
                 >
                   {isHidden ? <Eye /> : <EyeOff />}
                   <span className="hidden sm:inline">
@@ -87,7 +99,7 @@ export function SectionOrderEditor({ variant }: { variant: CVVariant }) {
                 <Button
                   variant="ghost"
                   size="icon-sm"
-                  onClick={() => moveVariantSection(variant.id, key, 'up')}
+                  onClick={() => moveVariantSection(variant.id, id, 'up')}
                   disabled={i === 0}
                   aria-label="Move up"
                   title="Move up"
@@ -97,7 +109,7 @@ export function SectionOrderEditor({ variant }: { variant: CVVariant }) {
                 <Button
                   variant="ghost"
                   size="icon-sm"
-                  onClick={() => moveVariantSection(variant.id, key, 'down')}
+                  onClick={() => moveVariantSection(variant.id, id, 'down')}
                   disabled={i === order.length - 1}
                   aria-label="Move down"
                   title="Move down"
@@ -118,7 +130,7 @@ export function SectionOrderEditor({ variant }: { variant: CVVariant }) {
                         }
                         className="h-7 px-2 text-xs"
                         onClick={() =>
-                          setSectionPlacement(variant.id, key, {
+                          setSectionPlacement(variant.id, id, {
                             column: c.value,
                           })
                         }
@@ -132,7 +144,7 @@ export function SectionOrderEditor({ variant }: { variant: CVVariant }) {
                     className="h-7 gap-1.5 px-2 text-xs"
                     title="Start a new page before this section"
                     onClick={() =>
-                      setSectionPlacement(variant.id, key, {
+                      setSectionPlacement(variant.id, id, {
                         pageBreakBefore: !placement.pageBreakBefore,
                       })
                     }
@@ -140,6 +152,39 @@ export function SectionOrderEditor({ variant }: { variant: CVVariant }) {
                     <SquareSplitVertical className="size-3.5" />
                     Page break
                   </Button>
+                  <Button
+                    size="sm"
+                    variant={
+                      showOptions || hasOverrides ? 'secondary' : 'ghost'
+                    }
+                    className="h-7 gap-1.5 px-2 text-xs"
+                    title="Per-section option overrides (beat the variant's policy)"
+                    onClick={() => setOptionsFor(showOptions ? null : id)}
+                  >
+                    <Settings2 className="size-3.5" />
+                    Options
+                    {hasOverrides && ` (${Object.keys(overrides).length})`}
+                  </Button>
+                </div>
+              )}
+
+              {!isHidden && showOptions && (
+                <div className="rounded-lg border bg-muted/40 p-3">
+                  <p className="mb-3 text-xs text-muted-foreground">
+                    Overrides for this section only, in this variant only. They
+                    win over the section's own settings AND the variant's
+                    policy.
+                  </p>
+                  <PartialOptionsFields
+                    value={overrides}
+                    inheritLabel="No override"
+                    set={(patch) =>
+                      setVariantSectionOptions(variant.id, id, patch)
+                    }
+                    clear={(key) =>
+                      clearVariantSectionOption(variant.id, id, key)
+                    }
+                  />
                 </div>
               )}
             </li>

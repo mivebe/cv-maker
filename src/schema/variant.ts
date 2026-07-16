@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { sectionOptionsSchema } from './profile'
 
 /**
  * A CVVariant references the master profile (it does not copy it). It records
@@ -121,16 +122,10 @@ export const themeConfigSchema = z.object({
   bulletColor: z.string().default(''),
   /** Indent of the bullet list, in em of body text. */
   bulletIndent: z.number().default(1.1),
-  /** Dashed separator between items in a section. */
-  itemDivider: z.boolean().default(true),
   /** Color of item titles (role / project name). Empty = fall back to accent. */
   titleColor: z.string().default(''),
   linkColor: z.string().default(''),
   badgeColor: z.string().default('#16a34a'),
-  /** Columns in the TOTALS grid. */
-  totalsColumns: z.number().default(4),
-  /** Vertical rule between the columns of the TOTALS grid. */
-  totalsDivider: z.boolean().default(true),
 
   // ---- issuer branding ----
   // Which branding slots this variant draws. The content lives on the profile
@@ -178,21 +173,32 @@ export const variantSchema = z.object({
    * every variant by default). Set false to exclude an item from this variant.
    */
   include: z.record(z.string(), z.boolean()),
-  /** Ordered list of section keys (see sectionKeys in lib). */
+  /** Ordered list of section ids (see profile.sections). */
   sectionOrder: z.array(z.string()),
-  /** Section keys hidden entirely in this variant. */
+  /** Section ids hidden entirely in this variant. */
   hiddenSections: z.array(z.string()),
   /**
-   * sectionKey -> heading text, overriding the default label ("Skills" ->
+   * sectionId -> heading text, overriding the section's own title ("Skills" ->
    * "Technical Skills"). Per-variant, because the right wording depends on who
    * is reading: a human likes "Portfolios", an ATS wants "Projects".
    */
   sectionTitles: z.record(z.string(), z.string()).default({}),
   /**
-   * sectionKey -> placement. Absent keys fall back to a per-kind default
+   * sectionId -> placement. Absent ids fall back to a per-kind default
    * (skills/education to the side column), so old variants keep their layout.
    */
   sectionLayout: z.record(z.string(), sectionPlacementSchema).default({}),
+  /**
+   * Option overrides applied to every section - this is how an ATS variant
+   * strips decoration in one move. Deliberately outranks the section's own
+   * options in the resolve merge: it is a policy, and a policy any section
+   * could dodge by simply having a value set would be no policy at all.
+   */
+  optionDefaults: sectionOptionsSchema.partial().default({}),
+  /** sectionId -> option overrides, applied on top of optionDefaults. */
+  sectionOptions: z
+    .record(z.string(), sectionOptionsSchema.partial())
+    .default({}),
   /** itemId -> shallow field overrides applied on top of the master item. */
   overrides: z.record(z.string(), z.record(z.string(), z.unknown())),
   /** Tailored headline/summary/location that override the master basics for this variant. */

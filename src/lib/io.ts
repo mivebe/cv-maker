@@ -33,6 +33,21 @@ export function importJson(text: string): ImportResult {
     return { ok: false, error: 'File is not valid JSON.' }
   }
 
+  // A v1 export (the fixed-shape profile: named arrays, no `sections`) would
+  // otherwise parse as an EMPTY profile once `sections` defaults to [] - so it
+  // must be rejected loudly, not imported silently.
+  const rawObj = raw as { version?: unknown; profile?: { sections?: unknown } }
+  if (
+    rawObj?.version === 1 ||
+    (rawObj?.profile && !Array.isArray(rawObj.profile.sections))
+  ) {
+    return {
+      ok: false,
+      error:
+        'This file uses the old v1 format (one array per section type), which this version no longer reads. Re-create the content, or re-export from the app version that wrote it.',
+    }
+  }
+
   const parsed = appDataSchema.safeParse(raw)
   if (!parsed.success) {
     const first = parsed.error.issues[0]

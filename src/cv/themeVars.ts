@@ -33,8 +33,6 @@ export function themeToStyle(theme: ThemeConfig): CSSProperties {
     '--cv-avatar-ring-color': theme.avatarRingColor,
     '--cv-avatar-backdrop': theme.avatarBackdrop || 'transparent',
 
-    '--cv-totals-cols': String(theme.totalsColumns),
-
     '--cv-bullet': theme.bulletColor || 'var(--cv-muted)',
     '--cv-bullet-indent': `${theme.bulletIndent}em`,
 
@@ -59,10 +57,8 @@ export function themeDataAttrs(theme: ThemeConfig) {
     'data-chip-fill': theme.chipFill,
     'data-bullets': theme.bulletStyle,
     'data-skills': theme.skillStyle,
-    'data-divider': String(theme.itemDivider),
     'data-header-align': theme.headerAlign,
     'data-avatar-pos': theme.avatarPosition,
     'data-avatar-gray': String(theme.avatarGrayscale),
-    'data-totals-divider': String(theme.totalsDivider),
   }
 }

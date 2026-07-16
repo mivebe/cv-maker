@@ -1,161 +1,97 @@
-import type { ComponentType, ReactNode } from 'react'
+import { useState, type ComponentType } from 'react'
+import { Plus } from 'lucide-react'
 import { BasicsEditor } from '../components/editors/BasicsEditor'
-import { ExperienceEditor } from '../components/editors/ExperienceEditor'
-import { EducationEditor } from '../components/editors/EducationEditor'
-import { SkillsEditor } from '../components/editors/SkillsEditor'
-import { ProjectsEditor } from '../components/editors/ProjectsEditor'
-import { TotalsEditor } from '../components/editors/TotalsEditor'
+import { BannerEditor } from '../components/editors/BannerEditor'
 import { BrandingEditor } from '../components/editors/BrandingEditor'
+import { ChartEditor } from '../components/editors/ChartEditor'
+import { CustomItemsEditor } from '../components/editors/CustomItemsEditor'
+import { EducationEditor } from '../components/editors/EducationEditor'
+import { ExperienceEditor } from '../components/editors/ExperienceEditor'
+import { LanguagesEditor } from '../components/editors/LanguagesEditor'
+import { ProjectsEditor } from '../components/editors/ProjectsEditor'
+import { SectionEditorCard } from '../components/editors/SectionShell'
+import { SkillsEditor } from '../components/editors/SkillsEditor'
+import { SliderListEditor } from '../components/editors/SliderListEditor'
+import { TitleListEditor } from '../components/editors/TitleListEditor'
+import { TotalsEditor } from '../components/editors/TotalsEditor'
+import { Button } from '@/components/ui/button'
 import {
-  AddCustomSectionButton,
-  CustomSectionCard,
-} from '../components/editors/CustomSectionsEditor'
-import {
-  useResponsiveColumns,
-  type ColumnCount,
-} from '../hooks/useResponsiveColumns'
-import type { CustomSection, MasterProfile } from '../schema/profile'
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import type { SectionKind } from '../schema'
+import { KIND_LABELS, SECTION_KINDS } from '../lib/sections'
 import { useStore } from '../store/useStore'
 
-type SectionKey =
-  | 'basics'
-  | 'experience'
-  | 'education'
-  | 'skills'
-  | 'projects'
-  | 'totals'
-  | 'branding'
-
-const SECTIONS: Record<SectionKey, ComponentType> = {
-  basics: BasicsEditor,
+/**
+ * The registry is keyed by KIND, not instance - that is what makes a new
+ * section type cheap: one schema member, one renderer, one editor, one row
+ * here.
+ */
+const EDITORS: Record<SectionKind, ComponentType<{ id: string }>> = {
   experience: ExperienceEditor,
   education: EducationEditor,
   skills: SkillsEditor,
   projects: ProjectsEditor,
   totals: TotalsEditor,
-  branding: BrandingEditor,
+  items: CustomItemsEditor,
+  banner: BannerEditor,
+  chart: ChartEditor,
+  sliders: SliderListEditor,
+  titleList: TitleListEditor,
+  languages: LanguagesEditor,
 }
 
-/**
- * Which sections live in which column, per column count. The assignment is
- * fixed rather than height-balanced on purpose: these are forms, and a card
- * that hops columns while you type is worse than a slightly uneven column.
- * Experience is by far the tallest section, so it gets a column to itself as
- * soon as there are three.
- */
-const COLUMN_LAYOUT: Record<ColumnCount, SectionKey[][]> = {
-  1: [
-    [
-      'basics',
-      'experience',
-      'education',
-      'skills',
-      'projects',
-      'totals',
-      'branding',
-    ],
-  ],
-  2: [
-    ['basics', 'experience'],
-    ['skills', 'education', 'projects', 'totals', 'branding'],
-  ],
-  3: [
-    ['basics', 'skills', 'totals'],
-    ['experience'],
-    ['education', 'projects', 'branding'],
-  ],
+/** Label for each kind's add-item button; banner has no items. */
+const ADD_LABELS: Partial<Record<SectionKind, string>> = {
+  experience: 'Add role',
+  education: 'Add education',
+  skills: 'Add group',
+  projects: 'Add project',
+  totals: 'Add total',
+  items: 'Add item',
+  chart: 'Add slice',
+  sliders: 'Add slider',
+  titleList: 'Add entry',
+  languages: 'Add language',
 }
 
-/**
- * Rough card height in "form rows". Only the ratios matter — these numbers feed
- * the packer below, never the DOM. They count what actually grows a card (items,
- * highlights, tags), so a card only moves when content is added or removed, not
- * while you type into it.
- */
-function builtinWeight(key: SectionKey, profile: MasterProfile): number {
-  switch (key) {
-    case 'basics':
-      return 14 + profile.basics.links.length * 2
-    case 'experience':
-      return (
-        2 +
-        sum(profile.experience, (e) => 9 + e.highlights.length + e.tags.length)
-      )
-    case 'education':
-      return 2 + profile.education.length * 7
-    case 'skills':
-      return 2 + sum(profile.skills, (g) => 3 + g.skills.length)
-    case 'projects':
-      return 2 + sum(profile.projects, (p) => 7 + p.highlights.length)
-    case 'totals':
-      return 2 + profile.totals.length * 2
-    // Collapsed to a single checkbox until it is switched on.
-    case 'branding':
-      return profile.branding.enabled ? 22 : 3
-  }
-}
-
-function customWeight(section: CustomSection): number {
-  if (section.display === 'banner') return 4
-  return 3 + sum(section.items, (i) => 9 + i.highlights.length + i.tags.length)
-}
-
-function sum<T>(items: T[], weight: (item: T) => number): number {
-  return items.reduce((total, item) => total + weight(item), 0)
-}
-
-/**
- * Custom sections go to whichever column is shortest so far. The built-in
- * sections are placed by the fixed table above (a form that reshuffles itself is
- * worse than an uneven column), so custom sections are the only slack the page
- * has — and they are the ones that vary wildly in size. Filling the shortest
- * column means the experience column gets its share once enough custom sections
- * pile up, instead of every one of them landing beside it.
- */
-function packCustomSections(
-  custom: CustomSection[],
-  columns: ColumnCount,
-  heights: number[],
-): number[] {
-  const running = [...heights]
-  return custom.map((section) => {
-    if (columns === 1) return 0
-    let target = 0
-    for (let i = 1; i < running.length; i++) {
-      if (running[i] < running[target]) target = i
-    }
-    running[target] += customWeight(section)
-    return target
-  })
+function AddSectionButton() {
+  const addSection = useStore((s) => s.addSection)
+  const [open, setOpen] = useState(false)
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="default">
+          <Plus />
+          Add section
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-56 p-1.5">
+        <div className="grid gap-0.5">
+          {SECTION_KINDS.map((kind) => (
+            <Button
+              key={kind}
+              variant="ghost"
+              className="justify-start"
+              onClick={() => {
+                addSection(kind)
+                setOpen(false)
+              }}
+            >
+              {KIND_LABELS[kind]}
+            </Button>
+          ))}
+        </div>
+      </PopoverContent>
+    </Popover>
+  )
 }
 
 export function ProfilePage() {
-  const columns = useResponsiveColumns()
-  const profile = useStore((s) => s.profile)
-  const custom = profile.custom
-
-  const layout: ReactNode[][] = COLUMN_LAYOUT[columns].map((column) =>
-    column.map((key) => {
-      const Editor = SECTIONS[key]
-      return <Editor key={key} />
-    }),
-  )
-
-  const heights = COLUMN_LAYOUT[columns].map((column) =>
-    sum(column, (key) => builtinWeight(key, profile)),
-  )
-
-  packCustomSections(custom, columns, heights).forEach((column, i) => {
-    const section = custom[i]
-    layout[column].push(
-      <CustomSectionCard
-        key={section.id}
-        section={section}
-        index={i}
-        total={custom.length}
-      />,
-    )
-  })
+  const sections = useStore((s) => s.profile.sections)
+  const addItem = useStore((s) => s.addItem)
 
   return (
     <div className="space-y-6">
@@ -170,19 +106,40 @@ export function ProfilePage() {
           </p>
         </div>
         <div className="shrink-0">
-          <AddCustomSectionButton />
+          <AddSectionButton />
         </div>
       </div>
 
-      <div
-        className="grid items-start gap-4 sm:gap-6"
-        style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}
-      >
-        {layout.map((column, i) => (
-          <div key={i} className="flex min-w-0 flex-col gap-4 sm:gap-6">
-            {column}
-          </div>
-        ))}
+      {/* One ordered list of cards, in profile.sections order: what "any
+          number of any kind, reorderable" looks like. Basics and Branding are
+          pinned - they are not sections. */}
+      <div className="mx-auto flex max-w-4xl flex-col gap-4 sm:gap-6">
+        <BasicsEditor />
+
+        {sections.map((section, i) => {
+          const Editor = EDITORS[section.kind]
+          const addLabel = ADD_LABELS[section.kind]
+          return (
+            <SectionEditorCard
+              key={section.id}
+              section={section}
+              index={i}
+              total={sections.length}
+              action={
+                addLabel && (
+                  <Button variant="ghost" onClick={() => addItem(section.id)}>
+                    <Plus />
+                    {addLabel}
+                  </Button>
+                )
+              }
+            >
+              <Editor id={section.id} />
+            </SectionEditorCard>
+          )
+        })}
+
+        <BrandingEditor />
       </div>
     </div>
   )

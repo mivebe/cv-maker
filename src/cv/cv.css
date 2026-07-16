@@ -95,6 +95,11 @@
 .cv-root[data-icons='false'] .cv-icon {
   display: none;
 }
+/* Per-section icon mute (options.showIcons). Subtractive only: it can hide a
+   section's icons under a theme that shows them, never the reverse. */
+.cv-section[data-icons='false'] .cv-icon {
+  display: none;
+}
 /* The issuer's logo is branding, not content decoration. The branding slots
    already own their own visibility (theme.brandingHeader / -Footer /
    -Watermark), so the content icon switch must not reach into them. */
@@ -431,7 +436,9 @@
 .cv-bullets li {
   break-inside: avoid;
 }
-.cv-root[data-divider='true'] .cv-item + .cv-item {
+/* Row dividers are a per-section option now (options.rowDividers), not a
+   document-wide theme token. */
+.cv-section[data-dividers='true'] .cv-item + .cv-item {
   border-top: 1px dashed var(--cv-border);
   padding-top: var(--cv-gap);
 }
@@ -630,7 +637,7 @@
   margin-bottom: 0;
 }
 /* A divider between stacked items would misfire across grid cells. */
-.cv-root[data-divider='true'] .cv-custom-grid .cv-item + .cv-item {
+.cv-section[data-dividers='true'] .cv-custom-grid .cv-item + .cv-item {
   border-top: none;
   padding-top: 0;
 }
@@ -693,7 +700,7 @@
 .cv-total[data-row-end='true'] {
   padding-right: 0;
 }
-.cv-root[data-totals-divider='true'] .cv-total:not([data-row-start='true']) {
+.cv-section[data-dividers='true'] .cv-total:not([data-row-start='true']) {
   border-left: 1px solid var(--cv-border);
 }
 .cv-total-label {
@@ -706,6 +713,266 @@
 .cv-total-value {
   font-weight: 700;
   color: var(--cv-accent);
+}
+
+/* Auto-fit list grids (title list, sliders, languages) ---------------------- */
+/*
+ * Every new section reflows by width, with no token and no column count to
+ * pick: `auto-fit` reads the actual width. The side column is narrow, so it
+ * yields one column; the main column yields two or three. Drag a section
+ * between columns and it reflows on its own.
+ */
+.cv-list-grid {
+  display: grid;
+  gap: calc(var(--cv-gap) * 0.6) var(--cv-column-gap);
+  grid-template-columns: repeat(auto-fit, minmax(var(--cv-list-min, 13em), 1fr));
+}
+/*
+ * Row dividers in an auto-fit grid: a border between "stacked" cells misfires
+ * across columns (the same hazard the custom grid documents), so this is the
+ * cheap version - correct in a single-column (side) placement, and in a
+ * multi-column grid the first row keeps borders off only on its first cell.
+ */
+.cv-section[data-dividers='true'] .cv-list-grid > * + * {
+  border-top: 1px dashed var(--cv-border);
+  padding-top: calc(var(--cv-gap) * 0.5);
+}
+
+/* Title list ---------------------------------------------------------------- */
+.cv-titleitem {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5em;
+  break-inside: avoid;
+}
+.cv-titleitem > .cv-icon,
+.cv-titleitem > .cv-icon-mono {
+  margin-top: 0.15em;
+}
+.cv-titleitem-body {
+  min-width: 0;
+}
+.cv-titleitem-title {
+  display: block;
+  font-weight: 700;
+  color: var(--cv-title);
+  font-size: 0.95em;
+}
+.cv-titleitem-subtitle {
+  display: block;
+  font-size: 0.8em;
+  color: var(--cv-muted);
+}
+
+/* Sliders -------------------------------------------------------------------- */
+.cv-slider-row {
+  break-inside: avoid;
+}
+.cv-slider-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5em;
+  margin-bottom: 0.3em;
+}
+.cv-slider-title {
+  font-weight: 600;
+  font-size: 0.92em;
+}
+.cv-slider-subtitle {
+  font-size: 0.78em;
+  color: var(--cv-muted);
+}
+.cv-slider-track {
+  position: relative;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--cv-border);
+}
+.cv-slider-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 999px;
+  background: var(--cv-accent);
+}
+.cv-slider-dot {
+  position: absolute;
+  top: 50%;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--cv-accent);
+  box-shadow: 0 0 0 2px #fff;
+  transform: translate(-50%, -50%);
+}
+.cv-slider-labels {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5em;
+  margin-top: 0.35em;
+  font-size: 0.72em;
+  color: var(--cv-muted);
+}
+/* Slider rows want a hair more breathing room than the grid default. */
+.cv-sliders {
+  row-gap: calc(var(--cv-gap) * 0.75);
+}
+
+/* Languages ------------------------------------------------------------------ */
+.cv-language {
+  break-inside: avoid;
+}
+.cv-language-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6em;
+}
+.cv-language-name {
+  font-weight: 600;
+  font-size: 0.92em;
+}
+.cv-language-stage {
+  font-size: 0.82em;
+  color: var(--cv-muted);
+}
+.cv-language-notches {
+  display: inline-flex;
+  gap: 3px;
+}
+.cv-language-notch {
+  width: 0.9em;
+  height: 0.42em;
+  border-radius: 2px;
+  background: var(--cv-border);
+}
+.cv-language-notch[data-filled='true'] {
+  background: var(--cv-accent);
+}
+.cv-languages[data-mode='slider'] .cv-language-row {
+  margin-bottom: 0.35em;
+}
+.cv-language-current {
+  color: var(--cv-text);
+  font-weight: 600;
+}
+
+/* Chart ------------------------------------------------------------------------
+ * A two-up auto-fit grid: narrow (side column) stacks the drawing above the
+ * legend, wide (main column) puts them side by side - same principle as
+ * .cv-list-grid, no token. The whole box is unbreakable (see pagefit ATOMS):
+ * a chart split from its legend is meaningless.
+ */
+.cv-chart {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10em, 1fr));
+  gap: calc(var(--cv-gap) * 0.75) var(--cv-column-gap);
+  align-items: center;
+  break-inside: avoid;
+}
+.cv-chart-svg {
+  display: block;
+  width: 100%;
+  max-width: 34mm;
+  margin: 0 auto;
+}
+.cv-chart-slice-label {
+  font-size: 9px;
+  font-weight: 700;
+  fill: #fff;
+}
+.cv-chart-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35em;
+  min-width: 0;
+}
+.cv-chart-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  font-size: 0.9em;
+}
+.cv-chart-swatch {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25em;
+  height: 1.25em;
+  border-radius: 3px;
+  color: #fff;
+  font-size: 0.72em;
+  font-weight: 700;
+}
+.cv-chart-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.cv-chart-value {
+  font-weight: 700;
+  color: var(--cv-accent);
+}
+/* Vertical bars: columns share the row; height encodes the value. */
+.cv-chart-bars {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-around;
+  gap: 0.6em;
+  height: 26mm;
+}
+.cv-chart-barcol {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.25em;
+  flex: 1;
+  height: 100%;
+  min-width: 0;
+}
+.cv-chart-bar {
+  width: 70%;
+  max-width: 2em;
+  border-radius: 2px 2px 0 0;
+}
+.cv-chart-barvalue {
+  font-size: 0.72em;
+  color: var(--cv-muted);
+}
+.cv-chart-barmark {
+  font-size: 0.72em;
+  font-weight: 700;
+  color: var(--cv-muted);
+  min-height: 1em;
+}
+/* Horizontal bars: plain divs, the print-proof fallback shape. */
+.cv-chart-hbars {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45em;
+}
+.cv-chart-hbarrow {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+}
+.cv-chart-hbartrack {
+  flex: 1;
+  height: 0.72em;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--cv-border) 45%, transparent);
+}
+.cv-chart-hbar {
+  height: 100%;
+  border-radius: 2px;
+}
+/* The chart section never draws the generic row dividers. */
+.cv-section[data-kind='chart'][data-dividers='true'] .cv-chart-row + .cv-chart-row {
+  border-top: none;
+  padding-top: 0;
 }
 
 /* Print ------------------------------------------------------------------- */

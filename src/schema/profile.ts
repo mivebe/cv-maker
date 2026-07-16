@@ -101,24 +101,6 @@ export const customItemSchema = z.object({
   tags: z.array(z.string()).default([]),
 })
 
-export const customSectionSchema = z.object({
-  id: z.string(),
-  title: z.string(),
-  items: z.array(customItemSchema),
-  /** Small line under the section title. */
-  subtitle: z.string().default(''),
-  /**
-   * `items` renders a normal section; `banner` renders just the title/subtitle
-   * as a centered full-width heading (used for a page-2 title block).
-   */
-  display: z.enum(['items', 'banner']).default('items'),
-  /**
-   * Lay the items out in this many equal columns (a compact grid for short
-   * entries like languages or awards). 1 = the default full-width stack.
-   */
-  columns: z.number().default(1),
-})
-
 /** One cell of the TOTALS grid: an icon, a label and a value ("7y"). */
 export const totalItemSchema = z.object({
   id: z.string(),
@@ -126,6 +108,148 @@ export const totalItemSchema = z.object({
   value: z.string(),
   icon: iconRef,
 })
+
+/** One chart slice/bar. Legend rows are marker + title + value, no subtitle. */
+export const chartItemSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  value: z.number().default(0),
+  icon: iconRef,
+})
+
+export const sliderItemSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  subtitle: z.string().default(''),
+  /** 1..options.sliderSteps. Clamped at render. */
+  value: z.number().default(1),
+})
+
+export const titleItemSchema = z.object({
+  id: z.string(),
+  icon: iconRef,
+  title: z.string(),
+  subtitle: z.string().default(''),
+})
+
+/** The four stages a language can be at; see LANGUAGE_STAGES in lib/sections. */
+export const languageItemSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  /** 1..4, indexes LANGUAGE_STAGES. */
+  level: z.number().min(1).max(4).default(1),
+})
+
+/**
+ * Per-section display settings. One flat bag rather than a per-kind union,
+ * because the variant override layers need `.partial()` and `.partial()` on a
+ * union is awkward. Irrelevant keys are inert: a `languages` section carries a
+ * `chartType` it never reads.
+ *
+ * Stored sparse (see `sectionBaseSchema.options`): a section only records what
+ * the user explicitly set, and the kind's baseline (KIND_OPTION_DEFAULTS in
+ * lib/sections.ts) fills the rest at resolve time. That is what lets a
+ * variant's `optionDefaults` policy layer sit between the two.
+ */
+export const sectionOptionsSchema = z.object({
+  // --- shared, honoured by any kind that has the field ---
+  /** Hide the summary / details / description text. */
+  showDescription: z.boolean().default(true),
+  /** Hide the bullet list. */
+  showHighlights: z.boolean().default(true),
+  /** `below` keeps the date in the meta row; `right` moves it to the title row. */
+  datePosition: z.enum(['below', 'right']).default('below'),
+  /** Rule between stacked rows (was theme.itemDivider / theme.totalsDivider). */
+  rowDividers: z.boolean().default(false),
+  /** Gated by theme.showIcons; this can additionally suppress just this section. */
+  showIcons: z.boolean().default(true),
+  /** Lay items out in this many equal columns (was customSection.columns). */
+  columns: z.number().default(1),
+
+  // --- chart ---
+  chartType: z.enum(['pie', 'donut', 'bar', 'hbar']).default('pie'),
+  chartMarker: z.enum(['letter', 'number', 'none']).default('letter'),
+  chartPalette: z.enum(['accent', 'categorical']).default('accent'),
+  chartShowValue: z.boolean().default(true),
+  /** `auto` = percent of the section total for pie/donut, raw for bar/hbar. */
+  chartValueFormat: z.enum(['auto', 'percent', 'raw']).default('auto'),
+
+  // --- sliders ---
+  sliderSteps: z.number().min(2).max(10).default(5),
+  sliderStartLabel: z.string().default(''),
+  sliderEndLabel: z.string().default(''),
+  sliderShowLabels: z.boolean().default(true),
+
+  // --- title list ---
+  showSubtitle: z.boolean().default(true),
+
+  // --- languages ---
+  languageDisplay: z.enum(['slider', 'notches', 'words']).default('words'),
+  languageShowLabels: z.boolean().default(true),
+})
+
+export const sectionBaseSchema = z.object({
+  id: z.string(),
+  /** Heading text. Empty falls back to the kind's default label ("Experience"). */
+  title: z.string().default(''),
+  /** Small line under the section title. */
+  subtitle: z.string().default(''),
+  /** Only the options the user explicitly set on this section. */
+  options: sectionOptionsSchema.partial().default({}),
+})
+
+/**
+ * Every section is an instance with an id, a kind and a title - any number of
+ * any kind, in one ordered array. `items` is the old custom section; `banner`
+ * is a heading-only block (a page-2 title), a kind of its own rather than a
+ * display mode now that every section has an options bag.
+ */
+export const sectionSchema = z.discriminatedUnion('kind', [
+  sectionBaseSchema.extend({
+    kind: z.literal('experience'),
+    items: z.array(experienceItemSchema),
+  }),
+  sectionBaseSchema.extend({
+    kind: z.literal('education'),
+    items: z.array(educationItemSchema),
+  }),
+  sectionBaseSchema.extend({
+    kind: z.literal('skills'),
+    items: z.array(skillGroupSchema),
+  }),
+  sectionBaseSchema.extend({
+    kind: z.literal('projects'),
+    items: z.array(projectItemSchema),
+  }),
+  sectionBaseSchema.extend({
+    kind: z.literal('totals'),
+    items: z.array(totalItemSchema),
+  }),
+  sectionBaseSchema.extend({
+    kind: z.literal('items'),
+    items: z.array(customItemSchema),
+  }),
+  sectionBaseSchema.extend({
+    kind: z.literal('banner'),
+    items: z.array(z.never()).default([]),
+  }),
+  sectionBaseSchema.extend({
+    kind: z.literal('chart'),
+    items: z.array(chartItemSchema),
+  }),
+  sectionBaseSchema.extend({
+    kind: z.literal('sliders'),
+    items: z.array(sliderItemSchema),
+  }),
+  sectionBaseSchema.extend({
+    kind: z.literal('titleList'),
+    items: z.array(titleItemSchema),
+  }),
+  sectionBaseSchema.extend({
+    kind: z.literal('languages'),
+    items: z.array(languageItemSchema),
+  }),
+])
 
 /**
  * The organisation issuing the CV (an agency, a studio, a recruiter) as opposed
@@ -159,14 +283,14 @@ export const brandingSchema = z
   })
   .default({})
 
+/**
+ * `basics` and `branding` stay outside the sections array. They are not
+ * sections: one is the document header, the other is a watermark. Neither
+ * orders, repeats, or can be absent the way a section can.
+ */
 export const masterProfileSchema = z.object({
   basics: basicsSchema,
-  experience: z.array(experienceItemSchema),
-  education: z.array(educationItemSchema),
-  skills: z.array(skillGroupSchema),
-  projects: z.array(projectItemSchema),
-  custom: z.array(customSectionSchema),
-  totals: z.array(totalItemSchema).default([]),
+  sections: z.array(sectionSchema).default([]),
   branding: brandingSchema,
 })
 
@@ -177,7 +301,15 @@ export type EducationItem = z.infer<typeof educationItemSchema>
 export type SkillGroup = z.infer<typeof skillGroupSchema>
 export type ProjectItem = z.infer<typeof projectItemSchema>
 export type CustomItem = z.infer<typeof customItemSchema>
-export type CustomSection = z.infer<typeof customSectionSchema>
 export type TotalItem = z.infer<typeof totalItemSchema>
+export type ChartItem = z.infer<typeof chartItemSchema>
+export type SliderItem = z.infer<typeof sliderItemSchema>
+export type TitleItem = z.infer<typeof titleItemSchema>
+export type LanguageItem = z.infer<typeof languageItemSchema>
+export type SectionOptions = z.infer<typeof sectionOptionsSchema>
+export type Section = z.infer<typeof sectionSchema>
+export type SectionKind = Section['kind']
+/** A section's item type, given its kind. */
+export type SectionItem = Section['items'][number]
 export type Branding = z.infer<typeof brandingSchema>
 export type MasterProfile = z.infer<typeof masterProfileSchema>

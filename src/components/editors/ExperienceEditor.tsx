@@ -1,33 +1,23 @@
-import { Plus } from 'lucide-react'
 import { useStore } from '../../store/useStore'
-import { EmptyHint, Field, SectionCard } from '@/components/app-ui'
+import { EmptyHint, Field } from '@/components/app-ui'
 import { DateInput } from '@/components/DateInput'
 import { SuggestInput } from '@/components/SuggestInput'
-import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { ItemFrame } from './ItemFrame'
 import { StringListEditor } from './StringListEditor'
 
-export function ExperienceEditor() {
-  const items = useStore((s) => s.profile.experience)
-  const addItem = useStore((s) => s.addItem)
+export function ExperienceEditor({ id }: { id: string }) {
+  const section = useStore((s) => s.profile.sections.find((x) => x.id === id))
   const updateItem = useStore((s) => s.updateItem)
   const removeItem = useStore((s) => s.removeItem)
   const moveItem = useStore((s) => s.moveItem)
+  if (!section || section.kind !== 'experience') return null
+  const items = section.items
 
   return (
-    <SectionCard
-      title="Experience"
-      description="Roles, most recent first."
-      action={
-        <Button variant="default" onClick={() => addItem('experience')}>
-          <Plus />
-          Add role
-        </Button>
-      }
-    >
+    <>
       {items.length === 0 && <EmptyHint>No experience yet.</EmptyHint>}
       <div className="space-y-4">
         {items.map((item, i) => (
@@ -36,9 +26,9 @@ export function ExperienceEditor() {
             title={
               [item.role, item.organization].filter(Boolean).join(' · ') || ''
             }
-            onUp={() => moveItem('experience', item.id, 'up')}
-            onDown={() => moveItem('experience', item.id, 'down')}
-            onRemove={() => removeItem('experience', item.id)}
+            onUp={() => moveItem(id, item.id, 'up')}
+            onDown={() => moveItem(id, item.id, 'down')}
+            onRemove={() => removeItem(id, item.id)}
             disableUp={i === 0}
             disableDown={i === items.length - 1}
           >
@@ -47,9 +37,7 @@ export function ExperienceEditor() {
                 <SuggestInput
                   kind="role"
                   value={item.role}
-                  onChange={(role) =>
-                    updateItem('experience', item.id, { role })
-                  }
+                  onChange={(role) => updateItem(id, item.id, { role })}
                 />
               </Field>
               <Field label="Organization">
@@ -57,7 +45,7 @@ export function ExperienceEditor() {
                   kind="organization"
                   value={item.organization}
                   onChange={(organization) =>
-                    updateItem('experience', item.id, { organization })
+                    updateItem(id, item.id, { organization })
                   }
                 />
               </Field>
@@ -65,9 +53,7 @@ export function ExperienceEditor() {
                 <SuggestInput
                   kind="location"
                   value={item.location}
-                  onChange={(location) =>
-                    updateItem('experience', item.id, { location })
-                  }
+                  onChange={(location) => updateItem(id, item.id, { location })}
                 />
               </Field>
               <div className="grid grid-cols-2 gap-3">
@@ -76,7 +62,7 @@ export function ExperienceEditor() {
                     value={item.startDate}
                     placeholder="2021-03"
                     onChange={(startDate) =>
-                      updateItem('experience', item.id, { startDate })
+                      updateItem(id, item.id, { startDate })
                     }
                   />
                 </Field>
@@ -85,9 +71,7 @@ export function ExperienceEditor() {
                     value={item.endDate}
                     placeholder="2023-06"
                     disabled={item.current}
-                    onChange={(endDate) =>
-                      updateItem('experience', item.id, { endDate })
-                    }
+                    onChange={(endDate) => updateItem(id, item.id, { endDate })}
                   />
                 </Field>
               </div>
@@ -96,9 +80,7 @@ export function ExperienceEditor() {
               <Checkbox
                 checked={item.current}
                 onCheckedChange={(v) =>
-                  updateItem('experience', item.id, {
-                    current: v === true,
-                  })
+                  updateItem(id, item.id, { current: v === true })
                 }
               />
               I currently work here
@@ -108,9 +90,7 @@ export function ExperienceEditor() {
                 <Textarea
                   value={item.summary}
                   onChange={(e) =>
-                    updateItem('experience', item.id, {
-                      summary: e.target.value,
-                    })
+                    updateItem(id, item.id, { summary: e.target.value })
                   }
                 />
               </Field>
@@ -122,7 +102,7 @@ export function ExperienceEditor() {
                 placeholder="Achievement or responsibility…"
                 addLabel="Add highlight"
                 onChange={(highlights) =>
-                  updateItem('experience', item.id, { highlights })
+                  updateItem(id, item.id, { highlights })
                 }
               />
             </div>
@@ -135,9 +115,7 @@ export function ExperienceEditor() {
                   value={item.tagsLabel}
                   placeholder="TechStack"
                   onChange={(e) =>
-                    updateItem('experience', item.id, {
-                      tagsLabel: e.target.value,
-                    })
+                    updateItem(id, item.id, { tagsLabel: e.target.value })
                   }
                 />
               </Field>
@@ -149,12 +127,12 @@ export function ExperienceEditor() {
                 placeholder="TypeScript"
                 addLabel="Add tag"
                 suggestionKind="skill"
-                onChange={(tags) => updateItem('experience', item.id, { tags })}
+                onChange={(tags) => updateItem(id, item.id, { tags })}
               />
             </div>
           </ItemFrame>
         ))}
       </div>
-    </SectionCard>
+    </>
   )
 }

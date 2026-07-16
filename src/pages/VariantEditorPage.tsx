@@ -8,6 +8,7 @@ import { VariantMetaEditor } from '../components/variant/VariantMetaEditor'
 import { SectionOrderEditor } from '../components/variant/SectionOrderEditor'
 import { IncludeOverrideEditor } from '../components/variant/IncludeOverrideEditor'
 import { ThemeEditor } from '../components/variant/ThemeEditor'
+import { VariantOptionDefaultsCard } from '../components/variant/VariantOptionsEditor'
 import { ExportButton } from '../components/variant/ExportButton'
 import { AtsPanel } from '../components/variant/AtsPanel'
 import {
@@ -89,8 +90,9 @@ function VariantEditor() {
             <SectionOrderEditor variant={variant} />
             <IncludeOverrideEditor variant={variant} />
           </TabsContent>
-          <TabsContent value="design">
+          <TabsContent value="design" className="space-y-4">
             <ThemeEditor variant={variant} />
+            <VariantOptionDefaultsCard variant={variant} />
           </TabsContent>
           <TabsContent value="ats">
             <AtsPanel cv={cv} theme={variant.theme} />

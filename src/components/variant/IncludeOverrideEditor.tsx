@@ -1,5 +1,13 @@
 import { useState } from 'react'
-import type { CVVariant } from '../../schema'
+import type {
+  ChartItem,
+  CVVariant,
+  LanguageItem,
+  Section,
+  SkillGroup,
+  TotalItem,
+} from '../../schema'
+import { LANGUAGE_STAGES, sectionLabel } from '../../lib/sections'
 import { useStore } from '../../store/useStore'
 import { SectionCard, EmptyHint } from '@/components/app-ui'
 import { Badge } from '@/components/ui/badge'
@@ -100,12 +108,7 @@ export function IncludeOverrideEditor({ variant }: { variant: CVVariant }) {
   const profile = useStore((s) => s.profile)
   const ov = variant.overrides
 
-  const hasContent =
-    profile.experience.length ||
-    profile.education.length ||
-    profile.skills.length ||
-    profile.projects.length ||
-    profile.custom.some((s) => s.items.length)
+  const hasContent = profile.sections.some((s) => s.items.length > 0)
 
   return (
     <SectionCard
@@ -116,121 +119,116 @@ export function IncludeOverrideEditor({ variant }: { variant: CVVariant }) {
         <EmptyHint>Add content in the Master Profile first.</EmptyHint>
       )}
       <div className="space-y-5">
-        {profile.experience.length > 0 && (
-          <Group title="Experience">
-            {profile.experience.map((it) => (
-              <ItemRow
-                key={it.id}
-                variant={variant}
-                itemId={it.id}
-                title={it.role}
-                subtitle={it.organization}
-              >
-                <OverrideText
-                  variantId={variant.id}
-                  itemId={it.id}
-                  field="role"
-                  label="Role"
-                  masterValue={it.role}
-                  override={ov[it.id]}
-                  suggestionKind="role"
-                />
-                <OverrideText
-                  variantId={variant.id}
-                  itemId={it.id}
-                  field="summary"
-                  label="Summary"
-                  masterValue={it.summary}
-                  override={ov[it.id]}
-                  multiline
-                />
-                <OverrideList
-                  variantId={variant.id}
-                  itemId={it.id}
-                  field="highlights"
-                  label="Highlights"
-                  masterValue={it.highlights}
-                  override={ov[it.id]}
-                />
-              </ItemRow>
-            ))}
-          </Group>
-        )}
+        {profile.sections.map((sec) => {
+          if (!sec.items.length) return null
+          const title = sectionLabel(sec)
 
-        {profile.education.length > 0 && (
-          <Group title="Education">
-            {profile.education.map((it) => (
-              <ItemRow
-                key={it.id}
-                variant={variant}
-                itemId={it.id}
-                title={it.degree}
-                subtitle={it.institution}
-              >
-                <OverrideText
-                  variantId={variant.id}
-                  itemId={it.id}
-                  field="details"
-                  label="Details"
-                  masterValue={it.details}
-                  override={ov[it.id]}
-                  multiline
-                />
-              </ItemRow>
-            ))}
-          </Group>
-        )}
+          if (sec.kind === 'experience') {
+            return (
+              <Group key={sec.id} title={title}>
+                {sec.items.map((it) => (
+                  <ItemRow
+                    key={it.id}
+                    variant={variant}
+                    itemId={it.id}
+                    title={it.role}
+                    subtitle={it.organization}
+                  >
+                    <OverrideText
+                      variantId={variant.id}
+                      itemId={it.id}
+                      field="role"
+                      label="Role"
+                      masterValue={it.role}
+                      override={ov[it.id]}
+                      suggestionKind="role"
+                    />
+                    <OverrideText
+                      variantId={variant.id}
+                      itemId={it.id}
+                      field="summary"
+                      label="Summary"
+                      masterValue={it.summary}
+                      override={ov[it.id]}
+                      multiline
+                    />
+                    <OverrideList
+                      variantId={variant.id}
+                      itemId={it.id}
+                      field="highlights"
+                      label="Highlights"
+                      masterValue={it.highlights}
+                      override={ov[it.id]}
+                    />
+                  </ItemRow>
+                ))}
+              </Group>
+            )
+          }
 
-        {profile.skills.length > 0 && (
-          <Group title="Skills">
-            {profile.skills.map((g) => (
-              <ItemRow
-                key={g.id}
-                variant={variant}
-                itemId={g.id}
-                title={g.name}
-                subtitle={g.skills.join(', ')}
-              />
-            ))}
-          </Group>
-        )}
+          if (sec.kind === 'education') {
+            return (
+              <Group key={sec.id} title={title}>
+                {sec.items.map((it) => (
+                  <ItemRow
+                    key={it.id}
+                    variant={variant}
+                    itemId={it.id}
+                    title={it.degree}
+                    subtitle={it.institution}
+                  >
+                    <OverrideText
+                      variantId={variant.id}
+                      itemId={it.id}
+                      field="details"
+                      label="Details"
+                      masterValue={it.details}
+                      override={ov[it.id]}
+                      multiline
+                    />
+                  </ItemRow>
+                ))}
+              </Group>
+            )
+          }
 
-        {profile.projects.length > 0 && (
-          <Group title="Projects">
-            {profile.projects.map((it) => (
-              <ItemRow
-                key={it.id}
-                variant={variant}
-                itemId={it.id}
-                title={it.name}
-                subtitle={it.description}
-              >
-                <OverrideText
-                  variantId={variant.id}
-                  itemId={it.id}
-                  field="description"
-                  label="Description"
-                  masterValue={it.description}
-                  override={ov[it.id]}
-                  multiline
-                />
-                <OverrideList
-                  variantId={variant.id}
-                  itemId={it.id}
-                  field="highlights"
-                  label="Highlights"
-                  masterValue={it.highlights}
-                  override={ov[it.id]}
-                />
-              </ItemRow>
-            ))}
-          </Group>
-        )}
+          if (sec.kind === 'projects') {
+            return (
+              <Group key={sec.id} title={title}>
+                {sec.items.map((it) => (
+                  <ItemRow
+                    key={it.id}
+                    variant={variant}
+                    itemId={it.id}
+                    title={it.name}
+                    subtitle={it.description}
+                  >
+                    <OverrideText
+                      variantId={variant.id}
+                      itemId={it.id}
+                      field="description"
+                      label="Description"
+                      masterValue={it.description}
+                      override={ov[it.id]}
+                      multiline
+                    />
+                    <OverrideList
+                      variantId={variant.id}
+                      itemId={it.id}
+                      field="highlights"
+                      label="Highlights"
+                      masterValue={it.highlights}
+                      override={ov[it.id]}
+                    />
+                  </ItemRow>
+                ))}
+              </Group>
+            )
+          }
 
-        {profile.custom.map(
-          (sec) =>
-            sec.items.length > 0 && (
-              <Group key={sec.id} title={sec.title}>
+          if (sec.kind === 'items') {
+            return (
+              <Group key={sec.id} title={title}>
                 {sec.items.map((it) => (
                   <ItemRow
                     key={it.id}
@@ -263,9 +261,48 @@ export function IncludeOverrideEditor({ variant }: { variant: CVVariant }) {
                   </ItemRow>
                 ))}
               </Group>
-            ),
-        )}
+            )
+          }
+
+          // Include-only kinds (skills, totals, chart, sliders, titleList,
+          // languages): a checkbox row per item, nothing to tailor.
+          return (
+            <Group key={sec.id} title={title}>
+              {sec.items.map((it) => (
+                <ItemRow
+                  key={it.id}
+                  variant={variant}
+                  itemId={it.id}
+                  title={itemTitle(sec, it)}
+                  subtitle={itemSubtitle(sec, it)}
+                />
+              ))}
+            </Group>
+          )
+        })}
       </div>
     </SectionCard>
   )
+}
+
+/** Display name for an include-only row, per kind. */
+function itemTitle(sec: Section, it: Section['items'][number]): string {
+  if (sec.kind === 'skills') return (it as SkillGroup).name
+  if (sec.kind === 'totals') return (it as TotalItem).label
+  if (sec.kind === 'languages') return (it as LanguageItem).name
+  return (it as { title?: string }).title ?? ''
+}
+
+function itemSubtitle(
+  sec: Section,
+  it: Section['items'][number],
+): string | undefined {
+  if (sec.kind === 'skills') return (it as SkillGroup).skills.join(', ')
+  if (sec.kind === 'totals') return (it as TotalItem).value
+  if (sec.kind === 'chart') return String((it as ChartItem).value)
+  if (sec.kind === 'languages')
+    return LANGUAGE_STAGES[
+      Math.min(Math.max(1, (it as LanguageItem).level), 4) - 1
+    ]
+  return (it as { subtitle?: string }).subtitle || undefined
 }

@@ -27,6 +27,11 @@ const ATOMS = [
   '.cv-item-title',
   '.cv-item-org',
   '.cv-meta-row',
+  // New-kind unbreakables; cv.css marks the same boxes break-inside: avoid.
+  '.cv-chart',
+  '.cv-titleitem',
+  '.cv-slider-row',
+  '.cv-language',
 ].join(', ')
 
 /**

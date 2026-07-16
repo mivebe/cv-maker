@@ -1,31 +1,37 @@
 import type {
   Basics,
   Branding,
+  ChartItem,
   CustomItem,
   CVVariant,
   EducationItem,
   ExperienceItem,
+  LanguageItem,
   MasterProfile,
   ProjectItem,
+  SectionOptions,
   SkillGroup,
+  SliderItem,
+  TitleItem,
   TotalItem,
 } from '../schema'
 import {
-  customIdFromKey,
-  defaultPlacement,
-  isCustomSectionKey,
+  KIND_OPTION_DEFAULTS,
+  KIND_PLACEMENT,
   reconcileSectionOrder,
   sectionLabel,
 } from './sections'
 
 /** Placement + presentation facts every resolved section carries. */
 interface SectionBase {
-  key: string
+  id: string
   label: string
-  /** Sub-line under the section title (custom sections only). */
+  /** Sub-line under the section title. */
   subtitle: string
   column: 'main' | 'side' | 'full'
   pageBreakBefore: boolean
+  /** The fully merged display options (kind baseline -> section -> variant). */
+  options: SectionOptions
 }
 
 export type ResolvedSection = SectionBase &
@@ -34,10 +40,14 @@ export type ResolvedSection = SectionBase &
     | { kind: 'education'; items: EducationItem[] }
     | { kind: 'skills'; items: SkillGroup[] }
     | { kind: 'projects'; items: ProjectItem[] }
-    | { kind: 'custom'; items: CustomItem[]; columns: number }
     | { kind: 'totals'; items: TotalItem[] }
+    | { kind: 'items'; items: CustomItem[] }
     /** A title/subtitle block with no items (e.g. a page-2 banner heading). */
     | { kind: 'banner'; items: never[] }
+    | { kind: 'chart'; items: ChartItem[] }
+    | { kind: 'sliders'; items: SliderItem[] }
+    | { kind: 'titleList'; items: TitleItem[] }
+    | { kind: 'languages'; items: LanguageItem[] }
   )
 
 export interface ResolvedCV {
@@ -63,9 +73,9 @@ function applyOverride<T extends { id: string }>(
 
 /**
  * Compute the effective CV for a variant: apply basics overrides, filter to
- * included items, apply per-item overrides, and order/place/hide sections. Empty
- * sections are dropped so the document never shows a bare heading - except
- * banners, which are *defined* as heading-only.
+ * included items, apply per-item overrides, and order/place/hide sections.
+ * Empty sections are dropped so the document never shows a bare heading -
+ * except banners, which are *defined* as heading-only.
  */
 export function resolveVariant(
   profile: MasterProfile,
@@ -80,57 +90,61 @@ export function resolveVariant(
 
   const order = reconcileSectionOrder(variant.sectionOrder, profile)
   const hidden = new Set(variant.hiddenSections)
+  const byId = new Map(profile.sections.map((s) => [s.id, s]))
 
   const sections: ResolvedSection[] = []
-  for (const key of order) {
-    if (hidden.has(key)) continue
+  for (const id of order) {
+    if (hidden.has(id)) continue
+    const section = byId.get(id)
+    if (!section) continue
 
-    const placement = variant.sectionLayout[key] ?? defaultPlacement(key)
-    const base = {
-      key,
-      label: variant.sectionTitles[key]?.trim() || sectionLabel(key, profile),
-      subtitle: '',
+    const placement =
+      variant.sectionLayout[id] ?? KIND_PLACEMENT[section.kind]
+
+    // Four layers, most specific last. `variant.optionDefaults` outranks
+    // `section.options` ON PURPOSE: it is a policy ("this variant has no icons
+    // anywhere"), and a policy any section could dodge by simply having a value
+    // set would be no policy at all. The per-section escape hatch is
+    // `variant.sectionOptions[id]`, which must be stated explicitly.
+    const options: SectionOptions = {
+      ...KIND_OPTION_DEFAULTS[section.kind],
+      ...section.options,
+      ...variant.optionDefaults,
+      ...variant.sectionOptions[id],
+    }
+
+    const base: SectionBase = {
+      id,
+      label: variant.sectionTitles[id]?.trim() || sectionLabel(section),
+      subtitle: section.subtitle,
       column: placement.column,
       pageBreakBefore: placement.pageBreakBefore,
+      options,
     }
 
-    const pick = <T extends { id: string }>(list: T[]): T[] =>
-      list
-        .filter((i) => isIncluded(variant, i.id))
-        .map((i) => applyOverride(variant, i))
-
-    if (key === 'experience') {
-      const items = pick(profile.experience)
-      if (items.length) sections.push({ ...base, kind: 'experience', items })
-    } else if (key === 'education') {
-      const items = pick(profile.education)
-      if (items.length) sections.push({ ...base, kind: 'education', items })
-    } else if (key === 'skills') {
-      const items = pick(profile.skills)
-      if (items.length) sections.push({ ...base, kind: 'skills', items })
-    } else if (key === 'projects') {
-      const items = pick(profile.projects)
-      if (items.length) sections.push({ ...base, kind: 'projects', items })
-    } else if (key === 'totals') {
-      const items = pick(profile.totals)
-      if (items.length) sections.push({ ...base, kind: 'totals', items })
-    } else if (isCustomSectionKey(key)) {
-      const sec = profile.custom.find((s) => s.id === customIdFromKey(key))
-      if (!sec) continue
-      const withSubtitle = { ...base, subtitle: sec.subtitle }
-      if (sec.display === 'banner') {
-        sections.push({ ...withSubtitle, kind: 'banner', items: [] })
-        continue
-      }
-      const items = pick(sec.items)
-      if (items.length)
-        sections.push({
-          ...withSubtitle,
-          kind: 'custom',
-          items,
-          columns: Math.max(1, Math.round(sec.columns || 1)),
-        })
+    if (section.kind === 'banner') {
+      sections.push({ ...base, kind: 'banner', items: [] })
+      continue
     }
+
+    const items = (section.items as { id: string }[])
+      .filter((i) => isIncluded(variant, i.id))
+      .map((i) => applyOverride(variant, i))
+    if (!items.length) continue
+
+    // A chart whose slices are all zero would render as a bare heading: the
+    // renderer has nothing to draw, so the section is as empty as no items.
+    if (
+      section.kind === 'chart' &&
+      !(items as ChartItem[]).some((i) => i.value > 0)
+    )
+      continue
+
+    sections.push({
+      ...base,
+      kind: section.kind,
+      items,
+    } as ResolvedSection)
   }
 
   return {

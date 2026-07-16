@@ -1,29 +1,20 @@
-import { Plus } from 'lucide-react'
 import { useStore } from '../../store/useStore'
-import { EmptyHint, Field, SectionCard } from '@/components/app-ui'
+import { EmptyHint, Field } from '@/components/app-ui'
 import { DateInput } from '@/components/DateInput'
 import { SuggestInput } from '@/components/SuggestInput'
-import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { ItemFrame } from './ItemFrame'
 
-export function EducationEditor() {
-  const items = useStore((s) => s.profile.education)
-  const addItem = useStore((s) => s.addItem)
+export function EducationEditor({ id }: { id: string }) {
+  const section = useStore((s) => s.profile.sections.find((x) => x.id === id))
   const updateItem = useStore((s) => s.updateItem)
   const removeItem = useStore((s) => s.removeItem)
   const moveItem = useStore((s) => s.moveItem)
+  if (!section || section.kind !== 'education') return null
+  const items = section.items
 
   return (
-    <SectionCard
-      title="Education"
-      action={
-        <Button variant="default" onClick={() => addItem('education')}>
-          <Plus />
-          Add education
-        </Button>
-      }
-    >
+    <>
       {items.length === 0 && <EmptyHint>No education yet.</EmptyHint>}
       <div className="space-y-4">
         {items.map((item, i) => (
@@ -32,9 +23,9 @@ export function EducationEditor() {
             title={
               [item.degree, item.institution].filter(Boolean).join(' · ') || ''
             }
-            onUp={() => moveItem('education', item.id, 'up')}
-            onDown={() => moveItem('education', item.id, 'down')}
-            onRemove={() => removeItem('education', item.id)}
+            onUp={() => moveItem(id, item.id, 'up')}
+            onDown={() => moveItem(id, item.id, 'down')}
+            onRemove={() => removeItem(id, item.id)}
             disableUp={i === 0}
             disableDown={i === items.length - 1}
           >
@@ -43,9 +34,7 @@ export function EducationEditor() {
                 <SuggestInput
                   kind="degree"
                   value={item.degree}
-                  onChange={(degree) =>
-                    updateItem('education', item.id, { degree })
-                  }
+                  onChange={(degree) => updateItem(id, item.id, { degree })}
                 />
               </Field>
               <Field label="Institution">
@@ -53,7 +42,7 @@ export function EducationEditor() {
                   kind="institution"
                   value={item.institution}
                   onChange={(institution) =>
-                    updateItem('education', item.id, { institution })
+                    updateItem(id, item.id, { institution })
                   }
                 />
               </Field>
@@ -61,9 +50,7 @@ export function EducationEditor() {
                 <SuggestInput
                   kind="location"
                   value={item.location}
-                  onChange={(location) =>
-                    updateItem('education', item.id, { location })
-                  }
+                  onChange={(location) => updateItem(id, item.id, { location })}
                 />
               </Field>
               <div className="grid grid-cols-2 gap-3">
@@ -72,7 +59,7 @@ export function EducationEditor() {
                     value={item.startDate}
                     placeholder="2011"
                     onChange={(startDate) =>
-                      updateItem('education', item.id, { startDate })
+                      updateItem(id, item.id, { startDate })
                     }
                   />
                 </Field>
@@ -80,9 +67,7 @@ export function EducationEditor() {
                   <DateInput
                     value={item.endDate}
                     placeholder="2015"
-                    onChange={(endDate) =>
-                      updateItem('education', item.id, { endDate })
-                    }
+                    onChange={(endDate) => updateItem(id, item.id, { endDate })}
                   />
                 </Field>
               </div>
@@ -92,9 +77,7 @@ export function EducationEditor() {
                 <Textarea
                   value={item.details}
                   onChange={(e) =>
-                    updateItem('education', item.id, {
-                      details: e.target.value,
-                    })
+                    updateItem(id, item.id, { details: e.target.value })
                   }
                 />
               </Field>
@@ -102,6 +85,6 @@ export function EducationEditor() {
           </ItemFrame>
         ))}
       </div>
-    </SectionCard>
+    </>
   )
 }

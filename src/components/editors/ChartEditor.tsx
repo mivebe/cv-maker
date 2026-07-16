@@ -1,42 +1,42 @@
 import { useStore } from '../../store/useStore'
 import { EmptyHint, ItemControls } from '@/components/app-ui'
 import { IconPicker } from '@/components/IconPicker'
-import { SuggestInput } from '@/components/SuggestInput'
 import { Input } from '@/components/ui/input'
 
-export function TotalsEditor({ id }: { id: string }) {
+export function ChartEditor({ id }: { id: string }) {
   const section = useStore((s) => s.profile.sections.find((x) => x.id === id))
   const updateItem = useStore((s) => s.updateItem)
   const removeItem = useStore((s) => s.removeItem)
   const moveItem = useStore((s) => s.moveItem)
-  if (!section || section.kind !== 'totals') return null
+  if (!section || section.kind !== 'chart') return null
   const items = section.items
 
   return (
     <>
-      {items.length === 0 && <EmptyHint>No totals yet.</EmptyHint>}
+      {items.length === 0 && <EmptyHint>No slices yet.</EmptyHint>}
       <div className="space-y-2">
         {items.map((item, i) => (
-          // A single row per cell: three short values do not earn an ItemFrame.
           <div key={item.id} className="flex flex-wrap items-center gap-2">
             <IconPicker
               className="w-32 shrink-0"
               value={item.icon}
               onChange={(icon) => updateItem(id, item.id, { icon })}
             />
-            <SuggestInput
-              kind="skill"
+            <Input
               className="min-w-0 flex-1"
-              value={item.label}
-              placeholder="TypeScript"
-              onChange={(label) => updateItem(id, item.id, { label })}
+              value={item.title}
+              placeholder="Frontend"
+              onChange={(e) =>
+                updateItem(id, item.id, { title: e.target.value })
+              }
             />
             <Input
               className="w-20 shrink-0"
+              type="number"
+              min={0}
               value={item.value}
-              placeholder="6y"
               onChange={(e) =>
-                updateItem(id, item.id, { value: e.target.value })
+                updateItem(id, item.id, { value: Number(e.target.value) || 0 })
               }
             />
             <ItemControls

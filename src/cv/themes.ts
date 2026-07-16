@@ -1,4 +1,4 @@
-import type { ThemeConfig, ThemePreset } from '../schema'
+import type { SectionOptions, ThemeConfig, ThemePreset } from '../schema'
 
 /**
  * Base token sets for each preset. A variant's theme starts as a copy of one of
@@ -51,12 +51,9 @@ const BASE: Omit<ThemeConfig, 'preset'> = {
   bulletStyle: 'disc',
   bulletColor: '',
   bulletIndent: 1.1,
-  itemDivider: true,
   titleColor: '',
   linkColor: '',
   badgeColor: '#16a34a',
-  totalsColumns: 4,
-  totalsDivider: true,
 
   brandingMark: true,
   brandingFooter: false,
@@ -75,7 +72,6 @@ export const THEME_PRESETS: Record<ThemePreset, ThemeConfig> = {
     showAvatar: false,
     skillStyle: 'inline',
     chipStyle: 'plain',
-    itemDivider: false,
   },
   modern: {
     ...BASE,
@@ -114,7 +110,6 @@ export const THEME_PRESETS: Record<ThemePreset, ThemeConfig> = {
     avatarPosition: 'right',
     avatarSize: 32,
     badgeColor: '#16a34a',
-    totalsColumns: 4,
     brandingBackdrop: 'watermark',
   },
   ats: {
@@ -137,14 +132,34 @@ export const THEME_PRESETS: Record<ThemePreset, ThemeConfig> = {
     // A plain disc is the one marker every PDF text extractor turns back into a
     // list item; a glyph like → or ✓ can come out as mojibake.
     bulletStyle: 'disc',
-    itemDivider: false,
-    totalsColumns: 3,
     // A logo is an image with no text layer, and a backdrop sits *behind* the
     // text: both are noise to a parser, so the issuer never reaches this preset.
     brandingMark: false,
     brandingFooter: false,
     brandingBackdrop: 'none',
     brandingEdge: false,
+  },
+}
+
+/**
+ * The section-options policy each preset implies (variant.optionDefaults).
+ * Picking a preset replaces the variant's policy with this, the same way it
+ * replaces the whole theme: `ats` is the reason the layer exists - a pie chart
+ * with letter markers or a notch bar carries no text, so switching a variant
+ * to ATS must strip that decoration from every section at once.
+ */
+export const PRESET_OPTION_DEFAULTS: Record<
+  ThemePreset,
+  Partial<SectionOptions>
+> = {
+  classic: {},
+  modern: {},
+  showcase: {},
+  ats: {
+    languageDisplay: 'words',
+    chartMarker: 'none',
+    showIcons: false,
+    rowDividers: false,
   },
 }
 

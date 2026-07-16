@@ -6,7 +6,7 @@ import type {
 } from '../../schema'
 import { useStore } from '../../store/useStore'
 import { useColorHistory } from '../../store/useColorHistory'
-import { Field, SectionCard } from '@/components/app-ui'
+import { Field, SectionCard, SliderField } from '@/components/app-ui'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
@@ -19,13 +19,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Slider } from '@/components/ui/slider'
 import {
   DATE_FORMATS,
   DATE_FORMAT_LABELS,
   type DateFormat,
 } from '../../lib/dates'
 import {
+  PRESET_OPTION_DEFAULTS,
   THEME_PRESETS,
   THEME_PRESET_LABELS,
   themeFromPreset,
@@ -78,36 +78,6 @@ const AVATAR_RATIOS: { label: string; value: number }[] = [
   { label: 'Portrait 2:3', value: 0.667 },
   { label: 'Landscape 4:3', value: 1.333 },
 ]
-
-function SliderField({
-  label,
-  value,
-  min,
-  max,
-  step,
-  suffix,
-  onChange,
-}: {
-  label: string
-  value: number
-  min: number
-  max: number
-  step: number
-  suffix?: string
-  onChange: (n: number) => void
-}) {
-  return (
-    <Field label={`${label}: ${value}${suffix ?? ''}`}>
-      <Slider
-        min={min}
-        max={max}
-        step={step}
-        value={[value]}
-        onValueChange={([n]) => onChange(n)}
-      />
-    </Field>
-  )
-}
 
 function ColorField({
   label,
@@ -213,6 +183,9 @@ function Toggle({
 
 export function ThemeEditor({ variant }: { variant: CVVariant }) {
   const updateVariantTheme = useStore((s) => s.updateVariantTheme)
+  const replaceVariantOptionDefaults = useStore(
+    (s) => s.replaceVariantOptionDefaults,
+  )
   const hasPhoto = useStore((s) => Boolean(s.profile.basics.photo))
   const hasBranding = useStore((s) => s.profile.branding.enabled)
   const t = variant.theme
@@ -225,13 +198,22 @@ export function ThemeEditor({ variant }: { variant: CVVariant }) {
       description="Restyle this variant. The ATS-safe preset stays single-column with standard fonts, no icons and no photo, for clean parsing."
     >
       <div className="space-y-4">
-        <Field label="Preset">
+        <Field
+          label="Preset"
+          hint="Picking a preset resets the theme AND the section options policy below — ATS strips per-section decoration (icons, chart markers, language notches) so every section degrades to parseable text at once."
+        >
           <div className="flex flex-wrap gap-2">
             {(Object.keys(THEME_PRESETS) as ThemePreset[]).map((p) => (
               <Button
                 key={p}
                 variant={t.preset === p ? 'default' : 'outline'}
-                onClick={() => set(themeFromPreset(p))}
+                onClick={() => {
+                  set(themeFromPreset(p))
+                  replaceVariantOptionDefaults(
+                    variant.id,
+                    PRESET_OPTION_DEFAULTS[p],
+                  )
+                }}
               >
                 {THEME_PRESET_LABELS[p]}
               </Button>
@@ -584,15 +566,6 @@ export function ThemeEditor({ variant }: { variant: CVVariant }) {
             ]}
             onChange={(skillStyle) => set({ skillStyle })}
           />
-          <Choice
-            label="Totals columns"
-            value={t.totalsColumns}
-            options={[
-              { label: '3', value: 3 },
-              { label: '4', value: 4 },
-            ]}
-            onChange={(totalsColumns) => set({ totalsColumns })}
-          />
         </div>
 
         {/* ---- highlight bullets ---- */}
@@ -648,16 +621,6 @@ export function ThemeEditor({ variant }: { variant: CVVariant }) {
             label="Rule under headings"
             checked={t.headingRule}
             onChange={(headingRule) => set({ headingRule })}
-          />
-          <Toggle
-            label="Divider between items"
-            checked={t.itemDivider}
-            onChange={(itemDivider) => set({ itemDivider })}
-          />
-          <Toggle
-            label="Divider between totals"
-            checked={t.totalsDivider}
-            onChange={(totalsDivider) => set({ totalsDivider })}
           />
           <Toggle
             label="Show icons"

@@ -10,6 +10,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
+import { Slider } from '@/components/ui/slider'
 
 /**
  * App-specific composites built on the shadcn primitives in components/ui.
@@ -39,6 +40,37 @@ export function Field({
         </span>
       )}
     </label>
+  )
+}
+
+/** A labelled slider showing its current value, e.g. "Font size: 10.5pt". */
+export function SliderField({
+  label,
+  value,
+  min,
+  max,
+  step,
+  suffix,
+  onChange,
+}: {
+  label: string
+  value: number
+  min: number
+  max: number
+  step: number
+  suffix?: string
+  onChange: (n: number) => void
+}) {
+  return (
+    <Field label={`${label}: ${value}${suffix ?? ''}`}>
+      <Slider
+        min={min}
+        max={max}
+        step={step}
+        value={[value]}
+        onValueChange={([n]) => onChange(n)}
+      />
+    </Field>
   )
 }
 

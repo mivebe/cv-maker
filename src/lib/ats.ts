@@ -3,6 +3,7 @@ import type { ResolvedCV } from './resolve'
 import { stripInline } from '../cv/RichText'
 import { displayPhone } from './phone'
 import { formatDate } from './dates'
+import { LANGUAGE_STAGES } from './sections'
 
 /**
  * ATS tooling. Applicant-tracking systems read a PDF as a stream of text in one
@@ -76,7 +77,7 @@ export function atsLinearText(cv: ResolvedCV, theme: ThemeConfig): string {
         if (it.description) lines.push(stripInline(it.description))
         bullets(it.highlights)
       }
-    } else if (section.kind === 'custom') {
+    } else if (section.kind === 'items') {
       for (const it of section.items) {
         lines.push(
           `${it.title}${it.subtitle ? ` - ${it.subtitle}` : ''}${it.meta ? ` (${it.meta})` : ''}`,
@@ -88,6 +89,48 @@ export function atsLinearText(cv: ResolvedCV, theme: ThemeConfig): string {
       }
     } else if (section.kind === 'totals') {
       for (const it of section.items) lines.push(`${it.label}: ${it.value}`)
+    } else if (section.kind === 'chart') {
+      // A pie with no text is invisible to a parser; the legend as one line is
+      // the whole section's signal. Same `auto` value rule as the renderer.
+      const { chartType, chartValueFormat } = section.options
+      const total = section.items.reduce((sum, i) => sum + i.value, 0)
+      const asPercent =
+        total > 0 &&
+        (chartValueFormat === 'percent' ||
+          (chartValueFormat === 'auto' &&
+            (chartType === 'pie' || chartType === 'donut')))
+      const asText = (v: number) =>
+        asPercent ? `${Math.round((v / total) * 100)}%` : String(v)
+      lines.push(
+        section.items
+          .filter((i) => i.value > 0)
+          .map((i) => `${i.title} ${asText(i.value)}`)
+          .join(', '),
+      )
+    } else if (section.kind === 'sliders') {
+      const steps = section.options.sliderSteps
+      lines.push(
+        section.items
+          .map(
+            (i) =>
+              `${i.title} ${Math.min(Math.max(1, Math.round(i.value)), steps)}/${steps}`,
+          )
+          .join(', '),
+      )
+    } else if (section.kind === 'titleList') {
+      for (const it of section.items) {
+        lines.push(`${it.title}${it.subtitle ? ` - ${it.subtitle}` : ''}`)
+      }
+    } else if (section.kind === 'languages') {
+      // Recruiters actively filter on languages: always words, never notches.
+      lines.push(
+        section.items
+          .map(
+            (i) =>
+              `${i.name} - ${LANGUAGE_STAGES[Math.min(Math.max(1, i.level), 4) - 1]}`,
+          )
+          .join(', '),
+      )
     }
   }
   return lines.join('\n')

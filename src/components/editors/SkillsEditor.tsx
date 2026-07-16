@@ -1,38 +1,28 @@
-import { Plus } from 'lucide-react'
 import { useStore } from '../../store/useStore'
-import { EmptyHint, Field, SectionCard } from '@/components/app-ui'
+import { EmptyHint, Field } from '@/components/app-ui'
 import { SuggestInput } from '@/components/SuggestInput'
-import { Button } from '@/components/ui/button'
 import { ItemFrame } from './ItemFrame'
 import { StringListEditor } from './StringListEditor'
 
-export function SkillsEditor() {
-  const groups = useStore((s) => s.profile.skills)
-  const addItem = useStore((s) => s.addItem)
+export function SkillsEditor({ id }: { id: string }) {
+  const section = useStore((s) => s.profile.sections.find((x) => x.id === id))
   const updateItem = useStore((s) => s.updateItem)
   const removeItem = useStore((s) => s.removeItem)
   const moveItem = useStore((s) => s.moveItem)
+  if (!section || section.kind !== 'skills') return null
+  const groups = section.items
 
   return (
-    <SectionCard
-      title="Skills"
-      description="Grouped by category (e.g. Languages, Frontend)."
-      action={
-        <Button variant="default" onClick={() => addItem('skills')}>
-          <Plus />
-          Add group
-        </Button>
-      }
-    >
+    <>
       {groups.length === 0 && <EmptyHint>No skill groups yet.</EmptyHint>}
       <div className="space-y-4">
         {groups.map((group, i) => (
           <ItemFrame
             key={group.id}
             title={group.name}
-            onUp={() => moveItem('skills', group.id, 'up')}
-            onDown={() => moveItem('skills', group.id, 'down')}
-            onRemove={() => removeItem('skills', group.id)}
+            onUp={() => moveItem(id, group.id, 'up')}
+            onDown={() => moveItem(id, group.id, 'down')}
+            onRemove={() => removeItem(id, group.id)}
             disableUp={i === 0}
             disableDown={i === groups.length - 1}
           >
@@ -42,7 +32,7 @@ export function SkillsEditor() {
                   kind="skillGroup"
                   value={group.name}
                   placeholder="Languages"
-                  onChange={(name) => updateItem('skills', group.id, { name })}
+                  onChange={(name) => updateItem(id, group.id, { name })}
                 />
               </Field>
               <StringListEditor
@@ -51,14 +41,12 @@ export function SkillsEditor() {
                 placeholder="TypeScript"
                 addLabel="Add skill"
                 suggestionKind="skill"
-                onChange={(skills) =>
-                  updateItem('skills', group.id, { skills })
-                }
+                onChange={(skills) => updateItem(id, group.id, { skills })}
               />
             </div>
           </ItemFrame>
         ))}
       </div>
-    </SectionCard>
+    </>
   )
 }

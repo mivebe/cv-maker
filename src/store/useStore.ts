@@ -4,54 +4,24 @@ import type {
   AppData,
   Basics,
   Branding,
-  CustomItem,
-  CustomSection,
   CVVariant,
-  EducationItem,
-  ExperienceItem,
   Link,
   MasterProfile,
-  ProjectItem,
+  Section,
+  SectionKind,
+  SectionOptions,
   SectionPlacement,
-  SkillGroup,
   ThemeConfig,
-  TotalItem,
 } from '../schema'
-import { masterProfileSchema, variantSchema } from '../schema'
 import {
   emptyProfile,
-  newCustomItem,
-  newCustomSection,
-  newEducation,
-  newExperience,
+  ITEM_FACTORIES,
   newLink,
-  newProject,
-  newSkillGroup,
-  newTotal,
+  newSection,
   newVariant,
 } from '../lib/factory'
 import { sampleData } from '../lib/sample'
 import { defaultPlacement, reconcileSectionOrder } from '../lib/sections'
-
-/** The standard profile array sections that share generic list ops. */
-export type ListSection =
-  'experience' | 'education' | 'skills' | 'projects' | 'totals'
-
-type ItemOf = {
-  experience: ExperienceItem
-  education: EducationItem
-  skills: SkillGroup
-  projects: ProjectItem
-  totals: TotalItem
-}
-
-const FACTORIES: { [K in ListSection]: () => ItemOf[K] } = {
-  experience: newExperience,
-  education: newEducation,
-  skills: newSkillGroup,
-  projects: newProject,
-  totals: newTotal,
-}
 
 type Direction = 'up' | 'down'
 
@@ -87,29 +57,25 @@ interface AppState {
   removeLink: (id: string) => void
   moveLink: (id: string, dir: Direction) => void
 
-  // ---- standard list sections ----
-  addItem: (section: ListSection) => string
-  updateItem: <K extends ListSection>(
-    section: K,
+  // ---- sections ----
+  addSection: (kind: SectionKind) => string
+  updateSection: (
     id: string,
-    patch: Partial<ItemOf[K]>,
+    patch: Partial<Pick<Section, 'title' | 'subtitle'>>,
   ) => void
-  removeItem: (section: ListSection, id: string) => void
-  moveItem: (section: ListSection, id: string, dir: Direction) => void
+  updateSectionOptions: (id: string, patch: Partial<SectionOptions>) => void
+  removeSection: (id: string) => void
+  moveSection: (id: string, dir: Direction) => void
 
-  // ---- custom sections ----
-  addCustomSection: () => string
-  updateCustomSection: (id: string, patch: Partial<CustomSection>) => void
-  removeCustomSection: (id: string) => void
-  moveCustomSection: (id: string, dir: Direction) => void
-  addCustomItem: (sectionId: string) => void
-  updateCustomItem: (
+  // ---- items within a section ----
+  addItem: (sectionId: string) => string | undefined
+  updateItem: (
     sectionId: string,
     itemId: string,
-    patch: Partial<CustomItem>,
+    patch: Record<string, unknown>,
   ) => void
-  removeCustomItem: (sectionId: string, itemId: string) => void
-  moveCustomItem: (sectionId: string, itemId: string, dir: Direction) => void
+  removeItem: (sectionId: string, itemId: string) => void
+  moveItem: (sectionId: string, itemId: string, dir: Direction) => void
 
   // ---- variants ----
   addVariant: (name?: string) => string
@@ -122,14 +88,34 @@ interface AppState {
   ) => void
   setVariantInclude: (id: string, itemId: string, included: boolean) => void
   setVariantSectionOrder: (id: string, order: string[]) => void
-  moveVariantSection: (id: string, sectionKey: string, dir: Direction) => void
-  toggleSectionHidden: (id: string, sectionKey: string) => void
+  moveVariantSection: (id: string, sectionId: string, dir: Direction) => void
+  toggleSectionHidden: (id: string, sectionId: string) => void
   setSectionPlacement: (
     id: string,
-    sectionKey: string,
+    sectionId: string,
     patch: Partial<SectionPlacement>,
   ) => void
-  setSectionTitle: (id: string, sectionKey: string, title: string) => void
+  setSectionTitle: (id: string, sectionId: string, title: string) => void
+  setVariantOptionDefaults: (
+    id: string,
+    patch: Partial<SectionOptions>,
+  ) => void
+  clearVariantOptionDefault: (id: string, key: keyof SectionOptions) => void
+  /** Replace the whole policy - what a theme-preset switch does. */
+  replaceVariantOptionDefaults: (
+    id: string,
+    value: Partial<SectionOptions>,
+  ) => void
+  setVariantSectionOptions: (
+    id: string,
+    sectionId: string,
+    patch: Partial<SectionOptions>,
+  ) => void
+  clearVariantSectionOption: (
+    id: string,
+    sectionId: string,
+    key: keyof SectionOptions,
+  ) => void
   setOverride: (
     variantId: string,
     itemId: string,
@@ -151,6 +137,18 @@ function patchProfile(
   set((s) => ({ profile: fn(s.profile) }))
 }
 
+/** Apply `fn` to one section; every other section is left as-is. */
+function patchSection(
+  set: (fn: (s: AppState) => Partial<AppState>) => void,
+  id: string,
+  fn: (sec: Section) => Section,
+) {
+  patchProfile(set, (p) => ({
+    ...p,
+    sections: p.sections.map((sec) => (sec.id === id ? fn(sec) : sec)),
+  }))
+}
+
 function patchVariant(
   set: (fn: (s: AppState) => Partial<AppState>) => void,
   id: string,
@@ -159,21 +157,6 @@ function patchVariant(
   set((s) => ({
     variants: s.variants.map((v) => (v.id === id ? fn(v) : v)),
   }))
-}
-
-/** What `partialize` writes to localStorage, and what `migrate` must return. */
-type PersistedState = Pick<AppState, 'profile' | 'variants'>
-
-/** Parse a persisted variant array, or null if any entry is unrecoverable. */
-function parseVariants(value: unknown): CVVariant[] | null {
-  if (!Array.isArray(value)) return null
-  const out: CVVariant[] = []
-  for (const v of value) {
-    const parsed = variantSchema.safeParse(v)
-    if (!parsed.success) return null
-    out.push(parsed.data)
-  }
-  return out
 }
 
 const seed = sampleData()
@@ -232,97 +215,61 @@ export const useStore = create<AppState>()(
           basics: { ...p.basics, links: moveById(p.basics.links, id, dir) },
         })),
 
-      // ---- standard list sections ----
-      addItem: (section) => {
-        const item = FACTORIES[section]()
-        patchProfile(set, (p) => ({
-          ...p,
-          [section]: [...p[section], item],
-        }))
-        return item.id
-      },
-      updateItem: (section, id, patch) =>
-        patchProfile(set, (p) => ({
-          ...p,
-          [section]: (p[section] as { id: string }[]).map((it) =>
-            it.id === id ? { ...it, ...patch } : it,
-          ),
-        })),
-      removeItem: (section, id) =>
-        patchProfile(set, (p) => ({
-          ...p,
-          [section]: (p[section] as { id: string }[]).filter(
-            (it) => it.id !== id,
-          ),
-        })),
-      moveItem: (section, id, dir) =>
-        patchProfile(set, (p) => ({
-          ...p,
-          [section]: moveById(p[section] as { id: string }[], id, dir),
-        })),
-
-      // ---- custom sections ----
-      addCustomSection: () => {
-        const sec = newCustomSection()
-        patchProfile(set, (p) => ({ ...p, custom: [...p.custom, sec] }))
+      // ---- sections ----
+      addSection: (kind) => {
+        const sec = newSection(kind)
+        patchProfile(set, (p) => ({ ...p, sections: [...p.sections, sec] }))
         return sec.id
       },
-      updateCustomSection: (id, patch) =>
-        patchProfile(set, (p) => ({
-          ...p,
-          custom: p.custom.map((s) => (s.id === id ? { ...s, ...patch } : s)),
+      updateSection: (id, patch) =>
+        patchSection(set, id, (sec) => ({ ...sec, ...patch })),
+      updateSectionOptions: (id, patch) =>
+        patchSection(set, id, (sec) => ({
+          ...sec,
+          options: { ...sec.options, ...patch },
         })),
-      removeCustomSection: (id) =>
+      removeSection: (id) =>
         patchProfile(set, (p) => ({
           ...p,
-          custom: p.custom.filter((s) => s.id !== id),
+          sections: p.sections.filter((sec) => sec.id !== id),
         })),
-      moveCustomSection: (id, dir) =>
+      moveSection: (id, dir) =>
         patchProfile(set, (p) => ({
           ...p,
-          custom: moveById(p.custom, id, dir),
+          sections: moveById(p.sections, id, dir),
         })),
-      addCustomItem: (sectionId) =>
-        patchProfile(set, (p) => ({
-          ...p,
-          custom: p.custom.map((s) =>
-            s.id === sectionId
-              ? { ...s, items: [...s.items, newCustomItem()] }
-              : s,
+
+      // ---- items ----
+      addItem: (sectionId) => {
+        const section = get().profile.sections.find((s) => s.id === sectionId)
+        if (!section) return undefined
+        const item = ITEM_FACTORIES[section.kind]()
+        if (!item) return undefined
+        patchSection(set, sectionId, (sec) => ({
+          ...sec,
+          items: [...sec.items, item],
+        }) as Section)
+        return item.id
+      },
+      updateItem: (sectionId, itemId, patch) =>
+        patchSection(set, sectionId, (sec) => ({
+          ...sec,
+          items: (sec.items as { id: string }[]).map((it) =>
+            it.id === itemId ? { ...it, ...patch } : it,
           ),
-        })),
-      updateCustomItem: (sectionId, itemId, patch) =>
-        patchProfile(set, (p) => ({
-          ...p,
-          custom: p.custom.map((s) =>
-            s.id === sectionId
-              ? {
-                  ...s,
-                  items: s.items.map((it) =>
-                    it.id === itemId ? { ...it, ...patch } : it,
-                  ),
-                }
-              : s,
+        }) as Section),
+      removeItem: (sectionId, itemId) =>
+        patchSection(set, sectionId, (sec) => ({
+          ...sec,
+          items: (sec.items as { id: string }[]).filter(
+            (it) => it.id !== itemId,
           ),
-        })),
-      removeCustomItem: (sectionId, itemId) =>
-        patchProfile(set, (p) => ({
-          ...p,
-          custom: p.custom.map((s) =>
-            s.id === sectionId
-              ? { ...s, items: s.items.filter((it) => it.id !== itemId) }
-              : s,
-          ),
-        })),
-      moveCustomItem: (sectionId, itemId, dir) =>
-        patchProfile(set, (p) => ({
-          ...p,
-          custom: p.custom.map((s) =>
-            s.id === sectionId
-              ? { ...s, items: moveById(s.items, itemId, dir) }
-              : s,
-          ),
-        })),
+        }) as Section),
+      moveItem: (sectionId, itemId, dir) =>
+        patchSection(set, sectionId, (sec) => ({
+          ...sec,
+          items: moveById(sec.items as { id: string }[], itemId, dir),
+        }) as Section),
 
       // ---- variants ----
       addVariant: (name) => {
@@ -354,40 +301,72 @@ export const useStore = create<AppState>()(
         })),
       setVariantSectionOrder: (id, order) =>
         patchVariant(set, id, (v) => ({ ...v, sectionOrder: order })),
-      moveVariantSection: (id, sectionKey, dir) =>
+      moveVariantSection: (id, sectionId, dir) =>
         patchVariant(set, id, (v) => {
           const order = reconcileSectionOrder(v.sectionOrder, get().profile)
           const asItems = order.map((k) => ({ id: k }))
           return {
             ...v,
-            sectionOrder: moveById(asItems, sectionKey, dir).map((x) => x.id),
+            sectionOrder: moveById(asItems, sectionId, dir).map((x) => x.id),
           }
         }),
-      toggleSectionHidden: (id, sectionKey) =>
+      toggleSectionHidden: (id, sectionId) =>
         patchVariant(set, id, (v) => ({
           ...v,
-          hiddenSections: v.hiddenSections.includes(sectionKey)
-            ? v.hiddenSections.filter((k) => k !== sectionKey)
-            : [...v.hiddenSections, sectionKey],
+          hiddenSections: v.hiddenSections.includes(sectionId)
+            ? v.hiddenSections.filter((k) => k !== sectionId)
+            : [...v.hiddenSections, sectionId],
         })),
-      setSectionPlacement: (id, sectionKey, patch) =>
+      setSectionPlacement: (id, sectionId, patch) =>
         patchVariant(set, id, (v) => ({
           ...v,
           sectionLayout: {
             ...v.sectionLayout,
-            [sectionKey]: {
-              ...(v.sectionLayout[sectionKey] ?? defaultPlacement(sectionKey)),
+            [sectionId]: {
+              ...(v.sectionLayout[sectionId] ??
+                defaultPlacement(get().profile, sectionId)),
               ...patch,
             },
           },
         })),
-      setSectionTitle: (id, sectionKey, title) =>
+      setSectionTitle: (id, sectionId, title) =>
         patchVariant(set, id, (v) => {
           const sectionTitles = { ...v.sectionTitles }
           // An empty rename means "use the default label", not "no heading".
-          if (title.trim()) sectionTitles[sectionKey] = title
-          else delete sectionTitles[sectionKey]
+          if (title.trim()) sectionTitles[sectionId] = title
+          else delete sectionTitles[sectionId]
           return { ...v, sectionTitles }
+        }),
+      setVariantOptionDefaults: (id, patch) =>
+        patchVariant(set, id, (v) => ({
+          ...v,
+          optionDefaults: { ...v.optionDefaults, ...patch },
+        })),
+      clearVariantOptionDefault: (id, key) =>
+        patchVariant(set, id, (v) => {
+          const optionDefaults = { ...v.optionDefaults }
+          delete optionDefaults[key]
+          return { ...v, optionDefaults }
+        }),
+      replaceVariantOptionDefaults: (id, value) =>
+        patchVariant(set, id, (v) => ({ ...v, optionDefaults: { ...value } })),
+      setVariantSectionOptions: (id, sectionId, patch) =>
+        patchVariant(set, id, (v) => ({
+          ...v,
+          sectionOptions: {
+            ...v.sectionOptions,
+            [sectionId]: { ...v.sectionOptions[sectionId], ...patch },
+          },
+        })),
+      clearVariantSectionOption: (id, sectionId, key) =>
+        patchVariant(set, id, (v) => {
+          const forSection = { ...v.sectionOptions[sectionId] }
+          delete forSection[key]
+          const sectionOptions = { ...v.sectionOptions }
+          if (Object.keys(forSection).length === 0)
+            delete sectionOptions[sectionId]
+          else sectionOptions[sectionId] = forSection
+          return { ...v, sectionOptions }
         }),
       setOverride: (variantId, itemId, field, value) =>
         patchVariant(set, variantId, (v) => ({
@@ -418,30 +397,15 @@ export const useStore = create<AppState>()(
         })),
     }),
     {
-      name: 'cv-maker:v1',
-      version: 6,
-      partialize: (s) => ({ profile: s.profile, variants: s.variants }),
       /**
-       * Older state predates icons/avatar/chips/totals/placement/bullets/
-       * branding. Every
-       * field added since has a Zod default, so re-parsing the persisted state
-       * through the schemas is the migration: it backfills the new fields and
-       * leaves the user's content untouched. Without this, already-saved profiles
-       * would hit the renderer with `undefined` where it expects a theme token.
-       * Bump `version` whenever a token is added, so saved themes get the default.
+       * v2 is the one-sections-array shape. There is deliberately no migration
+       * from `cv-maker:v1` (the fixed-shape profile): the old blob stays in
+       * localStorage but is never read again. Real data should have been
+       * exported to JSON before this shipped.
        */
-      migrate: (persisted, version): PersistedState => {
-        const asIs = persisted as PersistedState
-        if (version >= 6) return asIs
-
-        const profile = masterProfileSchema.safeParse(asIs?.profile)
-        const variants = parseVariants(asIs?.variants)
-        if (!profile.success || !variants) {
-          console.warn('cv-maker: could not migrate saved data; keeping as-is')
-          return asIs
-        }
-        return { profile: profile.data, variants }
-      },
+      name: 'cv-maker:v2',
+      version: 1,
+      partialize: (s) => ({ profile: s.profile, variants: s.variants }),
     },
   ),
 )
