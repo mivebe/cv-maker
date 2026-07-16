@@ -55,11 +55,13 @@ function brandIcons(): Plugin {
 }
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ command }) => ({
+  // Served from https://mivebe.github.io/cv-maker/ in production; root in dev.
+  base: command === 'build' ? '/cv-maker/' : '/',
   plugins: [react(), tailwindcss(), brandIcons()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
     },
   },
-})
+}))
