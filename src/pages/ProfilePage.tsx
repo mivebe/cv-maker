@@ -112,8 +112,9 @@ export function ProfilePage() {
 
       {/* One ordered list of cards, in profile.sections order: what "any
           number of any kind, reorderable" looks like. Basics and Branding are
-          pinned - they are not sections. */}
-      <div className="mx-auto flex max-w-4xl flex-col gap-4 sm:gap-6">
+          pinned - they are not sections. Multi-column CSS flow: two editor
+          columns on desktop, three on wide monitors. */}
+      <div className="gap-4 xl:columns-2 3xl:columns-3 sm:gap-6 [&>*]:mb-4 [&>*]:break-inside-avoid sm:[&>*]:mb-6">
         <BasicsEditor />
 
         {sections.map((section, i) => {

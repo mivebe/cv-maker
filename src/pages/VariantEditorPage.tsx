@@ -71,12 +71,14 @@ function VariantEditor() {
       </div>
 
       {/* Each pane scrolls on its own from lg up, so the controls and the page
-          they describe can be read side by side without dragging one another. */}
-      <div className="grid gap-4 lg:h-[calc(100vh-12rem)] lg:grid-cols-2 lg:gap-6">
+          they describe can be read side by side without dragging one another.
+          On wide monitors the controls spread over two columns; the rightmost
+          column always stays reserved for the live preview. */}
+      <div className="grid gap-4 lg:h-[calc(100vh-12rem)] lg:grid-cols-2 lg:gap-6 3xl:grid-cols-3">
         {/* Controls */}
         <Tabs
           defaultValue="content"
-          className="hl-surface no-print min-w-0 space-y-4 lg:h-full lg:min-h-0 lg:overflow-y-auto lg:pr-2"
+          className="hl-surface no-print min-w-0 space-y-4 lg:h-full lg:min-h-0 lg:overflow-y-auto lg:pr-2 3xl:col-span-2"
           {...surface}
         >
           <TabsList className="w-full sm:w-fit">
@@ -85,12 +87,18 @@ function VariantEditor() {
             <TabsTrigger value="ats">ATS</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="content" className="space-y-4">
+          <TabsContent
+            value="content"
+            className="[&>*]:mb-4 [&>*]:break-inside-avoid 3xl:columns-2 3xl:gap-6"
+          >
             <VariantMetaEditor variant={variant} />
             <SectionOrderEditor variant={variant} />
             <IncludeOverrideEditor variant={variant} />
           </TabsContent>
-          <TabsContent value="design" className="space-y-4">
+          <TabsContent
+            value="design"
+            className="[&>*]:mb-4 [&>*]:break-inside-avoid 3xl:columns-2 3xl:gap-6"
+          >
             <ThemeEditor variant={variant} />
             <VariantOptionDefaultsCard variant={variant} />
           </TabsContent>

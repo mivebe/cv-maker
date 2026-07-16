@@ -16,7 +16,7 @@ export function Layout() {
   return (
     <div className="flex min-h-full flex-col bg-muted/40">
       <header className="no-print sticky top-0 z-10 border-b bg-background/90 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-[100rem] flex-wrap items-center gap-x-4 gap-y-2 px-3 py-2.5 sm:px-6 sm:py-3">
+        <div className="flex w-full flex-wrap items-center gap-x-4 gap-y-2 px-3 py-2.5 sm:px-6 sm:py-3">
           <div className="flex items-center gap-2">
             <FileText className="size-5 shrink-0 text-primary" />
             <span className="text-base font-semibold tracking-tight sm:text-lg">
@@ -38,7 +38,7 @@ export function Layout() {
           </nav>
         </div>
       </header>
-      <main className="mx-auto w-full max-w-[100rem] flex-1 px-3 py-4 sm:px-6 sm:py-6">
+      <main className="w-full flex-1 px-3 py-4 sm:px-6 sm:py-6">
         <Outlet />
       </main>
     </div>

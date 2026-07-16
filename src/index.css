@@ -7,6 +7,12 @@
  */
 @custom-variant dark (&:is(.dark *));
 
+/* Wide-screen tier: full-screen desktop monitors (>=1760px) get a third
+   editor column; regular desktops stay at two. */
+@theme {
+  --breakpoint-3xl: 110rem;
+}
+
 /*
  * App chrome styling only (Tailwind). The CV document itself is styled
  * separately with plain token-driven CSS in src/cv/cv.css so the print
