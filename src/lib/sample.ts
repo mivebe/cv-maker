@@ -285,6 +285,7 @@ const profile: AppData['profile'] = {
       title: 'Selected Work & Community',
       subtitle: 'Side projects, talks and open source',
       display: 'banner',
+      columns: 1,
       items: [],
     },
     {
@@ -292,6 +293,7 @@ const profile: AppData['profile'] = {
       title: 'Side Products',
       subtitle: '',
       display: 'items',
+      columns: 1,
       items: [
         {
           id: 'cit_tidepool',
@@ -331,6 +333,7 @@ const profile: AppData['profile'] = {
       title: 'Hardware & Tinkering',
       subtitle: '',
       display: 'items',
+      columns: 1,
       items: [
         {
           id: 'cit_greenhouse',
@@ -355,6 +358,7 @@ const profile: AppData['profile'] = {
       title: 'Talks & Writing',
       subtitle: '',
       display: 'items',
+      columns: 1,
       items: [
         {
           id: 'cit_talk_render',

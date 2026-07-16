@@ -33,7 +33,7 @@ export type ResolvedSection = SectionBase &
     | { kind: 'education'; items: EducationItem[] }
     | { kind: 'skills'; items: SkillGroup[] }
     | { kind: 'projects'; items: ProjectItem[] }
-    | { kind: 'custom'; items: CustomItem[] }
+    | { kind: 'custom'; items: CustomItem[]; columns: number }
     | { kind: 'totals'; items: TotalItem[] }
     /** A title/subtitle block with no items (e.g. a page-2 banner heading). */
     | { kind: 'banner'; items: never[] }
@@ -121,7 +121,12 @@ export function resolveVariant(
       }
       const items = pick(sec.items)
       if (items.length)
-        sections.push({ ...withSubtitle, kind: 'custom', items })
+        sections.push({
+          ...withSubtitle,
+          kind: 'custom',
+          items,
+          columns: Math.max(1, Math.round(sec.columns || 1)),
+        })
     }
   }
 

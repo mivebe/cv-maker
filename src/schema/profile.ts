@@ -112,6 +112,11 @@ export const customSectionSchema = z.object({
    * as a centered full-width heading (used for a page-2 title block).
    */
   display: z.enum(['items', 'banner']).default('items'),
+  /**
+   * Lay the items out in this many equal columns (a compact grid for short
+   * entries like languages or awards). 1 = the default full-width stack.
+   */
+  columns: z.number().default(1),
 })
 
 /** One cell of the TOTALS grid: an icon, a label and a value ("7y"). */

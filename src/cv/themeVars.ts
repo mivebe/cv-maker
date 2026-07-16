@@ -49,6 +49,7 @@ export function themeDataAttrs(theme: ThemeConfig) {
     'data-icons': String(theme.showIcons),
     'data-brand-icons': String(theme.brandColorIcons),
     'data-chips': theme.chipStyle,
+    'data-chip-fill': theme.chipFill,
     'data-bullets': theme.bulletStyle,
     'data-skills': theme.skillStyle,
     'data-divider': String(theme.itemDivider),

@@ -46,6 +46,7 @@ const BASE: Omit<ThemeConfig, 'preset'> = {
   showIcons: true,
   brandColorIcons: true,
   chipStyle: 'pill',
+  chipFill: 'none',
   skillStyle: 'chips',
   bulletStyle: 'disc',
   bulletColor: '',

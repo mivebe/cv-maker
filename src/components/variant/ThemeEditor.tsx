@@ -565,6 +565,16 @@ export function ThemeEditor({ variant }: { variant: CVVariant }) {
             onChange={(chipStyle) => set({ chipStyle })}
           />
           <Choice
+            label="Chip fill"
+            value={t.chipFill}
+            options={[
+              { label: 'None', value: 'none' as const },
+              { label: 'Muted', value: 'muted' as const },
+              { label: 'Accent', value: 'accent' as const },
+            ]}
+            onChange={(chipFill) => set({ chipFill })}
+          />
+          <Choice
             label="Skills as"
             value={t.skillStyle}
             options={[

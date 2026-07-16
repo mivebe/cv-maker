@@ -474,6 +474,44 @@
   content: '';
 }
 
+/* Chip fill: make tag groups (skills) read as solid tags, not faint outlines. */
+.cv-root[data-chip-fill='muted'] .cv-chip {
+  background: #eef0f2;
+  border-color: transparent;
+}
+.cv-root[data-chip-fill='accent'] .cv-chip {
+  background: color-mix(in srgb, var(--cv-accent) 12%, #fff);
+  border-color: color-mix(in srgb, var(--cv-accent) 35%, #fff);
+  color: var(--cv-accent);
+  font-weight: 600;
+}
+/* Fill implies a solid pill even under the 'plain' chip style. */
+.cv-root[data-chip-fill='muted'] .cv-chip::after,
+.cv-root[data-chip-fill='accent'] .cv-chip::after {
+  content: '' !important;
+  margin: 0 !important;
+}
+.cv-root[data-chips='plain'][data-chip-fill='muted'] .cv-chip,
+.cv-root[data-chips='plain'][data-chip-fill='accent'] .cv-chip {
+  padding: 0.15em 0.6em;
+}
+
+/* Custom-section item grid (e.g. languages, 2 per row). */
+.cv-custom-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--cv-custom-cols, 1), minmax(0, 1fr));
+  gap: var(--cv-gap) var(--cv-column-gap);
+}
+/* Items already space themselves with margin-bottom; the grid gap owns spacing. */
+.cv-custom-grid .cv-item {
+  margin-bottom: 0;
+}
+/* A divider between stacked items would misfire across grid cells. */
+.cv-root[data-divider='true'] .cv-custom-grid .cv-item + .cv-item {
+  border-top: none;
+  padding-top: 0;
+}
+
 /* Skills: chips vs. one inline line per group. */
 .cv-skillgroup-inline {
   display: none;

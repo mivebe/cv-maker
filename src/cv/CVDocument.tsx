@@ -1,4 +1,4 @@
-import { forwardRef } from 'react'
+import { forwardRef, type CSSProperties } from 'react'
 import type {
   Basics,
   CustomItem,
@@ -293,8 +293,19 @@ function SectionBlock({
         section.items.map((it) => <ProjectBlock key={it.id} item={it} />)}
 
       {section.kind === 'custom' &&
-        section.items.map((it) => (
-          <CustomBlock key={it.id} item={it} format={theme.dateFormat} />
+        (section.columns > 1 ? (
+          <div
+            className="cv-custom-grid"
+            style={{ '--cv-custom-cols': section.columns } as CSSProperties}
+          >
+            {section.items.map((it) => (
+              <CustomBlock key={it.id} item={it} format={theme.dateFormat} />
+            ))}
+          </div>
+        ) : (
+          section.items.map((it) => (
+            <CustomBlock key={it.id} item={it} format={theme.dateFormat} />
+          ))
         ))}
 
       {section.kind === 'totals' && (

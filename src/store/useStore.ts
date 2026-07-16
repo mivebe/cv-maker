@@ -412,7 +412,7 @@ export const useStore = create<AppState>()(
     }),
     {
       name: 'cv-maker:v1',
-      version: 3,
+      version: 4,
       partialize: (s) => ({ profile: s.profile, variants: s.variants }),
       /**
        * Older state predates icons/avatar/chips/totals/placement/bullets. Every
@@ -424,7 +424,7 @@ export const useStore = create<AppState>()(
        */
       migrate: (persisted, version): PersistedState => {
         const asIs = persisted as PersistedState
-        if (version >= 3) return asIs
+        if (version >= 4) return asIs
 
         const profile = masterProfileSchema.safeParse(asIs?.profile)
         const variants = parseVariants(asIs?.variants)

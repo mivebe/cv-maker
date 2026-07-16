@@ -112,6 +112,8 @@ export const themeConfigSchema = z.object({
   /** Tint brand icons with their official colors (off = monochrome accent). */
   brandColorIcons: z.boolean().default(true),
   chipStyle: chipStyleSchema.default('pill'),
+  /** Fill behind chips, to make tag groups (e.g. skills) stand out. */
+  chipFill: z.enum(['none', 'muted', 'accent']).default('none'),
   skillStyle: skillStyleSchema.default('chips'),
   /** Marker in front of each highlight bullet. */
   bulletStyle: bulletStyleSchema.default('disc'),

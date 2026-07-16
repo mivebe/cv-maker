@@ -110,6 +110,28 @@ export function CustomSectionCard({
               </SelectContent>
             </Select>
           </Field>
+          {section.display === 'items' && (
+            <Field
+              label="Item columns"
+              hint="Lay short entries (e.g. languages) side by side."
+            >
+              <Select
+                value={String(section.columns)}
+                onValueChange={(v) =>
+                  updateCustomSection(section.id, { columns: Number(v) })
+                }
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">1 (stacked)</SelectItem>
+                  <SelectItem value="2">2 per row</SelectItem>
+                  <SelectItem value="3">3 per row</SelectItem>
+                </SelectContent>
+              </Select>
+            </Field>
+          )}
         </div>
 
         {section.display === 'banner' && section.items.length > 0 && (

@@ -108,6 +108,7 @@ export function newCustomSection(): CustomSection {
     items: [],
     subtitle: '',
     display: 'items',
+    columns: 1,
   }
 }
 
