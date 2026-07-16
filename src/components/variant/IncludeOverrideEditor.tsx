@@ -236,8 +236,12 @@ export function IncludeOverrideEditor({ variant }: { variant: CVVariant }) {
                     key={it.id}
                     variant={variant}
                     itemId={it.id}
-                    title={it.title}
-                    subtitle={it.subtitle}
+                    // An item can carry nothing but a chip group, in which case
+                    // the group's legend is its name - fall back to it (and to
+                    // the chips as the sub-line) rather than listing a column of
+                    // identical "Untitled" rows nobody can tell apart.
+                    title={it.title || it.tagsLabel}
+                    subtitle={it.subtitle || it.tags.join(', ')}
                   >
                     <OverrideText
                       variantId={variant.id}

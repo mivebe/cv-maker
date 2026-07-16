@@ -37,6 +37,13 @@ export function themeToStyle(theme: ThemeConfig): CSSProperties {
 
     '--cv-bullet': theme.bulletColor || 'var(--cv-muted)',
     '--cv-bullet-indent': `${theme.bulletIndent}em`,
+
+    // Logo box sizes are handed to <CVIcon> in px (it sizes inline), so only
+    // these need to reach CSS.
+    '--cv-brand-watermark-opacity': String(theme.brandingWatermarkOpacity),
+    // A third of the page margin: wide enough to read as a deliberate stripe,
+    // and guaranteed to stay inside the blank band beside the text.
+    '--cv-brand-edge-width': `${(theme.pageMargin / 3).toFixed(1)}mm`,
   } as CSSProperties
 }
 

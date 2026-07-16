@@ -19,6 +19,14 @@ import { allSectionKeys } from './sections'
  * deterministically.
  */
 
+/**
+ * A fictional issuer's mark, inline for the same reason as the portrait. Being
+ * an SVG data URL it also exercises the branding logo's main real-world form:
+ * an image pasted into the editor, which has to survive JSON export.
+ */
+const PLACEHOLDER_LOGO =
+  'data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%2064%2064%27%3E%3Ccircle%20cx=%2732%27%20cy=%2732%27%20r=%2728%27%20fill=%27none%27%20stroke=%27%232f80ed%27%20stroke-width=%276%27/%3E%3Cpath%20d=%27M20%2042%20L32%2020%20L44%2042%27%20fill=%27none%27%20stroke=%27%232f80ed%27%20stroke-width=%276%27%20stroke-linecap=%27round%27%20stroke-linejoin=%27round%27/%3E%3C/svg%3E'
+
 /** A neutral placeholder portrait, inline so the sample needs no asset files. */
 const PLACEHOLDER_AVATAR =
   'data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%20200%20200%27%3E%3Crect%20width=%27200%27%20height=%27200%27%20fill=%27%231f2937%27/%3E%3Ccircle%20cx=%27100%27%20cy=%2778%27%20r=%2734%27%20fill=%27%2393c5fd%27/%3E%3Cpath%20d=%27M28%20190c8-40%2036-58%2072-58s64%2018%2072%2058z%27%20fill=%27%2393c5fd%27/%3E%3C/svg%3E'
@@ -263,6 +271,21 @@ const profile: AppData['profile'] = {
       meta: '',
     },
   ],
+
+  branding: {
+    enabled: true,
+    company: 'Northwind Talent',
+    tagline: 'Engineering placements, done properly',
+    url: 'northwind.example.com',
+    logo: PLACEHOLDER_LOGO,
+    logoAlt: 'Northwind Talent',
+    accentColor: '#2f80ed',
+    issuedFor: 'Prepared for Contoso Ltd',
+    issuedDate: 'March 2026',
+    contact: 'hello@northwind.example.com',
+    note: 'Confidential - not for redistribution',
+    reference: 'REF NW-2291',
+  },
 
   totals: [
     { id: 'tot_js', label: 'JavaScript', value: '8y', icon: 'javascript' },

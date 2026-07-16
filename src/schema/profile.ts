@@ -127,6 +127,38 @@ export const totalItemSchema = z.object({
   icon: iconRef,
 })
 
+/**
+ * The organisation issuing the CV (an agency, a studio, a recruiter) as opposed
+ * to the person it describes. It lives on the profile rather than the theme
+ * because these are facts ("137 issued this, on 2026-07-16"), not styling; the
+ * theme only decides which of the slots below get drawn, so an ATS variant can
+ * strip the branding while a client-facing variant keeps it.
+ */
+export const brandingSchema = z
+  .object({
+    /** Master switch for the content; the theme still decides each slot. */
+    enabled: z.boolean().default(false),
+    company: z.string().default(''),
+    tagline: z.string().default(''),
+    url: z.string().default(''),
+    /** Icon ref: a data URL (survives export), an image URL, or a registry key. */
+    logo: iconRef,
+    logoAlt: z.string().default(''),
+    /** The brand's colour, kept so the editor can push it into the theme accent. */
+    accentColor: z.string().default(''),
+    /** Who the CV was prepared for, e.g. "Prepared for Acme Corp". */
+    issuedFor: z.string().default(''),
+    /** Freeform issue date, e.g. "July 2026". */
+    issuedDate: z.string().default(''),
+    /** Issuer contact line printed in the footer, e.g. "hello@137.studio". */
+    contact: z.string().default(''),
+    /** Small print, e.g. "Confidential — not for redistribution". */
+    note: z.string().default(''),
+    /** Reference/candidate id the issuer tracks this document by. */
+    reference: z.string().default(''),
+  })
+  .default({})
+
 export const masterProfileSchema = z.object({
   basics: basicsSchema,
   experience: z.array(experienceItemSchema),
@@ -135,6 +167,7 @@ export const masterProfileSchema = z.object({
   projects: z.array(projectItemSchema),
   custom: z.array(customSectionSchema),
   totals: z.array(totalItemSchema).default([]),
+  branding: brandingSchema,
 })
 
 export type Link = z.infer<typeof linkSchema>
@@ -146,4 +179,5 @@ export type ProjectItem = z.infer<typeof projectItemSchema>
 export type CustomItem = z.infer<typeof customItemSchema>
 export type CustomSection = z.infer<typeof customSectionSchema>
 export type TotalItem = z.infer<typeof totalItemSchema>
+export type Branding = z.infer<typeof brandingSchema>
 export type MasterProfile = z.infer<typeof masterProfileSchema>

@@ -57,6 +57,15 @@ const BASE: Omit<ThemeConfig, 'preset'> = {
   badgeColor: '#16a34a',
   totalsColumns: 4,
   totalsDivider: true,
+
+  brandingMark: true,
+  brandingFooter: false,
+  brandingBackdrop: 'none',
+  brandingEdge: false,
+  brandingLogoSize: 9,
+  brandingWatermarkSize: 95,
+  brandingTileSize: 26,
+  brandingWatermarkOpacity: 0.05,
 }
 
 export const THEME_PRESETS: Record<ThemePreset, ThemeConfig> = {
@@ -106,6 +115,7 @@ export const THEME_PRESETS: Record<ThemePreset, ThemeConfig> = {
     avatarSize: 32,
     badgeColor: '#16a34a',
     totalsColumns: 4,
+    brandingBackdrop: 'watermark',
   },
   ats: {
     ...BASE,
@@ -129,6 +139,12 @@ export const THEME_PRESETS: Record<ThemePreset, ThemeConfig> = {
     bulletStyle: 'disc',
     itemDivider: false,
     totalsColumns: 3,
+    // A logo is an image with no text layer, and a backdrop sits *behind* the
+    // text: both are noise to a parser, so the issuer never reaches this preset.
+    brandingMark: false,
+    brandingFooter: false,
+    brandingBackdrop: 'none',
+    brandingEdge: false,
   },
 }
 

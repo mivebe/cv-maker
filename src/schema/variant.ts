@@ -131,6 +131,32 @@ export const themeConfigSchema = z.object({
   totalsColumns: z.number().default(4),
   /** Vertical rule between the columns of the TOTALS grid. */
   totalsDivider: z.boolean().default(true),
+
+  // ---- issuer branding ----
+  // Which branding slots this variant draws. The content lives on the profile
+  // (see brandingSchema); these only say where it appears, so the same issuer
+  // details can be loud on a client-facing variant and absent on an ATS one.
+  //
+  // Every slot costs the document zero space. The CV belongs to the candidate,
+  // so the issuer never pushes their content around: each slot is positioned
+  // against the sheet, and lives either in a page margin - blank by definition -
+  // or behind the text. Nothing here can move a line or a page break.
+  /** Letterhead mark in the top margin of every page. */
+  brandingMark: z.boolean().default(true),
+  /** Issuer strip in the bottom margin of every page. */
+  brandingFooter: z.boolean().default(false),
+  /** What sits behind the content: one big faint logo, or a repeating tile. */
+  brandingBackdrop: z.enum(['none', 'watermark', 'tile']).default('none'),
+  /** Accent-coloured stripe down the sheet's left edge. */
+  brandingEdge: z.boolean().default(false),
+  /** Letterhead logo size, in mm. Clamped to the margin so it cannot overflow. */
+  brandingLogoSize: z.number().default(9),
+  /** Watermark logo size, in mm. Ignored by the `tile` backdrop. */
+  brandingWatermarkSize: z.number().default(95),
+  /** Tile repeat size, in mm. */
+  brandingTileSize: z.number().default(26),
+  /** Backdrop opacity, 0-1. Kept low: it must never fight the text. */
+  brandingWatermarkOpacity: z.number().default(0.05),
 })
 export type ThemeConfig = z.infer<typeof themeConfigSchema>
 

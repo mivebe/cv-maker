@@ -29,6 +29,21 @@ const ATOMS = [
   '.cv-meta-row',
 ].join(', ')
 
+/**
+ * Issuer branding is positioned against the sheet, not laid out in it: the edge
+ * stripe spans the full height and the footer sits in the bottom margin, so
+ * measuring them as content would report a full sheet of it on every page and
+ * invent page breaks. It is furniture - the sheet is not longer because it is
+ * printed on letterhead.
+ */
+const BRANDING = [
+  '.cv-brandmark',
+  '.cv-brandfooter',
+  '.cv-brandtile',
+  '.cv-brandedge',
+  '.cv-watermark',
+].join(', ')
+
 export interface PageFit {
   /** Y offsets, in unscaled px from the document top, where a sheet ends. */
   breaks: number[]
@@ -64,7 +79,7 @@ export function measurePageFit(root: HTMLElement, marginMm: number): PageFit {
   // Each `.cv-page` is an explicit sheet start (a section with pageBreakBefore),
   // so page-fit is computed per block and the sheet counts add up.
   for (const page of root.querySelectorAll<HTMLElement>('.cv-page')) {
-    const kids = Array.from(page.children)
+    const kids = Array.from(page.children).filter((el) => !el.matches(BRANDING))
     // Not the element's own height: `.cv-page` has a min-height of a full sheet
     // on screen, so a half-empty page would measure as a full one.
     const start = top(page) + marginPx

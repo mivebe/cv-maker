@@ -1,5 +1,6 @@
 import type {
   Basics,
+  Branding,
   CustomItem,
   CVVariant,
   EducationItem,
@@ -42,6 +43,8 @@ export type ResolvedSection = SectionBase &
 export interface ResolvedCV {
   basics: Basics
   sections: ResolvedSection[]
+  /** The issuing organisation, or null when the profile has no branding on. */
+  branding: Branding | null
 }
 
 /** An item is included unless the variant explicitly excluded it. */
@@ -130,5 +133,9 @@ export function resolveVariant(
     }
   }
 
-  return { basics, sections }
+  return {
+    basics,
+    sections,
+    branding: profile.branding.enabled ? profile.branding : null,
+  }
 }

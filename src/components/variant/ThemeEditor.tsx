@@ -214,6 +214,7 @@ function Toggle({
 export function ThemeEditor({ variant }: { variant: CVVariant }) {
   const updateVariantTheme = useStore((s) => s.updateVariantTheme)
   const hasPhoto = useStore((s) => Boolean(s.profile.basics.photo))
+  const hasBranding = useStore((s) => s.profile.branding.enabled)
   const t = variant.theme
   const set = (patch: Partial<CVVariant['theme']>) =>
     updateVariantTheme(variant.id, patch)
@@ -671,6 +672,96 @@ export function ThemeEditor({ variant }: { variant: CVVariant }) {
             />
           )}
         </div>
+
+        <Field
+          label="Issuer branding"
+          hint={
+            hasBranding
+              ? 'Where this variant shows the issuing company. Every option sits in a page margin, on the sheet’s edge, or behind the text — none of it takes space from the CV or moves a page break. The ATS-safe preset drops all of it: a logo carries no text, and a backdrop sits behind the text a parser reads.'
+              : 'Turn on branding in Profile → Issuer branding to place a company’s logo and details on this CV.'
+          }
+        >
+          <div className="flex flex-wrap gap-4">
+            <Toggle
+              label="Letterhead (top margin)"
+              checked={t.brandingMark}
+              onChange={(brandingMark) => set({ brandingMark })}
+            />
+            <Toggle
+              label="Footer (bottom margin)"
+              checked={t.brandingFooter}
+              onChange={(brandingFooter) => set({ brandingFooter })}
+            />
+            <Toggle
+              label="Edge stripe"
+              checked={t.brandingEdge}
+              onChange={(brandingEdge) => set({ brandingEdge })}
+            />
+          </div>
+        </Field>
+
+        <Choice
+          label="Backdrop (behind the text)"
+          value={t.brandingBackdrop}
+          options={[
+            { label: 'None', value: 'none' as const },
+            { label: 'Watermark', value: 'watermark' as const },
+            { label: 'Tiled', value: 'tile' as const },
+          ]}
+          onChange={(brandingBackdrop) => set({ brandingBackdrop })}
+        />
+
+        {hasBranding && (
+          <div className="grid gap-4 sm:grid-cols-2">
+            {t.brandingMark && (
+              <SliderField
+                label="Letterhead logo"
+                value={t.brandingLogoSize}
+                min={4}
+                max={18}
+                step={0.5}
+                suffix="mm"
+                onChange={(brandingLogoSize) => set({ brandingLogoSize })}
+              />
+            )}
+            {t.brandingBackdrop === 'watermark' && (
+              <SliderField
+                label="Watermark size"
+                value={t.brandingWatermarkSize}
+                min={30}
+                max={160}
+                step={5}
+                suffix="mm"
+                onChange={(brandingWatermarkSize) =>
+                  set({ brandingWatermarkSize })
+                }
+              />
+            )}
+            {t.brandingBackdrop === 'tile' && (
+              <SliderField
+                label="Tile size"
+                value={t.brandingTileSize}
+                min={10}
+                max={60}
+                step={1}
+                suffix="mm"
+                onChange={(brandingTileSize) => set({ brandingTileSize })}
+              />
+            )}
+            {t.brandingBackdrop !== 'none' && (
+              <SliderField
+                label="Backdrop opacity"
+                value={t.brandingWatermarkOpacity}
+                min={0.01}
+                max={0.2}
+                step={0.01}
+                onChange={(brandingWatermarkOpacity) =>
+                  set({ brandingWatermarkOpacity })
+                }
+              />
+            )}
+          </div>
+        )}
       </div>
     </SectionCard>
   )

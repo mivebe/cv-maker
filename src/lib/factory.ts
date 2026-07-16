@@ -1,4 +1,5 @@
 import type {
+  Branding,
   CustomItem,
   CustomSection,
   CVVariant,
@@ -13,6 +14,23 @@ import type {
 import { newId } from './id'
 import { allSectionKeys } from './sections'
 import { themeFromPreset } from '../cv/themes'
+
+export function emptyBranding(): Branding {
+  return {
+    enabled: false,
+    company: '',
+    tagline: '',
+    url: '',
+    logo: '',
+    logoAlt: '',
+    accentColor: '',
+    issuedFor: '',
+    issuedDate: '',
+    contact: '',
+    note: '',
+    reference: '',
+  }
+}
 
 export function emptyProfile(): MasterProfile {
   return {
@@ -34,6 +52,7 @@ export function emptyProfile(): MasterProfile {
     projects: [],
     custom: [],
     totals: [],
+    branding: emptyBranding(),
   }
 }
 

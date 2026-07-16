@@ -1,6 +1,7 @@
 import { forwardRef, type CSSProperties } from 'react'
 import type {
   Basics,
+  Branding,
   CustomItem,
   ExperienceItem,
   ProjectItem,
@@ -169,15 +170,22 @@ function CustomBlock({
   format: DateFormat
 }) {
   const hl = useHighlightNode()
+  // An item can legitimately carry nothing but a chip group - that is how a
+  // labelled list ("Frameworks: LangGraph, FastAPI") is expressed outside the
+  // one built-in skills section. Rendering the row regardless would print an
+  // empty heading and its leading, so the space has to be earned.
+  const hasTitleRow = Boolean(item.icon || item.title || item.meta)
   return (
     <article className="cv-item" {...hl(item.id)}>
-      <div className="cv-title-row">
-        <h3 className="cv-item-title">
-          {item.icon && <CVIcon name={item.icon} size={13} />}
-          {item.title}
-        </h3>
-        {item.meta && <span className="cv-item-meta">{item.meta}</span>}
-      </div>
+      {hasTitleRow && (
+        <div className="cv-title-row">
+          <h3 className="cv-item-title">
+            {item.icon && <CVIcon name={item.icon} size={13} />}
+            {item.title}
+          </h3>
+          {item.meta && <span className="cv-item-meta">{item.meta}</span>}
+        </div>
+      )}
       {item.subtitle && <div className="cv-item-org">{item.subtitle}</div>}
       <MetaRow date={formatDate(item.date, format)} />
       <ChipGroup legend={item.tagsLabel} items={item.tags} />
@@ -315,6 +323,129 @@ function SectionBlock({
   )
 }
 
+/**
+ * Issuer branding ---------------------------------------------------------
+ *
+ * Four slots, each independently switchable by the variant's theme. All of it is
+ * the *issuer's* identity, so it is deliberately quieter than anything about the
+ * candidate - the CV is still about the person, and the studio only signs it.
+ *
+ * The hard rule: branding costs the document no space, horizontally or
+ * vertically. Every slot is `position: absolute` against the sheet and lands in
+ * space nothing else uses - the top margin, the bottom margin, the sheet's edge,
+ * or the layer behind the text - so turning any of it on cannot reflow a line,
+ * shift a column or move a page break.
+ *
+ * The page is sized in inches and branding sizes are authored in mm (like the
+ * margin and the avatar), but CVIcon sizes itself in px - hence the conversion.
+ */
+const PX_PER_MM = 96 / 25.4
+
+function mmToPx(mm: number): number {
+  return Math.round(mm * PX_PER_MM)
+}
+
+/** Only an actual image can be painted as a repeating CSS background. */
+function isImageRef(name: string): boolean {
+  return /^(data:|https?:\/\/|\/)/.test(name)
+}
+
+/**
+ * Letterhead: the mark sits in the top margin band, which is blank by
+ * definition, so it reads as issued-by without touching the name below it.
+ */
+function BrandMark({
+  branding,
+  theme,
+}: {
+  branding: Branding
+  theme: ThemeConfig
+}) {
+  const meta = [branding.issuedFor, branding.issuedDate, branding.reference]
+    .map((s) => s.trim())
+    .filter(Boolean)
+
+  if (!branding.logo && !branding.company && !meta.length) return null
+
+  // The band is only as tall as the page margin, so the logo is clamped to it
+  // rather than allowed to spill onto the content or off the sheet.
+  const logoPx = mmToPx(
+    Math.min(theme.brandingLogoSize, theme.pageMargin * 0.62),
+  )
+
+  return (
+    <div className="cv-brandmark">
+      {meta.length > 0 && (
+        <span className="cv-brandmark-meta">{meta.join(' · ')}</span>
+      )}
+      <span className="cv-brandmark-lockup">
+        {branding.logo && <CVIcon name={branding.logo} size={logoPx} />}
+        {branding.company && (
+          <span className="cv-brandmark-name">{branding.company}</span>
+        )}
+        {branding.tagline && (
+          <span className="cv-brandmark-tagline">{branding.tagline}</span>
+        )}
+      </span>
+    </div>
+  )
+}
+
+function BrandFooter({ branding }: { branding: Branding }) {
+  const parts = [branding.company, branding.url, branding.contact]
+    .map((s) => s.trim())
+    .filter(Boolean)
+  if (!parts.length && !branding.note.trim()) return null
+
+  return (
+    <div className="cv-brandfooter">
+      <span className="cv-brandfooter-org">{parts.join(' · ')}</span>
+      {branding.note && (
+        <span className="cv-brandfooter-note">{branding.note}</span>
+      )}
+    </div>
+  )
+}
+
+/**
+ * The layer behind the text: one oversized logo, or the logo tiled across the
+ * whole sheet. `aria-hidden` and text-free on purpose - it is decoration sitting
+ * under the content, and it must not reach the PDF's text layer.
+ *
+ * The tile is a repeating CSS background, so unlike the watermark it needs a
+ * real image; a registry icon key (`github`) has no URL to repeat and falls back
+ * to the single mark.
+ */
+function BrandBackdrop({
+  branding,
+  theme,
+}: {
+  branding: Branding
+  theme: ThemeConfig
+}) {
+  if (!branding.logo) return null
+
+  if (theme.brandingBackdrop === 'tile' && isImageRef(branding.logo)) {
+    const tile = `${theme.brandingTileSize}mm`
+    return (
+      <div
+        className="cv-brandtile"
+        aria-hidden
+        style={{
+          backgroundImage: `url("${branding.logo}")`,
+          backgroundSize: `${tile} ${tile}`,
+        }}
+      />
+    )
+  }
+
+  return (
+    <div className="cv-watermark" aria-hidden>
+      <CVIcon name={branding.logo} size={mmToPx(theme.brandingWatermarkSize)} />
+    </div>
+  )
+}
+
 function Avatar({ basics, theme }: { basics: Basics; theme: ThemeConfig }) {
   if (!theme.showAvatar || !basics.photo) return null
   return (
@@ -409,7 +540,7 @@ export interface CVDocumentProps {
 
 export const CVDocument = forwardRef<HTMLDivElement, CVDocumentProps>(
   function CVDocument({ cv, theme }, ref) {
-    const { basics, sections } = cv
+    const { basics, sections, branding } = cv
     const pages = paginate(sections, theme.columns === 2)
     if (!pages.length) pages.push({ bands: [] })
 
@@ -422,6 +553,18 @@ export const CVDocument = forwardRef<HTMLDivElement, CVDocumentProps>(
       >
         {pages.map((page, pageIndex) => (
           <div className="cv-page" key={pageIndex}>
+            {/* Branding first in the DOM, but none of it is in the flow: each
+                piece is positioned against the sheet. */}
+            {branding && theme.brandingBackdrop !== 'none' && (
+              <BrandBackdrop branding={branding} theme={theme} />
+            )}
+            {branding && theme.brandingEdge && (
+              <div className="cv-brandedge" aria-hidden />
+            )}
+            {branding && theme.brandingMark && (
+              <BrandMark branding={branding} theme={theme} />
+            )}
+
             {pageIndex === 0 && <Header basics={basics} theme={theme} />}
 
             {page.bands.map((band, bandIndex) =>
@@ -445,6 +588,10 @@ export const CVDocument = forwardRef<HTMLDivElement, CVDocumentProps>(
                   </div>
                 </div>
               ),
+            )}
+
+            {branding && theme.brandingFooter && (
+              <BrandFooter branding={branding} />
             )}
           </div>
         ))}

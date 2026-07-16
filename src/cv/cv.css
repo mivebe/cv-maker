@@ -57,6 +57,14 @@
   padding: var(--cv-margin);
   background: #fff;
   margin: 0 auto;
+  /* Anchors the watermark and the issuer footer, both of which are positioned
+     against the sheet rather than flowing with the content. `isolate` makes the
+     sheet its own stacking context, which is what lets the watermark sit at
+     z-index -1: above this element's white background, below the text. Without
+     it the watermark would escape to the nearest context and the background
+     would paint straight over it. */
+  position: relative;
+  isolation: isolate;
   /* Screen affordance only - the print block below strips it. */
   box-shadow: 0 1px 8px rgba(0, 0, 0, 0.15);
 }
@@ -86,6 +94,13 @@
 }
 .cv-root[data-icons='false'] .cv-icon {
   display: none;
+}
+/* The issuer's logo is branding, not content decoration. The branding slots
+   already own their own visibility (theme.brandingHeader / -Footer /
+   -Watermark), so the content icon switch must not reach into them. */
+.cv-root[data-icons='false'] .cv-brandmark .cv-icon,
+.cv-root[data-icons='false'] .cv-watermark .cv-icon {
+  display: inline-block;
 }
 .cv-root[data-brand-icons='false'] .cv-icon {
   fill: currentColor !important;
@@ -174,6 +189,114 @@
 }
 .cv-root[data-header-align='center'] .cv-summary {
   text-align: center;
+}
+
+/* Issuer branding --------------------------------------------------------- */
+/* Every slot below is absolutely positioned against the sheet and occupies only
+   space the document already leaves blank - the margins, the sheet edge, or the
+   layer behind the text. None of it is in the flow, so none of it can move a
+   line, a column or a page break. The CV is the candidate's; the issuer signs
+   it in the white space. */
+
+/* Letterhead: laid into the top margin band and vertically centred there, so it
+   reads as issued-by above the name without pushing the name down. */
+.cv-brandmark {
+  position: absolute;
+  top: 0;
+  left: var(--cv-margin);
+  right: var(--cv-margin);
+  height: var(--cv-margin);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1em;
+  overflow: hidden;
+  pointer-events: none;
+}
+.cv-brandmark-lockup {
+  display: flex;
+  align-items: center;
+  gap: 0.45em;
+  /* Always the right-hand end, even when the meta line is absent. */
+  margin-left: auto;
+}
+.cv-brandmark-name {
+  font-size: 0.92em;
+  font-weight: 700;
+  color: var(--cv-accent);
+  letter-spacing: 0.02em;
+}
+.cv-brandmark-tagline {
+  font-size: 0.66em;
+  color: var(--cv-muted);
+}
+/* Issued-for / date / reference read as filing metadata, so they hang back at
+   the opposite end, away from the mark itself. */
+.cv-brandmark-meta {
+  font-size: 0.66em;
+  color: var(--cv-muted);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.cv-watermark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: -1;
+  opacity: var(--cv-brand-watermark-opacity);
+  pointer-events: none;
+  line-height: 0;
+}
+
+/* The tile covers the whole sheet, edge to edge: it is a background, so it wants
+   to look like paper stock rather than like a mark placed on the page. */
+.cv-brandtile {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  opacity: var(--cv-brand-watermark-opacity);
+  background-repeat: repeat;
+  background-position: center;
+  pointer-events: none;
+}
+
+/* A full-bleed stripe of the brand colour down the sheet's left edge. It sits
+   inside the page margin, so it never reaches the text column. */
+.cv-brandedge {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: var(--cv-brand-edge-width);
+  background: var(--cv-accent);
+  pointer-events: none;
+}
+
+/* Sits in the page's bottom margin, so it never displaces content and never
+   changes where the page breaks. */
+.cv-brandfooter {
+  position: absolute;
+  left: var(--cv-margin);
+  right: var(--cv-margin);
+  bottom: calc(var(--cv-margin) * 0.34);
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1em;
+  padding-top: 0.4em;
+  border-top: 1px solid var(--cv-border);
+  font-size: 0.62em;
+  color: var(--cv-muted);
+}
+.cv-brandfooter-org {
+  font-weight: 600;
+  color: var(--cv-accent);
+  letter-spacing: 0.02em;
+}
+.cv-brandfooter-note {
+  text-align: right;
 }
 
 /* Avatar ------------------------------------------------------------------ */

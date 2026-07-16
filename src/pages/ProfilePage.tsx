@@ -5,6 +5,7 @@ import { EducationEditor } from '../components/editors/EducationEditor'
 import { SkillsEditor } from '../components/editors/SkillsEditor'
 import { ProjectsEditor } from '../components/editors/ProjectsEditor'
 import { TotalsEditor } from '../components/editors/TotalsEditor'
+import { BrandingEditor } from '../components/editors/BrandingEditor'
 import {
   AddCustomSectionButton,
   CustomSectionCard,
@@ -17,7 +18,13 @@ import type { CustomSection, MasterProfile } from '../schema/profile'
 import { useStore } from '../store/useStore'
 
 type SectionKey =
-  'basics' | 'experience' | 'education' | 'skills' | 'projects' | 'totals'
+  | 'basics'
+  | 'experience'
+  | 'education'
+  | 'skills'
+  | 'projects'
+  | 'totals'
+  | 'branding'
 
 const SECTIONS: Record<SectionKey, ComponentType> = {
   basics: BasicsEditor,
@@ -26,6 +33,7 @@ const SECTIONS: Record<SectionKey, ComponentType> = {
   skills: SkillsEditor,
   projects: ProjectsEditor,
   totals: TotalsEditor,
+  branding: BrandingEditor,
 }
 
 /**
@@ -36,15 +44,25 @@ const SECTIONS: Record<SectionKey, ComponentType> = {
  * soon as there are three.
  */
 const COLUMN_LAYOUT: Record<ColumnCount, SectionKey[][]> = {
-  1: [['basics', 'experience', 'education', 'skills', 'projects', 'totals']],
+  1: [
+    [
+      'basics',
+      'experience',
+      'education',
+      'skills',
+      'projects',
+      'totals',
+      'branding',
+    ],
+  ],
   2: [
     ['basics', 'experience'],
-    ['skills', 'education', 'projects', 'totals'],
+    ['skills', 'education', 'projects', 'totals', 'branding'],
   ],
   3: [
     ['basics', 'skills', 'totals'],
     ['experience'],
-    ['education', 'projects'],
+    ['education', 'projects', 'branding'],
   ],
 }
 
@@ -71,6 +89,9 @@ function builtinWeight(key: SectionKey, profile: MasterProfile): number {
       return 2 + sum(profile.projects, (p) => 7 + p.highlights.length)
     case 'totals':
       return 2 + profile.totals.length * 2
+    // Collapsed to a single checkbox until it is switched on.
+    case 'branding':
+      return profile.branding.enabled ? 22 : 3
   }
 }
 

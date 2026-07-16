@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware'
 import type {
   AppData,
   Basics,
+  Branding,
   CustomItem,
   CustomSection,
   CVVariant,
@@ -80,6 +81,7 @@ interface AppState {
 
   // ---- basics ----
   updateBasics: (patch: Partial<Basics>) => void
+  updateBranding: (patch: Partial<Branding>) => void
   addLink: () => void
   updateLink: (id: string, patch: Partial<Link>) => void
   removeLink: (id: string) => void
@@ -196,6 +198,11 @@ export const useStore = create<AppState>()(
       // ---- basics ----
       updateBasics: (patch) =>
         patchProfile(set, (p) => ({ ...p, basics: { ...p.basics, ...patch } })),
+      updateBranding: (patch) =>
+        patchProfile(set, (p) => ({
+          ...p,
+          branding: { ...p.branding, ...patch },
+        })),
       addLink: () =>
         patchProfile(set, (p) => ({
           ...p,
@@ -412,10 +419,11 @@ export const useStore = create<AppState>()(
     }),
     {
       name: 'cv-maker:v1',
-      version: 4,
+      version: 6,
       partialize: (s) => ({ profile: s.profile, variants: s.variants }),
       /**
-       * Older state predates icons/avatar/chips/totals/placement/bullets. Every
+       * Older state predates icons/avatar/chips/totals/placement/bullets/
+       * branding. Every
        * field added since has a Zod default, so re-parsing the persisted state
        * through the schemas is the migration: it backfills the new fields and
        * leaves the user's content untouched. Without this, already-saved profiles
@@ -424,7 +432,7 @@ export const useStore = create<AppState>()(
        */
       migrate: (persisted, version): PersistedState => {
         const asIs = persisted as PersistedState
-        if (version >= 4) return asIs
+        if (version >= 6) return asIs
 
         const profile = masterProfileSchema.safeParse(asIs?.profile)
         const variants = parseVariants(asIs?.variants)
