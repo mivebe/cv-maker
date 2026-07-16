@@ -72,6 +72,7 @@ export function resolveVariant(
     ...profile.basics,
     headline: variant.basicsOverride.headline ?? profile.basics.headline,
     summary: variant.basicsOverride.summary ?? profile.basics.summary,
+    location: variant.basicsOverride.location ?? profile.basics.location,
   }
 
   const order = reconcileSectionOrder(variant.sectionOrder, profile)

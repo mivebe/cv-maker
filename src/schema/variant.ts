@@ -167,10 +167,12 @@ export const variantSchema = z.object({
   sectionLayout: z.record(z.string(), sectionPlacementSchema).default({}),
   /** itemId -> shallow field overrides applied on top of the master item. */
   overrides: z.record(z.string(), z.record(z.string(), z.unknown())),
-  /** Tailored headline/summary that override the master basics for this variant. */
+  /** Tailored headline/summary/location that override the master basics for this variant. */
   basicsOverride: z.object({
     headline: z.string().optional(),
     summary: z.string().optional(),
+    /** Per-variant location (e.g. target a local role) without touching master. */
+    location: z.string().optional(),
   }),
   theme: themeConfigSchema,
 })

@@ -68,6 +68,20 @@ export function VariantMetaEditor({ variant }: { variant: CVVariant }) {
               }
             />
           </Field>
+          <Field
+            label="Location override"
+            hint={`Leave blank to use master: "${profile.basics.location || '-'}"`}
+          >
+            <Input
+              value={variant.basicsOverride.location ?? ''}
+              placeholder={profile.basics.location}
+              onChange={(e) =>
+                updateVariantBasics(variant.id, {
+                  location: e.target.value || undefined,
+                })
+              }
+            />
+          </Field>
         </div>
       </SectionCard>
     </div>
