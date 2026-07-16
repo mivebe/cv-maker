@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Check, X } from 'lucide-react'
-import { BRAND_COUNT, CVIcon, ICON_GROUPS, searchIcons } from '@/cv/icons'
+import { CVIcon, ICON_GROUPS, searchIcons, SEARCHABLE_COUNT } from '@/cv/icons'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -70,7 +70,7 @@ export function IconPicker({
         <Input
           autoFocus
           value={query}
-          placeholder={`Search ${BRAND_COUNT.toLocaleString()} icons, or paste a URL`}
+          placeholder={`Search ${SEARCHABLE_COUNT.toLocaleString()} icons, or paste a URL`}
           onChange={(e) => setQuery(e.target.value)}
         />
 

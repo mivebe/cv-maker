@@ -12,9 +12,11 @@
     "typecheck": "tsc -b --noEmit"
   },
   "dependencies": {
-    "@mivebe/icons": "file:../icons",
+    "@entypo-icons/core": "^1.0.1",
     "@fontsource-variable/geist": "^5.2.9",
+    "@fortawesome/fontawesome-free": "^7.3.1",
     "@hookform/resolvers": "^3.9.1",
+    "@mivebe/icons": "file:../icons",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^1.24.0",

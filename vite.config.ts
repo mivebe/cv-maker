@@ -54,11 +54,89 @@ function brandIcons(): Plugin {
   }
 }
 
+/**
+ * Additional icon packs (Font Awesome Free, Entypo), same contract as
+ * brandIcons: names only are bundled (via the `virtual:icon-pack-manifest`
+ * module), the SVG itself is fetched from /icon-packs/<pack>/<name>.svg the
+ * first time something draws it - node_modules in dev, copied into dist/ at
+ * build. Freepik is deliberately absent: Flaticon's license does not allow
+ * redistributing the files, so those enter as pasted image URLs instead.
+ */
+const ICON_PACKS: { route: string; dir: string }[] = [
+  { route: 'fa-solid', dir: '@fortawesome/fontawesome-free/svgs/solid' },
+  { route: 'fa-regular', dir: '@fortawesome/fontawesome-free/svgs/regular' },
+  { route: 'fa-brands', dir: '@fortawesome/fontawesome-free/svgs/brands' },
+  { route: 'entypo', dir: '@entypo-icons/core/icons' },
+]
+
+function iconPacks(): Plugin {
+  const packs = ICON_PACKS.map((p) => ({
+    ...p,
+    abs: path.resolve(__dirname, 'node_modules', p.dir),
+  }))
+  const PREFIX = '/icon-packs/'
+  const VIRTUAL = 'virtual:icon-pack-manifest'
+  const RESOLVED = '\0' + VIRTUAL
+
+  return {
+    name: 'icon-packs',
+
+    resolveId(id) {
+      if (id === VIRTUAL) return RESOLVED
+    },
+    load(id) {
+      if (id !== RESOLVED) return
+      const manifest: Record<string, string[]> = {}
+      for (const p of packs) {
+        manifest[p.route] = fs
+          .readdirSync(p.abs)
+          .filter((f) => f.endsWith('.svg'))
+          .map((f) => f.slice(0, -4))
+      }
+      return `export const packManifest = ${JSON.stringify(manifest)}`
+    },
+
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        const url = req.url?.split('?')[0]
+        if (!url?.startsWith(PREFIX)) return next()
+
+        const [route, ...rest] = decodeURIComponent(
+          url.slice(PREFIX.length),
+        ).split('/')
+        const pack = packs.find((p) => p.route === route)
+        const name = path.basename(rest.join('/'))
+        const file = pack ? path.resolve(pack.abs, name) : ''
+        if (!pack || path.dirname(file) !== pack.abs || !fs.existsSync(file)) {
+          res.statusCode = 404
+          return res.end()
+        }
+
+        res.setHeader('Content-Type', 'image/svg+xml')
+        res.end(fs.readFileSync(file))
+      })
+    },
+
+    generateBundle() {
+      for (const p of packs) {
+        for (const name of fs.readdirSync(p.abs)) {
+          if (!name.endsWith('.svg')) continue
+          this.emitFile({
+            type: 'asset',
+            fileName: `icon-packs/${p.route}/${name}`,
+            source: fs.readFileSync(path.join(p.abs, name)),
+          })
+        }
+      }
+    },
+  }
+}
+
 // https://vite.dev/config/
 export default defineConfig(({ command }) => ({
   // Served from https://mivebe.github.io/cv-maker/ in production; root in dev.
   base: command === 'build' ? '/cv-maker/' : '/',
-  plugins: [react(), tailwindcss(), brandIcons()],
+  plugins: [react(), tailwindcss(), brandIcons(), iconPacks()],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
