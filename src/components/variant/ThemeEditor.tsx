@@ -384,6 +384,16 @@ export function ThemeEditor({ variant }: { variant: CVVariant }) {
             ]}
             onChange={(avatarPosition) => set({ avatarPosition })}
           />
+          <Choice
+            label="Under the name"
+            value={t.headerFill ?? ('none' as const)}
+            options={[
+              { label: 'Empty', value: 'none' as const },
+              { label: 'Profile links', value: 'links' as const },
+              { label: 'Summary', value: 'summary' as const },
+            ]}
+            onChange={(headerFill) => set({ headerFill })}
+          />
         </div>
 
         <Toggle

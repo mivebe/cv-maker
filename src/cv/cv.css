@@ -175,6 +175,32 @@
   font-size: 0.95em;
 }
 
+/* Header fill: what sits in the blank space under the name and headline. */
+.cv-header-links {
+  list-style: none;
+  margin: 0.6em 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3em 1.1em;
+  font-size: 0.82em;
+}
+.cv-header-links li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+}
+.cv-root[data-header-align='center'] .cv-header-links {
+  justify-content: center;
+}
+/* Summary beside the contact column: tighter than the full-width paragraph,
+   and capped so it wraps instead of crushing the contacts against the edge. */
+.cv-summary-inline {
+  margin-top: 0.6em;
+  font-size: 0.9em;
+  max-width: 36em;
+}
+
 .cv-root[data-avatar-pos='left'] .cv-avatar {
   order: -1;
 }

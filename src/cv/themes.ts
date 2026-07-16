@@ -30,6 +30,7 @@ const BASE: Omit<ThemeConfig, 'preset'> = {
   columnGap: 28,
 
   headerAlign: 'left',
+  headerFill: 'none',
   showAvatar: true,
   avatarShape: 'rounded',
   avatarPosition: 'right',
@@ -87,6 +88,9 @@ export const THEME_PRESETS: Record<ThemePreset, ThemeConfig> = {
     pageMargin: 14,
     headingRule: false,
     avatarShape: 'circle',
+    // The one-page-minded preset: the summary rides beside the contacts
+    // instead of costing the page a full-width paragraph.
+    headerFill: 'summary',
   },
   showcase: {
     ...BASE,
@@ -110,6 +114,9 @@ export const THEME_PRESETS: Record<ThemePreset, ThemeConfig> = {
     avatarPosition: 'right',
     avatarSize: 32,
     badgeColor: '#16a34a',
+    // Profile links sit under the name, contact details on the right - the
+    // link-heavy preset is the one with blank space under its big name.
+    headerFill: 'links',
     brandingBackdrop: 'watermark',
   },
   ats: {

@@ -833,9 +833,35 @@ function Avatar({ basics, theme }: { basics: Basics; theme: ThemeConfig }) {
   )
 }
 
+interface ContactEntry {
+  key: string
+  icon: string
+  text: string
+  url: string
+}
+
+function ContactLine({ c }: { c: ContactEntry }) {
+  return (
+    <>
+      <CVIcon name={c.icon} size={13} />
+      {c.url ? (
+        <a className="cv-link" href={c.url}>
+          {c.text}
+        </a>
+      ) : (
+        <span>{c.text}</span>
+      )}
+    </>
+  )
+}
+
 function Header({ basics, theme }: { basics: Basics; theme: ThemeConfig }) {
   const hl = useHighlightNode()
-  const contacts = [
+  // Runtime fallback: themes persisted before this token existed carry no
+  // headerFill (the store does not re-parse through zod on load).
+  const fill = theme.headerFill ?? 'none'
+
+  const info = [
     basics.email && {
       key: 'email',
       icon: 'mail',
@@ -854,18 +880,18 @@ function Header({ basics, theme }: { basics: Basics; theme: ThemeConfig }) {
       text: basics.location,
       url: '',
     },
-    ...basics.links.map((l) => ({
-      key: l.id,
-      icon: l.icon || 'link',
-      text: l.label || prettyUrl(l.url),
-      url: l.url ? href(l.url) : '',
-    })),
-  ].filter(Boolean) as {
-    key: string
-    icon: string
-    text: string
-    url: string
-  }[]
+  ].filter(Boolean) as ContactEntry[]
+
+  const links: ContactEntry[] = basics.links.map((l) => ({
+    key: l.id,
+    icon: l.icon || 'link',
+    text: l.label || prettyUrl(l.url),
+    url: l.url ? href(l.url) : '',
+  }))
+
+  // `links` fill moves the profile links under the name; everything else
+  // keeps them stacked with the contact details on the right.
+  const rightColumn = fill === 'links' ? info : [...info, ...links]
 
   return (
     <header className="cv-header" {...hl(BASICS_ID)}>
@@ -873,20 +899,27 @@ function Header({ basics, theme }: { basics: Basics; theme: ThemeConfig }) {
         <div className="cv-identity">
           <h1 className="cv-name">{basics.name || 'Your Name'}</h1>
           {basics.headline && <p className="cv-headline">{basics.headline}</p>}
+          {fill === 'links' && links.length > 0 && (
+            <ul className="cv-header-links">
+              {links.map((c) => (
+                <li key={c.key}>
+                  <ContactLine c={c} />
+                </li>
+              ))}
+            </ul>
+          )}
+          {fill === 'summary' && basics.summary && (
+            <p className="cv-summary cv-summary-inline">
+              <RichText text={basics.summary} />
+            </p>
+          )}
         </div>
 
-        {contacts.length > 0 && (
+        {rightColumn.length > 0 && (
           <ul className="cv-contact">
-            {contacts.map((c) => (
+            {rightColumn.map((c) => (
               <li key={c.key}>
-                <CVIcon name={c.icon} size={13} />
-                {c.url ? (
-                  <a className="cv-link" href={c.url}>
-                    {c.text}
-                  </a>
-                ) : (
-                  <span>{c.text}</span>
-                )}
+                <ContactLine c={c} />
               </li>
             ))}
           </ul>
@@ -895,7 +928,7 @@ function Header({ basics, theme }: { basics: Basics; theme: ThemeConfig }) {
         <Avatar basics={basics} theme={theme} />
       </div>
 
-      {basics.summary && (
+      {fill !== 'summary' && basics.summary && (
         <p className="cv-summary">
           <RichText text={basics.summary} />
         </p>

@@ -87,6 +87,13 @@ export const themeConfigSchema = z.object({
 
   // ---- header / avatar ----
   headerAlign: z.enum(['left', 'center']).default('left'),
+  /**
+   * What fills the space under the name and headline, beside the contact
+   * column: the profile links (leaving email/phone/location on the right),
+   * the summary (instead of the full-width paragraph below the header row),
+   * or nothing.
+   */
+  headerFill: z.enum(['none', 'links', 'summary']).default('none'),
   /** Show the avatar at all (content still stores the photo). */
   showAvatar: z.boolean().default(true),
   avatarShape: avatarShapeSchema.default('rounded'),
