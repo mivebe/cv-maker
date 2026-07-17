@@ -67,7 +67,10 @@ export function parsePackRef(raw: string): PackRef | null {
   if (i <= 0) return null
   const pack = PACK_PREFIXES[raw.slice(0, i).toLowerCase()]
   if (!pack) return null
-  const name = raw.slice(i + 1).trim().toLowerCase()
+  const name = raw
+    .slice(i + 1)
+    .trim()
+    .toLowerCase()
   if (!packSets[pack]?.has(name)) return null
   return { pack, name, slug: `${PACK_CANONICAL[pack]}:${name}` }
 }

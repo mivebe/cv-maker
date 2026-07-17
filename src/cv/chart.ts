@@ -60,7 +60,10 @@ export function chartColors(
   palette: 'accent' | 'categorical',
 ): string[] {
   if (palette === 'categorical') {
-    return Array.from({ length: count }, (_, i) => CATEGORICAL[i % CATEGORICAL.length])
+    return Array.from(
+      { length: count },
+      (_, i) => CATEGORICAL[i % CATEGORICAL.length],
+    )
   }
   const base = hexToHsl(accentColor) ?? { h: 215, s: 0.55, l: 0.45 }
   return Array.from({ length: count }, (_, i) => {

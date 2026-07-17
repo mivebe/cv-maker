@@ -291,7 +291,8 @@ function ChartBlock({
   // `auto`: parts-of-a-whole shapes read as percentages, bars as raw values.
   const asPercent =
     options.chartValueFormat === 'percent' ||
-    (options.chartValueFormat === 'auto' && (type === 'pie' || type === 'donut'))
+    (options.chartValueFormat === 'auto' &&
+      (type === 'pie' || type === 'donut'))
   const value = (v: number) =>
     asPercent ? `${Math.round((v / total) * 100)}%` : String(v)
 
@@ -358,9 +359,7 @@ function ChartBlock({
             </g>
           )
         })}
-        {type === 'donut' && (
-          <circle cx={50} cy={50} r={rInner} fill="#fff" />
-        )}
+        {type === 'donut' && <circle cx={50} cy={50} r={rInner} fill="#fff" />}
       </svg>
     )
   } else {
@@ -542,9 +541,7 @@ function LanguagesBlock({
               {options.languageShowLabels && (
                 <div className="cv-slider-labels">
                   <span>{LANGUAGE_STAGES[0]}</span>
-                  <span className="cv-language-current">
-                    {stage(it.level)}
-                  </span>
+                  <span className="cv-language-current">{stage(it.level)}</span>
                   <span>{LANGUAGE_STAGES[3]}</span>
                 </div>
               )}

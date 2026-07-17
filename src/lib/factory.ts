@@ -145,10 +145,7 @@ export function newLanguageItem(): LanguageItem {
  * Item factory per kind, so the store's generic `addItem(sectionId)` can mint
  * the right item shape from the section it lands in. `banner` has no items.
  */
-export const ITEM_FACTORIES: Record<
-  SectionKind,
-  () => SectionItem | null
-> = {
+export const ITEM_FACTORIES: Record<SectionKind, () => SectionItem | null> = {
   experience: newExperience,
   education: newEducation,
   skills: newSkillGroup,

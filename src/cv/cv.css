@@ -751,7 +751,10 @@
 .cv-list-grid {
   display: grid;
   gap: calc(var(--cv-gap) * 0.6) var(--cv-column-gap);
-  grid-template-columns: repeat(auto-fit, minmax(var(--cv-list-min, 13em), 1fr));
+  grid-template-columns: repeat(
+    auto-fit,
+    minmax(var(--cv-list-min, 13em), 1fr)
+  );
 }
 /*
  * Row dividers in an auto-fit grid: a border between "stacked" cells misfires
@@ -996,7 +999,9 @@
   border-radius: 2px;
 }
 /* The chart section never draws the generic row dividers. */
-.cv-section[data-kind='chart'][data-dividers='true'] .cv-chart-row + .cv-chart-row {
+.cv-section[data-kind='chart'][data-dividers='true']
+  .cv-chart-row
+  + .cv-chart-row {
   border-top: none;
   padding-top: 0;
 }

@@ -98,8 +98,7 @@ export function resolveVariant(
     const section = byId.get(id)
     if (!section) continue
 
-    const placement =
-      variant.sectionLayout[id] ?? KIND_PLACEMENT[section.kind]
+    const placement = variant.sectionLayout[id] ?? KIND_PLACEMENT[section.kind]
 
     // Four layers, most specific last. `variant.optionDefaults` outranks
     // `section.options` ON PURPOSE: it is a policy ("this variant has no icons
