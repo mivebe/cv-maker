@@ -11,7 +11,6 @@ import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Separator } from '@/components/ui/separator'
 import {
   Select,
   SelectContent,
@@ -181,26 +180,29 @@ function Toggle({
   )
 }
 
-export function ThemeEditor({ variant }: { variant: CVVariant }) {
-  const updateVariantTheme = useStore((s) => s.updateVariantTheme)
+/** Theme value + setter every card shares. */
+interface CardProps {
+  t: CVVariant['theme']
+  set: (patch: Partial<CVVariant['theme']>) => void
+}
+
+function PresetColumnsCard({
+  variant,
+  t,
+  set,
+}: CardProps & { variant: CVVariant }) {
   const replaceVariantOptionDefaults = useStore(
     (s) => s.replaceVariantOptionDefaults,
   )
-  const hasPhoto = useStore((s) => Boolean(s.profile.basics.photo))
-  const hasBranding = useStore((s) => s.profile.branding.enabled)
-  const t = variant.theme
-  const set = (patch: Partial<CVVariant['theme']>) =>
-    updateVariantTheme(variant.id, patch)
-
   return (
     <SectionCard
-      title="Design"
+      title="Preset & Columns"
       description="Restyle this variant. The ATS-safe preset stays single-column with standard fonts, no icons and no photo, for clean parsing."
     >
       <div className="space-y-4">
         <Field
           label="Preset"
-          hint="Picking a preset resets the theme AND the section options policy below — ATS strips per-section decoration (icons, chart markers, language notches) so every section degrades to parseable text at once."
+          hint="Picking a preset resets the theme AND the section options policy — ATS strips per-section decoration (icons, chart markers, language notches) so every section degrades to parseable text at once."
         >
           <div className="flex flex-wrap gap-2">
             {(Object.keys(THEME_PRESETS) as ThemePreset[]).map((p) => (
@@ -221,6 +223,51 @@ export function ThemeEditor({ variant }: { variant: CVVariant }) {
           </div>
         </Field>
 
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Choice
+            label="Columns"
+            value={t.columns}
+            options={[
+              { label: 'One', value: 1 as const },
+              { label: 'Two', value: 2 as const },
+            ]}
+            onChange={(columns) => set({ columns })}
+          />
+          {t.columns === 2 && (
+            <>
+              <SliderField
+                label="Column gap"
+                value={t.columnGap}
+                min={8}
+                max={60}
+                step={1}
+                suffix="px"
+                onChange={(columnGap) => set({ columnGap })}
+              />
+              <SliderField
+                label="Side column width"
+                value={t.sideColumnRatio}
+                min={0.3}
+                max={1.2}
+                step={0.02}
+                suffix="× main"
+                onChange={(sideColumnRatio) => set({ sideColumnRatio })}
+              />
+            </>
+          )}
+        </div>
+      </div>
+    </SectionCard>
+  )
+}
+
+function TextSpacingCard({ t, set }: CardProps) {
+  return (
+    <SectionCard
+      title="Text & Spacing"
+      description="Type, sizing and the breathing room between sections and items."
+    >
+      <div className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Font family">
             <Select
@@ -244,15 +291,6 @@ export function ThemeEditor({ variant }: { variant: CVVariant }) {
               </SelectContent>
             </Select>
           </Field>
-          <Choice
-            label="Columns"
-            value={t.columns}
-            options={[
-              { label: 'One', value: 1 as const },
-              { label: 'Two', value: 2 as const },
-            ]}
-            onChange={(columns) => set({ columns })}
-          />
           <Field
             label="Date format"
             hint="Text the date parser doesn't recognise (“Present”, “Summer 2020”) prints as typed."
@@ -273,9 +311,6 @@ export function ThemeEditor({ variant }: { variant: CVVariant }) {
               </SelectContent>
             </Select>
           </Field>
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2">
           <SliderField
             label="Font size"
             value={t.fontSize}
@@ -310,13 +345,6 @@ export function ThemeEditor({ variant }: { variant: CVVariant }) {
             step={0.05}
             onChange={(density) => set({ density })}
           />
-        </div>
-
-        <Separator />
-
-        {/* ---- spacing ---- */}
-        <p className="text-xs font-medium text-muted-foreground">Spacing</p>
-        <div className="grid gap-4 sm:grid-cols-2">
           <SliderField
             label="Between sections"
             value={t.sectionGap}
@@ -335,36 +363,20 @@ export function ThemeEditor({ variant }: { variant: CVVariant }) {
             suffix="px"
             onChange={(itemGap) => set({ itemGap })}
           />
-          {t.columns === 2 && (
-            <>
-              <SliderField
-                label="Column gap"
-                value={t.columnGap}
-                min={8}
-                max={60}
-                step={1}
-                suffix="px"
-                onChange={(columnGap) => set({ columnGap })}
-              />
-              <SliderField
-                label="Side column width"
-                value={t.sideColumnRatio}
-                min={0.3}
-                max={1.2}
-                step={0.02}
-                suffix="× main"
-                onChange={(sideColumnRatio) => set({ sideColumnRatio })}
-              />
-            </>
-          )}
         </div>
+      </div>
+    </SectionCard>
+  )
+}
 
-        <Separator />
-
-        {/* ---- header & avatar ---- */}
-        <p className="text-xs font-medium text-muted-foreground">
-          Header & avatar
-        </p>
+function HeaderAvatarCard({ t, set }: CardProps) {
+  const hasPhoto = useStore((s) => Boolean(s.profile.basics.photo))
+  return (
+    <SectionCard
+      title="Header & Avatar"
+      description="How the name block sits on the page, and the portrait next to it."
+    >
+      <div className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-2">
           <Choice
             label="Header alignment"
@@ -502,50 +514,62 @@ export function ThemeEditor({ variant }: { variant: CVVariant }) {
             />
           </>
         )}
+      </div>
+    </SectionCard>
+  )
+}
 
-        <Separator />
+function ColorsCard({ t, set }: CardProps) {
+  return (
+    <SectionCard
+      title="Colors"
+      description="Item titles and links fall back to the accent when left blank."
+    >
+      <div className="grid gap-4 sm:grid-cols-3">
+        <ColorField
+          label="Accent"
+          value={t.accentColor}
+          onChange={(accentColor) => set({ accentColor })}
+        />
+        <ColorField
+          label="Text"
+          value={t.textColor}
+          onChange={(textColor) => set({ textColor })}
+        />
+        <ColorField
+          label="Headings"
+          value={t.headingColor}
+          onChange={(headingColor) => set({ headingColor })}
+        />
+        <ColorField
+          label="Item titles"
+          value={t.titleColor}
+          placeholder="accent"
+          onChange={(titleColor) => set({ titleColor })}
+        />
+        <ColorField
+          label="Links"
+          value={t.linkColor}
+          placeholder="accent"
+          onChange={(linkColor) => set({ linkColor })}
+        />
+        <ColorField
+          label="Badges"
+          value={t.badgeColor}
+          onChange={(badgeColor) => set({ badgeColor })}
+        />
+      </div>
+    </SectionCard>
+  )
+}
 
-        {/* ---- color ---- */}
-        <p className="text-xs font-medium text-muted-foreground">Color</p>
-        <div className="grid gap-4 sm:grid-cols-3">
-          <ColorField
-            label="Accent"
-            value={t.accentColor}
-            onChange={(accentColor) => set({ accentColor })}
-          />
-          <ColorField
-            label="Text"
-            value={t.textColor}
-            onChange={(textColor) => set({ textColor })}
-          />
-          <ColorField
-            label="Headings"
-            value={t.headingColor}
-            onChange={(headingColor) => set({ headingColor })}
-          />
-          <ColorField
-            label="Item titles"
-            value={t.titleColor}
-            placeholder="accent"
-            onChange={(titleColor) => set({ titleColor })}
-          />
-          <ColorField
-            label="Links"
-            value={t.linkColor}
-            placeholder="accent"
-            onChange={(linkColor) => set({ linkColor })}
-          />
-          <ColorField
-            label="Badges"
-            value={t.badgeColor}
-            onChange={(badgeColor) => set({ badgeColor })}
-          />
-        </div>
-
-        <Separator />
-
-        {/* ---- decoration ---- */}
-        <p className="text-xs font-medium text-muted-foreground">Decoration</p>
+function DecorationCard({ t, set }: CardProps) {
+  return (
+    <SectionCard
+      title="Decoration"
+      description="Chips, bullets, casing and icons — the trim on top of the layout."
+    >
+      <div className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-2">
           <Choice
             label="Chips"
@@ -645,33 +669,40 @@ export function ThemeEditor({ variant }: { variant: CVVariant }) {
             />
           )}
         </div>
+      </div>
+    </SectionCard>
+  )
+}
 
-        <Field
-          label="Issuer branding"
-          hint={
-            hasBranding
-              ? 'Where this variant shows the issuing company. Every option sits in a page margin, on the sheet’s edge, or behind the text — none of it takes space from the CV or moves a page break. The ATS-safe preset drops all of it: a logo carries no text, and a backdrop sits behind the text a parser reads.'
-              : 'Turn on branding in Profile → Issuer branding to place a company’s logo and details on this CV.'
-          }
-        >
-          <div className="flex flex-wrap gap-4">
-            <Toggle
-              label="Letterhead (top margin)"
-              checked={t.brandingMark}
-              onChange={(brandingMark) => set({ brandingMark })}
-            />
-            <Toggle
-              label="Footer (bottom margin)"
-              checked={t.brandingFooter}
-              onChange={(brandingFooter) => set({ brandingFooter })}
-            />
-            <Toggle
-              label="Edge stripe"
-              checked={t.brandingEdge}
-              onChange={(brandingEdge) => set({ brandingEdge })}
-            />
-          </div>
-        </Field>
+function BrandingCard({ t, set }: CardProps) {
+  const hasBranding = useStore((s) => s.profile.branding.enabled)
+  return (
+    <SectionCard
+      title="Issuer branding"
+      description={
+        hasBranding
+          ? 'Where this variant shows the issuing company. Every option sits in a page margin, on the sheet’s edge, or behind the text — none of it takes space from the CV or moves a page break. The ATS-safe preset drops all of it: a logo carries no text, and a backdrop sits behind the text a parser reads.'
+          : 'Turn on branding in Profile → Issuer branding to place a company’s logo and details on this CV.'
+      }
+    >
+      <div className="space-y-4">
+        <div className="flex flex-wrap gap-4">
+          <Toggle
+            label="Letterhead (top margin)"
+            checked={t.brandingMark}
+            onChange={(brandingMark) => set({ brandingMark })}
+          />
+          <Toggle
+            label="Footer (bottom margin)"
+            checked={t.brandingFooter}
+            onChange={(brandingFooter) => set({ brandingFooter })}
+          />
+          <Toggle
+            label="Edge stripe"
+            checked={t.brandingEdge}
+            onChange={(brandingEdge) => set({ brandingEdge })}
+          />
+        </div>
 
         <Choice
           label="Backdrop (behind the text)"
@@ -737,5 +768,29 @@ export function ThemeEditor({ variant }: { variant: CVVariant }) {
         )}
       </div>
     </SectionCard>
+  )
+}
+
+/**
+ * The Design tab's theme controls, split into topic cards. Renders a fragment
+ * of sibling <SectionCard>s so the tab's multi-column flow (3xl:columns-2 on
+ * the page) can balance them across columns — one monolithic card would pin
+ * everything into a single column.
+ */
+export function ThemeEditor({ variant }: { variant: CVVariant }) {
+  const updateVariantTheme = useStore((s) => s.updateVariantTheme)
+  const t = variant.theme
+  const set = (patch: Partial<CVVariant['theme']>) =>
+    updateVariantTheme(variant.id, patch)
+
+  return (
+    <>
+      <PresetColumnsCard variant={variant} t={t} set={set} />
+      <TextSpacingCard t={t} set={set} />
+      <HeaderAvatarCard t={t} set={set} />
+      <ColorsCard t={t} set={set} />
+      <DecorationCard t={t} set={set} />
+      <BrandingCard t={t} set={set} />
+    </>
   )
 }

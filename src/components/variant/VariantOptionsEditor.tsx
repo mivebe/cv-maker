@@ -1,38 +1,61 @@
+import {
+  CalendarDays,
+  ChartPie,
+  Hash,
+  Languages,
+  List,
+  SeparatorHorizontal,
+  Shapes,
+  SlidersHorizontal,
+  Text,
+  type LucideIcon,
+} from 'lucide-react'
 import type { CVVariant, SectionOptions } from '../../schema'
 import { useStore } from '../../store/useStore'
-import { Field, SectionCard } from '@/components/app-ui'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
+import { SectionCard } from '@/components/app-ui'
+import { Button } from '@/components/ui/button'
 
 /**
  * Editors for a variant's two option-override layers. Both edit a *partial*
- * options bag, so every control is tri-state: unset ("No override") means the
- * layer stays silent for that key and the layer below shows through.
+ * options bag, so every control is tri-state: unset ("No policy" / "No
+ * override") means the layer stays silent for that key and the layer below
+ * shows through.
  */
 
-type FieldDef =
-  | { key: keyof SectionOptions; label: string; type: 'bool' }
-  | {
-      key: keyof SectionOptions
-      label: string
-      type: 'enum'
-      choices: { label: string; value: string }[]
-    }
+type Choice = { label: string; value: string | boolean }
+
+interface FieldDef {
+  key: keyof SectionOptions
+  label: string
+  /** What kind of thing this option controls, at a glance. */
+  icon: LucideIcon
+  choices: Choice[]
+}
+
+const ON_OFF: Choice[] = [
+  { label: 'On', value: true },
+  { label: 'Off', value: false },
+]
 
 const FIELDS: FieldDef[] = [
-  { key: 'showIcons', label: 'Section icons', type: 'bool' },
-  { key: 'rowDividers', label: 'Row dividers', type: 'bool' },
-  { key: 'showDescription', label: 'Descriptions', type: 'bool' },
-  { key: 'showHighlights', label: 'Highlights', type: 'bool' },
+  { key: 'showIcons', label: 'Section icons', icon: Shapes, choices: ON_OFF },
+  {
+    key: 'rowDividers',
+    label: 'Row dividers',
+    icon: SeparatorHorizontal,
+    choices: ON_OFF,
+  },
+  {
+    key: 'showDescription',
+    label: 'Descriptions',
+    icon: Text,
+    choices: ON_OFF,
+  },
+  { key: 'showHighlights', label: 'Highlights', icon: List, choices: ON_OFF },
   {
     key: 'datePosition',
     label: 'Date position',
-    type: 'enum',
+    icon: CalendarDays,
     choices: [
       { label: 'Below the title', value: 'below' },
       { label: 'Right of the title', value: 'right' },
@@ -41,7 +64,7 @@ const FIELDS: FieldDef[] = [
   {
     key: 'chartType',
     label: 'Chart type',
-    type: 'enum',
+    icon: ChartPie,
     choices: [
       { label: 'Pie', value: 'pie' },
       { label: 'Donut', value: 'donut' },
@@ -52,7 +75,7 @@ const FIELDS: FieldDef[] = [
   {
     key: 'chartMarker',
     label: 'Chart markers',
-    type: 'enum',
+    icon: Hash,
     choices: [
       { label: 'Letters', value: 'letter' },
       { label: 'Numbers', value: 'number' },
@@ -62,19 +85,28 @@ const FIELDS: FieldDef[] = [
   {
     key: 'languageDisplay',
     label: 'Language display',
-    type: 'enum',
+    icon: Languages,
     choices: [
       { label: 'Words', value: 'words' },
       { label: 'Notches', value: 'notches' },
       { label: 'Slider', value: 'slider' },
     ],
   },
-  { key: 'sliderShowLabels', label: 'Slider labels', type: 'bool' },
+  {
+    key: 'sliderShowLabels',
+    label: 'Slider labels',
+    icon: SlidersHorizontal,
+    choices: ON_OFF,
+  },
 ]
 
-const INHERIT = '__inherit__'
-
-/** Tri-state rows over a partial options bag. */
+/**
+ * Tri-state rows over a partial options bag: a row of buttons per option,
+ * like the theme editor's pickers. The inherit button reads muted when active
+ * (it is the resting state - eight filled buttons would shout); a real value
+ * reads filled, so a glance down the card shows exactly where this layer
+ * speaks up.
+ */
 export function PartialOptionsFields({
   value,
   inheritLabel,
@@ -87,48 +119,49 @@ export function PartialOptionsFields({
   clear: (key: keyof SectionOptions) => void
 }) {
   return (
-    <div className="grid gap-3 sm:grid-cols-2">
+    // Multicol, not grid: the column count follows the available width and
+    // the browser balances the fields' uneven heights across columns.
+    <div className="columns-[16rem] gap-x-6">
       {FIELDS.map((f) => {
         const current = value[f.key]
-        const selectValue =
-          current === undefined
-            ? INHERIT
-            : f.type === 'bool'
-              ? String(current === true)
-              : String(current)
         return (
-          <Field key={f.key} label={f.label}>
-            <Select
-              value={selectValue}
-              onValueChange={(v) => {
-                if (v === INHERIT) clear(f.key)
-                else if (f.type === 'bool') set({ [f.key]: v === 'true' })
-                else set({ [f.key]: v })
-              }}
-            >
-              <SelectTrigger
-                className="w-full"
-                data-overridden={current !== undefined}
+          // Not app-ui's Field: that wraps children in a <label>, and a label
+          // adopts the first button inside it as its control - clicking the
+          // caption would then silently press "No policy".
+          <div
+            key={f.key}
+            role="group"
+            aria-label={f.label}
+            className="mb-4 break-inside-avoid"
+          >
+            <span className="mb-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+              <f.icon className="size-3.5 shrink-0" aria-hidden />
+              {f.label}
+            </span>
+            <div className="flex flex-wrap gap-1.5">
+              <Button
+                size="sm"
+                variant={current === undefined ? 'secondary' : 'outline'}
+                className="h-7 px-2.5 text-xs"
+                aria-pressed={current === undefined}
+                onClick={() => clear(f.key)}
               >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={INHERIT}>{inheritLabel}</SelectItem>
-                {f.type === 'bool' ? (
-                  <>
-                    <SelectItem value="true">On</SelectItem>
-                    <SelectItem value="false">Off</SelectItem>
-                  </>
-                ) : (
-                  f.choices.map((c) => (
-                    <SelectItem key={c.value} value={c.value}>
-                      {c.label}
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
-          </Field>
+                {inheritLabel}
+              </Button>
+              {f.choices.map((c) => (
+                <Button
+                  key={String(c.value)}
+                  size="sm"
+                  variant={current === c.value ? 'default' : 'outline'}
+                  className="h-7 px-2.5 text-xs"
+                  aria-pressed={current === c.value}
+                  onClick={() => set({ [f.key]: c.value })}
+                >
+                  {c.label}
+                </Button>
+              ))}
+            </div>
+          </div>
         )
       })}
     </div>
@@ -141,9 +174,7 @@ export function PartialOptionsFields({
  */
 export function VariantOptionDefaultsCard({ variant }: { variant: CVVariant }) {
   const setVariantOptionDefaults = useStore((s) => s.setVariantOptionDefaults)
-  const clearVariantOptionDefault = useStore(
-    (s) => s.clearVariantOptionDefault,
-  )
+  const clearVariantOptionDefault = useStore((s) => s.clearVariantOptionDefault)
   return (
     <SectionCard
       title="Section options policy"
