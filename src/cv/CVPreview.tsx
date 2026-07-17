@@ -43,7 +43,12 @@ export const CVPreview = forwardRef<
     const el = containerRef.current
     if (!el) return
     const recompute = () => {
-      const avail = el.clientWidth
+      // clientWidth includes the backdrop's padding; the page must fit inside it.
+      const style = getComputedStyle(el)
+      const avail =
+        el.clientWidth -
+        parseFloat(style.paddingLeft) -
+        parseFloat(style.paddingRight)
       setScale(Math.min(1, avail / PAGE_WIDTH_PX))
     }
     recompute()
@@ -102,9 +107,17 @@ export const CVPreview = forwardRef<
         ref={containerRef}
         // The backdrop the page sits on. It darkens with the app, but the page
         // itself stays white in both modes - it is paper, and it prints as paper.
-        className="w-full overflow-auto rounded-lg bg-slate-200 p-2 sm:p-4 dark:bg-slate-900"
+        // overflow-hidden, not auto: the scaled page's layout box is still its
+        // natural width, and a scrollbar for that phantom width is the bug.
+        className="w-full overflow-hidden rounded-lg bg-slate-200 p-2 dark:bg-slate-900"
       >
-        <div style={{ height: pageHeight ?? undefined }}>
+        <div
+          style={{
+            height: pageHeight ?? undefined,
+            width: PAGE_WIDTH_PX * scale,
+            maxWidth: '100%',
+          }}
+        >
           <div
             ref={innerRef}
             className="relative"

@@ -53,6 +53,9 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  /* App scrollbar thumb; semi-transparent so it sits on any surface. */
+  --scrollbar-thumb: oklch(0.55 0 0 / 0.35);
+  --scrollbar-thumb-hover: oklch(0.45 0 0 / 0.6);
 }
 
 html,
@@ -166,6 +169,8 @@ body {
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+  --scrollbar-thumb: oklch(0.85 0 0 / 0.25);
+  --scrollbar-thumb-hover: oklch(0.9 0 0 / 0.45);
 }
 /*
  ---break---
@@ -204,5 +209,44 @@ body {
   }
   html {
     @apply font-sans;
+  }
+}
+
+/*
+ * App scrollbars: slim rounded pills on a transparent track, following the
+ * theme via --scrollbar-thumb. WebKit browsers get the full treatment through
+ * the pseudo-elements; Firefox ignores those, so it gets the standard thin
+ * variant instead - gated behind @supports so Chromium (which understands
+ * scrollbar-color too, and would let it override the pseudo styling) never
+ * sees it.
+ */
+@media screen {
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track,
+  ::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    /* A 4px pill: the transparent border keeps it off the pane edge and the
+       padding-box clip is what makes the border read as empty space. */
+    background-color: var(--scrollbar-thumb);
+    background-clip: padding-box;
+    border: 3px solid transparent;
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-thumb:hover,
+  ::-webkit-scrollbar-thumb:active {
+    background-color: var(--scrollbar-thumb-hover);
+    border-width: 2px;
+  }
+
+  @supports (-moz-appearance: none) {
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: var(--scrollbar-thumb) transparent;
+    }
   }
 }

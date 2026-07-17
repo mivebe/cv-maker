@@ -135,12 +135,13 @@ export function SuggestInput({
           autoComplete="off"
           className={className}
           value={value}
+          // Opens only while typing (or on ArrowDown) - never on focus/click,
+          // which would flash the list at every field visit.
           onChange={(e) => {
             onChange(e.target.value)
             setOpen(true)
             setActive(0)
           }}
-          onFocus={() => setOpen(true)}
           onBlur={() => setOpen(false)}
           onKeyDown={handleKeyDown}
         />
