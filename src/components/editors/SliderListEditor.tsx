@@ -1,6 +1,7 @@
 import { useStore } from '../../store/useStore'
 import { EmptyHint, ItemControls, SliderField } from '@/components/app-ui'
 import { effectiveOptions } from '../../lib/sections'
+import { SortableItem, SortableList } from '@/components/reorder/SortableList'
 import { SuggestInput } from '@/components/SuggestInput'
 import { Input } from '@/components/ui/input'
 
@@ -9,6 +10,7 @@ export function SliderListEditor({ id }: { id: string }) {
   const updateItem = useStore((s) => s.updateItem)
   const removeItem = useStore((s) => s.removeItem)
   const moveItem = useStore((s) => s.moveItem)
+  const setItemOrder = useStore((s) => s.setItemOrder)
   if (!section || section.kind !== 'sliders') return null
   const items = section.items
   const steps = effectiveOptions(section).sliderSteps
@@ -16,10 +18,15 @@ export function SliderListEditor({ id }: { id: string }) {
   return (
     <>
       {items.length === 0 && <EmptyHint>No sliders yet.</EmptyHint>}
-      <div className="space-y-3">
+      <SortableList
+        ids={items.map((it) => it.id)}
+        onReorder={(ids) => setItemOrder(id, ids)}
+        className="space-y-3"
+      >
         {items.map((item, i) => (
-          <div
+          <SortableItem
             key={item.id}
+            id={item.id}
             className="rounded-lg border bg-muted/30 p-3"
           >
             <div className="flex flex-wrap items-center gap-2">
@@ -57,9 +64,9 @@ export function SliderListEditor({ id }: { id: string }) {
                 onChange={(value) => updateItem(id, item.id, { value })}
               />
             </div>
-          </div>
+          </SortableItem>
         ))}
-      </div>
+      </SortableList>
     </>
   )
 }

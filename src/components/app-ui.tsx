@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { ChevronDown, ChevronUp, Trash2 } from 'lucide-react'
+import { useReorderMode } from '../store/useReorderMode'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -74,42 +75,54 @@ export function SliderField({
   )
 }
 
-/** Up/down/remove control cluster used on every list item. */
+/**
+ * Up/down/remove control cluster used on every list item. In drag mode the
+ * arrows disappear (the row itself is the handle); `forceArrows` keeps them
+ * for lists that are not draggable (the master profile's section cards).
+ */
 export function ItemControls({
   onUp,
   onDown,
   onRemove,
   disableUp,
   disableDown,
+  forceArrows,
 }: {
   onUp: () => void
   onDown: () => void
   onRemove: () => void
   disableUp?: boolean
   disableDown?: boolean
+  forceArrows?: boolean
 }) {
+  const mode = useReorderMode((s) => s.mode)
+  const arrows = forceArrows || mode === 'arrows'
   return (
     <div className="flex shrink-0 items-center gap-1">
-      <Button
-        variant="ghost"
-        size="icon-sm"
-        onClick={onUp}
-        disabled={disableUp}
-        aria-label="Move up"
-        title="Move up"
-      >
-        <ChevronUp />
-      </Button>
-      <Button
-        variant="ghost"
-        size="icon-sm"
-        onClick={onDown}
-        disabled={disableDown}
-        aria-label="Move down"
-        title="Move down"
-      >
-        <ChevronDown />
-      </Button>
+      {arrows && (
+        <>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={onUp}
+            disabled={disableUp}
+            aria-label="Move up"
+            title="Move up"
+          >
+            <ChevronUp />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={onDown}
+            disabled={disableDown}
+            aria-label="Move down"
+            title="Move down"
+          >
+            <ChevronDown />
+          </Button>
+        </>
+      )}
       <Button
         variant="ghost"
         size="icon-sm"

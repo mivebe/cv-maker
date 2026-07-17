@@ -61,7 +61,10 @@ export function SectionEditorCard({
           >
             <Settings2 />
           </Button>
+          {/* Section cards flow in a masonry, not a vertical list, so they are
+              not draggable - the arrows stay in both reorder modes. */}
           <ItemControls
+            forceArrows
             onUp={() => moveSection(section.id, 'up')}
             onDown={() => moveSection(section.id, 'down')}
             onRemove={() => removeSection(section.id)}
@@ -149,13 +152,7 @@ function OptSelect<K extends keyof SectionOptions>({
   )
 }
 
-function OptColumns({
-  section,
-  max = 4,
-}: {
-  section: Section
-  max?: number
-}) {
+function OptColumns({ section, max = 4 }: { section: Section; max?: number }) {
   const updateSectionOptions = useStore((s) => s.updateSectionOptions)
   const value = effectiveOptions(section).columns
   return (

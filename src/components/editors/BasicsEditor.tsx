@@ -4,6 +4,7 @@ import { useStore } from '../../store/useStore'
 import { useAvatarHistory } from '../../store/useAvatarHistory'
 import { Field, ItemControls, SectionCard } from '@/components/app-ui'
 import { IconPicker } from '@/components/IconPicker'
+import { SortableItem, SortableList } from '@/components/reorder/SortableList'
 import { SuggestInput } from '@/components/SuggestInput'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -28,6 +29,7 @@ export function BasicsEditor() {
   const updateLink = useStore((s) => s.updateLink)
   const removeLink = useStore((s) => s.removeLink)
   const moveLink = useStore((s) => s.moveLink)
+  const setLinkOrder = useStore((s) => s.setLinkOrder)
   const recentAvatars = useAvatarHistory((s) => s.recent)
   const rememberAvatar = useAvatarHistory((s) => s.rememberAvatar)
   const forgetAvatar = useAvatarHistory((s) => s.forgetAvatar)
@@ -250,10 +252,18 @@ export function BasicsEditor() {
             Add link
           </Button>
         </div>
-        <div className="space-y-2">
+        <SortableList
+          ids={basics.links.map((l) => l.id)}
+          onReorder={setLinkOrder}
+          className="space-y-2"
+        >
           {basics.links.map((link, i) => (
             // Narrow: label takes its own row, URL + controls share the next.
-            <div key={link.id} className="flex flex-wrap items-center gap-2">
+            <SortableItem
+              key={link.id}
+              id={link.id}
+              className="flex flex-wrap items-center gap-2"
+            >
               <IconPicker
                 className="w-32 shrink-0"
                 value={link.icon}
@@ -279,9 +289,9 @@ export function BasicsEditor() {
                 disableUp={i === 0}
                 disableDown={i === basics.links.length - 1}
               />
-            </div>
+            </SortableItem>
           ))}
-        </div>
+        </SortableList>
       </div>
     </SectionCard>
   )

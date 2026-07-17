@@ -40,6 +40,20 @@ function moveById<T extends { id: string }>(
   return next
 }
 
+/**
+ * Reorder `list` to follow `ids` (a drag-and-drop result). Unknown ids are
+ * ignored and items missing from `ids` keep their relative order at the end,
+ * so a stale drop can never lose data.
+ */
+function orderByIds<T extends { id: string }>(list: T[], ids: string[]): T[] {
+  const byId = new Map(list.map((x) => [x.id, x]))
+  const picked = ids
+    .map((id) => byId.get(id))
+    .filter((x): x is T => x !== undefined)
+  const pickedSet = new Set(picked.map((x) => x.id))
+  return [...picked, ...list.filter((x) => !pickedSet.has(x.id))]
+}
+
 interface AppState {
   profile: MasterProfile
   variants: CVVariant[]
@@ -56,6 +70,7 @@ interface AppState {
   updateLink: (id: string, patch: Partial<Link>) => void
   removeLink: (id: string) => void
   moveLink: (id: string, dir: Direction) => void
+  setLinkOrder: (ids: string[]) => void
 
   // ---- sections ----
   addSection: (kind: SectionKind) => string
@@ -76,6 +91,7 @@ interface AppState {
   ) => void
   removeItem: (sectionId: string, itemId: string) => void
   moveItem: (sectionId: string, itemId: string, dir: Direction) => void
+  setItemOrder: (sectionId: string, itemIds: string[]) => void
 
   // ---- variants ----
   addVariant: (name?: string) => string
@@ -96,10 +112,7 @@ interface AppState {
     patch: Partial<SectionPlacement>,
   ) => void
   setSectionTitle: (id: string, sectionId: string, title: string) => void
-  setVariantOptionDefaults: (
-    id: string,
-    patch: Partial<SectionOptions>,
-  ) => void
+  setVariantOptionDefaults: (id: string, patch: Partial<SectionOptions>) => void
   clearVariantOptionDefault: (id: string, key: keyof SectionOptions) => void
   /** Replace the whole policy - what a theme-preset switch does. */
   replaceVariantOptionDefaults: (
@@ -214,6 +227,11 @@ export const useStore = create<AppState>()(
           ...p,
           basics: { ...p.basics, links: moveById(p.basics.links, id, dir) },
         })),
+      setLinkOrder: (ids) =>
+        patchProfile(set, (p) => ({
+          ...p,
+          basics: { ...p.basics, links: orderByIds(p.basics.links, ids) },
+        })),
 
       // ---- sections ----
       addSection: (kind) => {
@@ -245,31 +263,61 @@ export const useStore = create<AppState>()(
         if (!section) return undefined
         const item = ITEM_FACTORIES[section.kind]()
         if (!item) return undefined
-        patchSection(set, sectionId, (sec) => ({
-          ...sec,
-          items: [...sec.items, item],
-        }) as Section)
+        patchSection(
+          set,
+          sectionId,
+          (sec) =>
+            ({
+              ...sec,
+              items: [...sec.items, item],
+            }) as Section,
+        )
         return item.id
       },
       updateItem: (sectionId, itemId, patch) =>
-        patchSection(set, sectionId, (sec) => ({
-          ...sec,
-          items: (sec.items as { id: string }[]).map((it) =>
-            it.id === itemId ? { ...it, ...patch } : it,
-          ),
-        }) as Section),
+        patchSection(
+          set,
+          sectionId,
+          (sec) =>
+            ({
+              ...sec,
+              items: (sec.items as { id: string }[]).map((it) =>
+                it.id === itemId ? { ...it, ...patch } : it,
+              ),
+            }) as Section,
+        ),
       removeItem: (sectionId, itemId) =>
-        patchSection(set, sectionId, (sec) => ({
-          ...sec,
-          items: (sec.items as { id: string }[]).filter(
-            (it) => it.id !== itemId,
-          ),
-        }) as Section),
+        patchSection(
+          set,
+          sectionId,
+          (sec) =>
+            ({
+              ...sec,
+              items: (sec.items as { id: string }[]).filter(
+                (it) => it.id !== itemId,
+              ),
+            }) as Section,
+        ),
       moveItem: (sectionId, itemId, dir) =>
-        patchSection(set, sectionId, (sec) => ({
-          ...sec,
-          items: moveById(sec.items as { id: string }[], itemId, dir),
-        }) as Section),
+        patchSection(
+          set,
+          sectionId,
+          (sec) =>
+            ({
+              ...sec,
+              items: moveById(sec.items as { id: string }[], itemId, dir),
+            }) as Section,
+        ),
+      setItemOrder: (sectionId, itemIds) =>
+        patchSection(
+          set,
+          sectionId,
+          (sec) =>
+            ({
+              ...sec,
+              items: orderByIds(sec.items as { id: string }[], itemIds),
+            }) as Section,
+        ),
 
       // ---- variants ----
       addVariant: (name) => {

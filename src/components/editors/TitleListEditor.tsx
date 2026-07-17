@@ -1,6 +1,7 @@
 import { useStore } from '../../store/useStore'
 import { EmptyHint, ItemControls } from '@/components/app-ui'
 import { IconPicker } from '@/components/IconPicker'
+import { SortableItem, SortableList } from '@/components/reorder/SortableList'
 import { Input } from '@/components/ui/input'
 
 export function TitleListEditor({ id }: { id: string }) {
@@ -8,15 +9,24 @@ export function TitleListEditor({ id }: { id: string }) {
   const updateItem = useStore((s) => s.updateItem)
   const removeItem = useStore((s) => s.removeItem)
   const moveItem = useStore((s) => s.moveItem)
+  const setItemOrder = useStore((s) => s.setItemOrder)
   if (!section || section.kind !== 'titleList') return null
   const items = section.items
 
   return (
     <>
       {items.length === 0 && <EmptyHint>No entries yet.</EmptyHint>}
-      <div className="space-y-2">
+      <SortableList
+        ids={items.map((it) => it.id)}
+        onReorder={(ids) => setItemOrder(id, ids)}
+        className="space-y-2"
+      >
         {items.map((item, i) => (
-          <div key={item.id} className="flex flex-wrap items-center gap-2">
+          <SortableItem
+            key={item.id}
+            id={item.id}
+            className="flex flex-wrap items-center gap-2"
+          >
             <IconPicker
               className="w-32 shrink-0"
               value={item.icon}
@@ -45,9 +55,9 @@ export function TitleListEditor({ id }: { id: string }) {
               disableUp={i === 0}
               disableDown={i === items.length - 1}
             />
-          </div>
+          </SortableItem>
         ))}
-      </div>
+      </SortableList>
     </>
   )
 }

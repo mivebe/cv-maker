@@ -1,7 +1,9 @@
+import { useEffect, useRef } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { FileText } from 'lucide-react'
 import { AppearanceToggle } from './AppearanceToggle'
 import { ImportExportButtons } from './ImportExportButtons'
+import { ReorderModeToggle } from './ReorderModeToggle'
 import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
@@ -13,9 +15,31 @@ const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   )
 
 export function Layout() {
+  const headerRef = useRef<HTMLElement>(null)
+
+  // Pages that pin their own toolbars right below this header need its
+  // rendered height (it wraps to two rows on mobile), so publish it as a
+  // CSS variable instead of hardcoding breakpoint-specific offsets.
+  useEffect(() => {
+    const el = headerRef.current
+    if (!el) return
+    const update = () =>
+      document.documentElement.style.setProperty(
+        '--app-header-h',
+        `${el.offsetHeight}px`,
+      )
+    update()
+    const observer = new ResizeObserver(update)
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
   return (
     <div className="flex min-h-full flex-col bg-muted/40">
-      <header className="no-print sticky top-0 z-10 border-b bg-background/90 backdrop-blur">
+      <header
+        ref={headerRef}
+        className="no-print sticky top-0 z-10 border-b bg-background/90 backdrop-blur"
+      >
         <div className="flex w-full flex-wrap items-center gap-x-4 gap-y-2 px-3 py-2.5 sm:px-6 sm:py-3">
           <div className="flex items-center gap-2">
             <FileText className="size-5 shrink-0 text-primary" />
@@ -26,6 +50,7 @@ export function Layout() {
           {/* Actions sit beside the logo on mobile; the nav wraps below them. */}
           <div className="order-2 ml-auto flex min-w-0 items-center gap-1 sm:order-3 sm:gap-2">
             <ImportExportButtons />
+            <ReorderModeToggle />
             <AppearanceToggle />
           </div>
           <nav className="order-3 flex w-full items-center gap-1 sm:order-2 sm:w-auto">
