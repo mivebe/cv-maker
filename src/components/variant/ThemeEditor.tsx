@@ -32,6 +32,7 @@ import {
 
 const FONT_FAMILIES: { label: string; value: string }[] = [
   { label: 'Georgia (serif)', value: 'Georgia, "Times New Roman", serif' },
+  { label: 'Zilla Slab (serif)', value: '"Zilla Slab", Georgia, serif' },
   { label: 'Times (serif)', value: '"Times New Roman", Times, serif' },
   {
     label: 'Geist (sans)',
@@ -554,6 +555,24 @@ function ColorsCard({ t, set }: CardProps) {
           onChange={(linkColor) => set({ linkColor })}
         />
         <ColorField
+          label="Page background"
+          value={t.pageBackground}
+          placeholder="white"
+          onChange={(pageBackground) => set({ pageBackground })}
+        />
+        <ColorField
+          label="Header band"
+          value={t.headerBackground}
+          placeholder="none"
+          onChange={(headerBackground) => set({ headerBackground })}
+        />
+        <ColorField
+          label="Heading bands"
+          value={t.headingBackground}
+          placeholder="none"
+          onChange={(headingBackground) => set({ headingBackground })}
+        />
+        <ColorField
           label="Badges"
           value={t.badgeColor}
           onChange={(badgeColor) => set({ badgeColor })}
@@ -599,6 +618,15 @@ function DecorationCard({ t, set }: CardProps) {
               { label: 'Inline list', value: 'inline' as const },
             ]}
             onChange={(skillStyle) => set({ skillStyle })}
+          />
+          <Choice
+            label="Section headings"
+            value={t.headingAlign}
+            options={[
+              { label: 'Left', value: 'left' as const },
+              { label: 'Centered', value: 'center' as const },
+            ]}
+            onChange={(headingAlign) => set({ headingAlign })}
           />
         </div>
 

@@ -13,6 +13,11 @@ export function themeToStyle(theme: ThemeConfig): CSSProperties {
     '--cv-heading': theme.headingColor,
     '--cv-margin': `${theme.pageMargin}mm`,
 
+    // Backgrounds. Empty tokens fall back to a white sheet and no bands.
+    '--cv-page-bg': theme.pageBackground || '#fff',
+    '--cv-header-bg': theme.headerBackground || 'transparent',
+    '--cv-heading-bg': theme.headingBackground || 'transparent',
+
     // Spacing: the explicit tokens, scaled by the density multiplier.
     '--cv-gap': `${(theme.itemGap * d).toFixed(1)}px`,
     '--cv-section-gap': `${(theme.sectionGap * d).toFixed(1)}px`,
@@ -51,6 +56,9 @@ export function themeDataAttrs(theme: ThemeConfig) {
     'data-uppercase': String(theme.uppercaseHeadings),
     'data-uppercase-name': String(theme.uppercaseName),
     'data-rule': String(theme.headingRule),
+    'data-heading-align': theme.headingAlign,
+    'data-header-band': String(Boolean(theme.headerBackground)),
+    'data-heading-band': String(Boolean(theme.headingBackground)),
     'data-icons': String(theme.showIcons),
     'data-brand-icons': String(theme.brandColorIcons),
     'data-chips': theme.chipStyle,

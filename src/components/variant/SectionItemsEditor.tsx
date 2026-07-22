@@ -16,6 +16,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { cn } from '@/lib/utils'
 import { OverrideList, OverrideText } from './OverrideField'
 import { useHighlightNode } from './highlight'
+import { isItemTailored } from './tailoring'
 
 /**
  * One section's master items inside a variant: a checkbox per item to include
@@ -97,11 +98,16 @@ function ItemRow({
 export function SectionItemsEditor({
   variant,
   section,
+  tailoredOnly = false,
 }: {
   variant: CVVariant
   section: Section
+  /** Show only items that are overridden or dropped in this variant. */
+  tailoredOnly?: boolean
 }) {
   const ov = variant.overrides
+  const keep = (it: { id: string }) =>
+    !tailoredOnly || isItemTailored(variant, it.id)
 
   if (!section.items.length) {
     return <EmptyHint>No items yet - add them in the Master Profile.</EmptyHint>
@@ -110,7 +116,7 @@ export function SectionItemsEditor({
   if (section.kind === 'experience') {
     return (
       <div className="space-y-2">
-        {section.items.map((it) => (
+        {section.items.filter(keep).map((it) => (
           <ItemRow
             key={it.id}
             variant={variant}
@@ -127,6 +133,26 @@ export function SectionItemsEditor({
               override={ov[it.id]}
               suggestionKind="role"
             />
+            {/* Dates are tailorable too: an "explain the gap" variant amends a
+                range without rewriting the master history. */}
+            <div className="grid gap-3 sm:grid-cols-2">
+              <OverrideText
+                variantId={variant.id}
+                itemId={it.id}
+                field="startDate"
+                label="Start date"
+                masterValue={it.startDate}
+                override={ov[it.id]}
+              />
+              <OverrideText
+                variantId={variant.id}
+                itemId={it.id}
+                field="endDate"
+                label="End date"
+                masterValue={it.current ? 'Present' : it.endDate}
+                override={ov[it.id]}
+              />
+            </div>
             <OverrideText
               variantId={variant.id}
               itemId={it.id}
@@ -153,7 +179,7 @@ export function SectionItemsEditor({
   if (section.kind === 'education') {
     return (
       <div className="space-y-2">
-        {section.items.map((it) => (
+        {section.items.filter(keep).map((it) => (
           <ItemRow
             key={it.id}
             variant={variant}
@@ -179,7 +205,7 @@ export function SectionItemsEditor({
   if (section.kind === 'projects') {
     return (
       <div className="space-y-2">
-        {section.items.map((it) => (
+        {section.items.filter(keep).map((it) => (
           <ItemRow
             key={it.id}
             variant={variant}
@@ -213,7 +239,7 @@ export function SectionItemsEditor({
   if (section.kind === 'items') {
     return (
       <div className="space-y-2">
-        {section.items.map((it) => (
+        {section.items.filter(keep).map((it) => (
           <ItemRow
             key={it.id}
             variant={variant}
@@ -252,7 +278,7 @@ export function SectionItemsEditor({
   // a checkbox row per item, nothing to tailor.
   return (
     <div className="space-y-2">
-      {section.items.map((it) => (
+      {section.items.filter(keep).map((it) => (
         <ItemRow
           key={it.id}
           variant={variant}

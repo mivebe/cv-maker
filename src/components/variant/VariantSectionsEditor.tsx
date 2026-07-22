@@ -5,11 +5,13 @@ import {
   ChevronUp,
   Eye,
   EyeOff,
+  Sparkles,
   SquareSplitVertical,
 } from 'lucide-react'
 import type { CVVariant, Section } from '../../schema'
 import { useStore } from '../../store/useStore'
 import { useReorderMode } from '../../store/useReorderMode'
+import { EmptyHint } from '@/components/app-ui'
 import { SortableItem, SortableList } from '@/components/reorder/SortableList'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -25,6 +27,7 @@ import {
 import { useHighlightNode } from './highlight'
 import { PartialOptionsFields } from './VariantOptionsEditor'
 import { SectionItemsEditor } from './SectionItemsEditor'
+import { sectionTailoring, tailoredBasicsFields } from './tailoring'
 
 /**
  * The Content tab's section list: one expandable card per section holding
@@ -53,11 +56,14 @@ function VariantSectionCard({
   section,
   index,
   total,
+  tailoredOnly = false,
 }: {
   variant: CVVariant
   section: Section
   index: number
   total: number
+  /** Filter mode: open by default and show only what this variant tailors. */
+  tailoredOnly?: boolean
 }) {
   const moveVariantSection = useStore((s) => s.moveVariantSection)
   const toggleSectionHidden = useStore((s) => s.toggleSectionHidden)
@@ -67,7 +73,7 @@ function VariantSectionCard({
   const clearVariantSectionOption = useStore((s) => s.clearVariantSectionOption)
   const mode = useReorderMode((s) => s.mode)
   const hl = useHighlightNode()
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(tailoredOnly)
 
   const id = section.id
   const label = sectionLabel(section)
@@ -76,6 +82,7 @@ function VariantSectionCard({
   const overrides = variant.sectionOptions[id] ?? {}
   const overrideCount = Object.keys(overrides).length
   const twoCol = variant.theme.columns === 2
+  const t = sectionTailoring(variant, section)
 
   return (
     <div className="rounded-lg border bg-card" {...hl(id)}>
@@ -108,10 +115,26 @@ function VariantSectionCard({
         >
           {KIND_LABELS[section.kind]}
         </Badge>
-        {overrideCount > 0 && !open && (
-          <Badge variant="secondary" className="shrink-0">
-            {overrideCount}
-          </Badge>
+        {tailoredOnly ? (
+          <div className="hidden shrink-0 items-center gap-1 sm:flex">
+            {t.titleOverridden && <Badge variant="secondary">heading</Badge>}
+            {t.hidden && <Badge variant="secondary">hidden</Badge>}
+            {t.styleCount > 0 && (
+              <Badge variant="secondary">{t.styleCount} style</Badge>
+            )}
+            {t.tailoredItems > 0 && (
+              <Badge variant="secondary">
+                {t.tailoredItems} item{t.tailoredItems > 1 ? 's' : ''}
+              </Badge>
+            )}
+          </div>
+        ) : (
+          overrideCount > 0 &&
+          !open && (
+            <Badge variant="secondary" className="shrink-0">
+              {overrideCount}
+            </Badge>
+          )
         )}
         <Button
           variant="ghost"
@@ -123,7 +146,7 @@ function VariantSectionCard({
         >
           {isHidden ? <Eye /> : <EyeOff />}
         </Button>
-        {mode === 'arrows' && (
+        {mode === 'arrows' && !tailoredOnly && (
           <>
             <Button
               variant="ghost"
@@ -158,82 +181,97 @@ function VariantSectionCard({
             </p>
           ) : (
             <>
-              <div>
-                <SubHeading>Placement</SubHeading>
-                <div className="flex flex-wrap items-center gap-1.5">
-                  {twoCol ? (
-                    COLUMNS.map((c) => (
-                      <Button
-                        key={c.value}
-                        size="sm"
-                        variant={
-                          placement.column === c.value ? 'secondary' : 'ghost'
-                        }
-                        className="h-7 px-2 text-xs"
-                        onClick={() =>
-                          setSectionPlacement(variant.id, id, {
-                            column: c.value,
-                          })
-                        }
-                      >
-                        {c.label}
-                      </Button>
-                    ))
-                  ) : (
-                    <span className="text-xs text-muted-foreground">
-                      Single-column theme - column placement applies to
-                      two-column themes only.
-                    </span>
-                  )}
-                  <Button
-                    size="sm"
-                    variant={placement.pageBreakBefore ? 'secondary' : 'ghost'}
-                    className="h-7 gap-1.5 px-2 text-xs"
-                    title="Start a new page before this section"
-                    onClick={() =>
-                      setSectionPlacement(variant.id, id, {
-                        pageBreakBefore: !placement.pageBreakBefore,
-                      })
-                    }
-                  >
-                    <SquareSplitVertical className="size-3.5" />
-                    Page break
-                  </Button>
-                </div>
-              </div>
-
-              <div>
-                <SubHeading>
-                  Style overrides
-                  {overrideCount > 0 && ` (${overrideCount})`}
-                </SubHeading>
-                <p className="mb-3 text-xs text-muted-foreground">
-                  For this section only, in this variant only. They win over the
-                  section's own settings AND the variant's policy (Design tab).
-                </p>
-                <PartialOptionsFields
-                  value={overrides}
-                  inheritLabel="No override"
-                  set={(patch) =>
-                    setVariantSectionOptions(variant.id, id, patch)
-                  }
-                  clear={(key) =>
-                    clearVariantSectionOption(variant.id, id, key)
-                  }
-                />
-              </div>
-
-              {/* A banner is heading-only by definition; there are no items. */}
-              {section.kind !== 'banner' && (
+              {!tailoredOnly && (
                 <div>
-                  <SubHeading>Items</SubHeading>
-                  <p className="mb-3 text-xs text-muted-foreground">
-                    Uncheck items to drop them from this variant. "Tailor"
-                    overrides wording without touching the master.
-                  </p>
-                  <SectionItemsEditor variant={variant} section={section} />
+                  <SubHeading>Placement</SubHeading>
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    {twoCol ? (
+                      COLUMNS.map((c) => (
+                        <Button
+                          key={c.value}
+                          size="sm"
+                          variant={
+                            placement.column === c.value ? 'secondary' : 'ghost'
+                          }
+                          className="h-7 px-2 text-xs"
+                          onClick={() =>
+                            setSectionPlacement(variant.id, id, {
+                              column: c.value,
+                            })
+                          }
+                        >
+                          {c.label}
+                        </Button>
+                      ))
+                    ) : (
+                      <span className="text-xs text-muted-foreground">
+                        Single-column theme - column placement applies to
+                        two-column themes only.
+                      </span>
+                    )}
+                    <Button
+                      size="sm"
+                      variant={
+                        placement.pageBreakBefore ? 'secondary' : 'ghost'
+                      }
+                      className="h-7 gap-1.5 px-2 text-xs"
+                      title="Start a new page before this section"
+                      onClick={() =>
+                        setSectionPlacement(variant.id, id, {
+                          pageBreakBefore: !placement.pageBreakBefore,
+                        })
+                      }
+                    >
+                      <SquareSplitVertical className="size-3.5" />
+                      Page break
+                    </Button>
+                  </div>
                 </div>
               )}
+
+              {(!tailoredOnly || overrideCount > 0) && (
+                <div>
+                  <SubHeading>
+                    Style overrides
+                    {overrideCount > 0 && ` (${overrideCount})`}
+                  </SubHeading>
+                  <p className="mb-3 text-xs text-muted-foreground">
+                    For this section only, in this variant only. They win over
+                    the section's own settings AND the variant's policy (Design
+                    tab).
+                  </p>
+                  <PartialOptionsFields
+                    value={overrides}
+                    inheritLabel="No override"
+                    set={(patch) =>
+                      setVariantSectionOptions(variant.id, id, patch)
+                    }
+                    clear={(key) =>
+                      clearVariantSectionOption(variant.id, id, key)
+                    }
+                  />
+                </div>
+              )}
+
+              {/* A banner is heading-only by definition; there are no items. */}
+              {section.kind !== 'banner' &&
+                (!tailoredOnly || t.tailoredItems > 0) && (
+                  <div>
+                    <SubHeading>
+                      {tailoredOnly ? 'Tailored items' : 'Items'}
+                    </SubHeading>
+                    <p className="mb-3 text-xs text-muted-foreground">
+                      {tailoredOnly
+                        ? 'Only items this variant overrides or drops. Unchecked items are excluded from this CV.'
+                        : 'Uncheck items to drop them from this variant. "Tailor" overrides wording without touching the master.'}
+                    </p>
+                    <SectionItemsEditor
+                      variant={variant}
+                      section={section}
+                      tailoredOnly={tailoredOnly}
+                    />
+                  </div>
+                )}
             </>
           )}
         </div>
@@ -245,40 +283,103 @@ function VariantSectionCard({
 export function VariantSectionsEditor({ variant }: { variant: CVVariant }) {
   const profile = useStore((s) => s.profile)
   const setVariantSectionOrder = useStore((s) => s.setVariantSectionOrder)
+  const [tailoredOnly, setTailoredOnly] = useState(false)
 
   const order = reconcileSectionOrder(variant.sectionOrder, profile)
   const twoCol = variant.theme.columns === 2
 
+  const basicsFields = tailoredBasicsFields(variant)
+  const tailoredSections = order
+    .map((id) => sectionById(profile, id))
+    .filter((s): s is Section => Boolean(s))
+    .map((section) => ({ section, t: sectionTailoring(variant, section) }))
+    .filter(({ t }) => t.count > 0)
+  const totalCount =
+    basicsFields.length +
+    tailoredSections.reduce((sum, { t }) => sum + t.count, 0)
+
   return (
     <section>
-      <div className="mb-3">
-        <h2 className="text-base font-semibold">Sections</h2>
-        <p className="text-sm text-muted-foreground">
-          Everything about a section lives in its card: heading, visibility,
-          placement{twoCol ? ', column' : ''}, style overrides and items. The
-          card order is the CV's section order.
-        </p>
+      <div className="mb-3 flex items-start justify-between gap-3">
+        <div>
+          <h2 className="text-base font-semibold">Sections</h2>
+          <p className="text-sm text-muted-foreground">
+            Everything about a section lives in its card: heading, visibility,
+            placement{twoCol ? ', column' : ''}, style overrides and items. The
+            card order is the CV's section order.
+          </p>
+        </div>
+        {/* One click answers "what did I change for THIS application?" */}
+        <Button
+          size="sm"
+          variant={tailoredOnly ? 'default' : 'outline'}
+          className="shrink-0 gap-1.5"
+          aria-pressed={tailoredOnly}
+          title="Show only content this variant tailors away from the master"
+          onClick={() => setTailoredOnly((v) => !v)}
+        >
+          <Sparkles className="size-3.5" />
+          Tailored only
+          {totalCount > 0 && (
+            <Badge variant="secondary" className="px-1.5">
+              {totalCount}
+            </Badge>
+          )}
+        </Button>
       </div>
-      <SortableList
-        ids={order}
-        onReorder={(ids) => setVariantSectionOrder(variant.id, ids)}
-        className="space-y-3"
-      >
-        {order.map((id, i) => {
-          const section = sectionById(profile, id)
-          if (!section) return null
-          return (
-            <SortableItem key={id} id={id}>
+
+      {tailoredOnly ? (
+        <div className="space-y-3">
+          {basicsFields.length > 0 && (
+            <div className="rounded-lg border bg-card px-3 py-2 text-sm">
+              <span className="font-medium">Basics tailored: </span>
+              {basicsFields.join(', ')}
+              <span className="text-muted-foreground">
+                {' '}
+                - edit under Variant details above.
+              </span>
+            </div>
+          )}
+          {totalCount === 0 ? (
+            <EmptyHint>
+              Nothing is tailored in this variant yet - every section and item
+              follows the master profile.
+            </EmptyHint>
+          ) : (
+            tailoredSections.map(({ section }, i) => (
               <VariantSectionCard
+                key={section.id}
                 variant={variant}
                 section={section}
                 index={i}
-                total={order.length}
+                total={tailoredSections.length}
+                tailoredOnly
               />
-            </SortableItem>
-          )
-        })}
-      </SortableList>
+            ))
+          )}
+        </div>
+      ) : (
+        <SortableList
+          ids={order}
+          onReorder={(ids) => setVariantSectionOrder(variant.id, ids)}
+          className="space-y-3"
+        >
+          {order.map((id, i) => {
+            const section = sectionById(profile, id)
+            if (!section) return null
+            return (
+              <SortableItem key={id} id={id}>
+                <VariantSectionCard
+                  variant={variant}
+                  section={section}
+                  index={i}
+                  total={order.length}
+                />
+              </SortableItem>
+            )
+          })}
+        </SortableList>
+      )}
     </section>
   )
 }

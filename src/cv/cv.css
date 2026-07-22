@@ -55,7 +55,7 @@
   min-height: 11in;
   box-sizing: border-box;
   padding: var(--cv-margin);
-  background: #fff;
+  background: var(--cv-page-bg, #fff);
   margin: 0 auto;
   /* Anchors the watermark and the issuer footer, both of which are positioned
      against the sheet rather than flowing with the content. `isolate` makes the
@@ -117,6 +117,14 @@
 /* Header ------------------------------------------------------------------ */
 .cv-header {
   margin-bottom: var(--cv-section-gap);
+}
+/* Header band: bleeds through the page margins to the sheet edges, then pads
+   the content back in, so the text column stays exactly where it was. */
+.cv-root[data-header-band='true'] .cv-header {
+  background: var(--cv-header-bg);
+  margin: calc(-1 * var(--cv-margin)) calc(-1 * var(--cv-margin))
+    var(--cv-section-gap);
+  padding: var(--cv-margin);
 }
 .cv-header-row {
   display: flex;
@@ -407,6 +415,16 @@
 }
 .cv-root[data-uppercase='true'] .cv-section-title {
   text-transform: uppercase;
+}
+/* Theme-wide centered headings (the per-kind flex variant below centers via
+   its flanking rules and ignores text-align by design). */
+.cv-root[data-heading-align='center'] .cv-section-title {
+  text-align: center;
+}
+/* Band behind every section heading. */
+.cv-root[data-heading-band='true'] .cv-section-title {
+  background: var(--cv-heading-bg);
+  padding: 0.3em 0.6em;
 }
 .cv-root[data-rule='true'] .cv-section-title:not([data-align='center']) {
   border-bottom: 2px solid var(--cv-heading);

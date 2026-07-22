@@ -23,6 +23,11 @@ const BASE: Omit<ThemeConfig, 'preset'> = {
   uppercaseHeadings: true,
   uppercaseName: false,
   headingRule: true,
+  headingAlign: 'left',
+
+  pageBackground: '',
+  headerBackground: '',
+  headingBackground: '',
 
   sectionGap: 18,
   itemGap: 12,

@@ -2,6 +2,11 @@
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
 @import '@fontsource-variable/geist';
+/* CV document font option (FlowCV-style serif) - regular + the heading weights. */
+@import '@fontsource/zilla-slab/400.css';
+@import '@fontsource/zilla-slab/500.css';
+@import '@fontsource/zilla-slab/600.css';
+@import '@fontsource/zilla-slab/700.css';
 /*
  ---break---
  */

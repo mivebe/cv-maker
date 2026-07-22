@@ -51,7 +51,10 @@ export function VariantsPage() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
         {variants.map((v) => (
-          <Card key={v.id} className="flex flex-col">
+          <Card
+            key={v.id}
+            className="flex flex-col transition-[border-color,box-shadow] hover:border-primary/40 hover:shadow-md"
+          >
             <CardHeader>
               <button
                 onClick={() => navigate(`/variant/${v.id}`)}

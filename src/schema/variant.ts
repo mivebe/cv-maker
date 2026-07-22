@@ -74,6 +74,19 @@ export const themeConfigSchema = z.object({
   uppercaseName: z.boolean().default(false),
   /** Draw a rule under each section heading. */
   headingRule: z.boolean(),
+  /** How section headings align. */
+  headingAlign: z.enum(['left', 'center']).default('left'),
+
+  // ---- backgrounds ----
+  /** Sheet background. Empty = white. */
+  pageBackground: z.string().default(''),
+  /**
+   * Band behind the header, bleeding through the page margins to the sheet
+   * edges (the FlowCV look). Empty = none.
+   */
+  headerBackground: z.string().default(''),
+  /** Band behind each section heading. Empty = none. */
+  headingBackground: z.string().default(''),
 
   // ---- spacing (explicit, on top of `density`) ----
   /** Space between sections, in px at density 1. */
