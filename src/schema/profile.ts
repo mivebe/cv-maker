@@ -276,7 +276,7 @@ export const brandingSchema = z
     issuedDate: z.string().default(''),
     /** Issuer contact line printed in the footer, e.g. "hello@137.studio". */
     contact: z.string().default(''),
-    /** Small print, e.g. "Confidential — not for redistribution". */
+    /** Small print, e.g. "Confidential - not for redistribution". */
     note: z.string().default(''),
     /** Reference/candidate id the issuer tracks this document by. */
     reference: z.string().default(''),

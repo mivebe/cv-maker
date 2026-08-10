@@ -7,7 +7,7 @@
  * falls through to the page unchanged.
  */
 
-/** A month/year or a bare year — the only precision a CV ever needs. */
+/** A month/year or a bare year - the only precision a CV ever needs. */
 export interface PartialDate {
   year: number
   /** 1-12. Absent = the user gave only a year. */

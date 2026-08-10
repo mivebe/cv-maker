@@ -210,7 +210,7 @@ const SKILLS: Suggestion[] = [
   { value: 'Public speaking' },
   { value: 'Stakeholder management' },
 
-  // Security / compliance / other domains — acronyms collide on purpose,
+  // Security / compliance / other domains - acronyms collide on purpose,
   // which is exactly the "GCP" case the autocomplete has to handle.
   { value: 'Good Clinical Practice', aliases: ['GCP'] },
   { value: 'General Data Protection Regulation', aliases: ['GDPR'] },

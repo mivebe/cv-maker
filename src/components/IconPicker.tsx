@@ -96,7 +96,7 @@ export function IconPicker({
 
               {truncated && (
                 <p className="text-xs text-muted-foreground">
-                  Showing the first {LIMIT} matches — keep typing to narrow.
+                  Showing the first {LIMIT} matches - keep typing to narrow.
                 </p>
               )}
 

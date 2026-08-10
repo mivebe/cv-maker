@@ -71,7 +71,7 @@ const BULLET_STYLES: { label: string; value: BulletStyle; marker: string }[] = [
   { label: 'None', value: 'none', marker: ' ' },
 ]
 
-/** Frame proportion, width ÷ height — the shape's corner cut is separate. */
+/** Frame proportion, width ÷ height - the shape's corner cut is separate. */
 const AVATAR_RATIOS: { label: string; value: number }[] = [
   { label: 'Square 1:1', value: 1 },
   { label: 'Portrait 3:4', value: 0.75 },
@@ -203,7 +203,7 @@ function PresetColumnsCard({
       <div className="space-y-4">
         <Field
           label="Preset"
-          hint="Picking a preset resets the theme AND the section options policy — ATS strips per-section decoration (icons, chart markers, language notches) so every section degrades to parseable text at once."
+          hint="Picking a preset resets the theme AND the section options policy - ATS strips per-section decoration (icons, chart markers, language notches) so every section degrades to parseable text at once."
         >
           <div className="flex flex-wrap gap-2">
             {(Object.keys(THEME_PRESETS) as ThemePreset[]).map((p) => (
@@ -416,7 +416,7 @@ function HeaderAvatarCard({ t, set }: CardProps) {
         />
         {t.showAvatar && !hasPhoto && (
           <p className="text-xs text-muted-foreground/70">
-            No photo on the master profile yet — add one in Profile → Basics.
+            No photo on the master profile yet - add one in Profile → Basics.
           </p>
         )}
 
@@ -466,7 +466,7 @@ function HeaderAvatarCard({ t, set }: CardProps) {
                 onChange={(avatarZoom) => set({ avatarZoom })}
               />
               <SliderField
-                label="Framing — horizontal"
+                label="Framing - horizontal"
                 value={t.avatarOffsetX}
                 min={0}
                 max={100}
@@ -475,7 +475,7 @@ function HeaderAvatarCard({ t, set }: CardProps) {
                 onChange={(avatarOffsetX) => set({ avatarOffsetX })}
               />
               <SliderField
-                label="Framing — vertical"
+                label="Framing - vertical"
                 value={t.avatarOffsetY}
                 min={0}
                 max={100}
@@ -586,7 +586,7 @@ function DecorationCard({ t, set }: CardProps) {
   return (
     <SectionCard
       title="Decoration"
-      description="Chips, bullets, casing and icons — the trim on top of the layout."
+      description="Chips, bullets, casing and icons - the trim on top of the layout."
     >
       <div className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-2">
@@ -633,7 +633,7 @@ function DecorationCard({ t, set }: CardProps) {
         {/* ---- highlight bullets ---- */}
         <Field
           label="Bullets"
-          hint="Highlights on experience, projects and custom items. The ATS-safe preset wants a plain dot — glyph markers can garble when a parser extracts the PDF's text."
+          hint="Highlights on experience, projects and custom items. The ATS-safe preset wants a plain dot - glyph markers can garble when a parser extracts the PDF's text."
         >
           <div className="flex flex-wrap gap-2">
             {BULLET_STYLES.map((b) => (
@@ -709,7 +709,7 @@ function BrandingCard({ t, set }: CardProps) {
       title="Issuer branding"
       description={
         hasBranding
-          ? 'Where this variant shows the issuing company. Every option sits in a page margin, on the sheet’s edge, or behind the text — none of it takes space from the CV or moves a page break. The ATS-safe preset drops all of it: a logo carries no text, and a backdrop sits behind the text a parser reads.'
+          ? 'Where this variant shows the issuing company. Every option sits in a page margin, on the sheet’s edge, or behind the text - none of it takes space from the CV or moves a page break. The ATS-safe preset drops all of it: a logo carries no text, and a backdrop sits behind the text a parser reads.'
           : 'Turn on branding in Profile → Issuer branding to place a company’s logo and details on this CV.'
       }
     >
@@ -802,7 +802,7 @@ function BrandingCard({ t, set }: CardProps) {
 /**
  * The Design tab's theme controls, split into topic cards. Renders a fragment
  * of sibling <SectionCard>s so the tab's multi-column flow (3xl:columns-2 on
- * the page) can balance them across columns — one monolithic card would pin
+ * the page) can balance them across columns - one monolithic card would pin
  * everything into a single column.
  */
 export function ThemeEditor({ variant }: { variant: CVVariant }) {

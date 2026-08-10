@@ -97,7 +97,7 @@ export const CVPreview = forwardRef<
         {over && (
           <span className="inline-flex items-center gap-1 text-amber-700 dark:text-amber-400">
             <AlertTriangle className="size-3.5 shrink-0" />
-            Over two pages — trim about {trim.toFixed(1)} in of content, or
+            Over two pages - trim about {trim.toFixed(1)} in of content, or
             tighten density, margins and font size.
           </span>
         )}

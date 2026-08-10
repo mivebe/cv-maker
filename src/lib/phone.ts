@@ -3,7 +3,7 @@
  * number (basics.phoneCode) so it can be picked from a list instead of typed,
  * and so the rendered CV and the `tel:` link agree on the international form.
  *
- * Not exhaustive by design — a hand-picked list of the countries a user of this
+ * Not exhaustive by design - a hand-picked list of the countries a user of this
  * tool is likely to apply from, plus whatever they type in themselves.
  */
 export interface DialCode {
@@ -54,7 +54,7 @@ export function displayPhone(code: string, phone: string): string {
   return [code.trim(), phone.trim()].filter(Boolean).join(' ')
 }
 
-/** The phone as a `tel:` target — digits and a leading `+` only. */
+/** The phone as a `tel:` target - digits and a leading `+` only. */
 export function telHref(code: string, phone: string): string {
   const raw = displayPhone(code, phone)
   const digits = raw.replace(/[^\d+]/g, '')

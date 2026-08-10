@@ -178,7 +178,7 @@ export function VariantOptionDefaultsCard({ variant }: { variant: CVVariant }) {
   return (
     <SectionCard
       title="Section options policy"
-      description="Applied to EVERY section of this variant, over each section's own settings — how an ATS variant strips decoration in one move. Per-section escapes live in the Sections list."
+      description="Applied to EVERY section of this variant, over each section's own settings - how an ATS variant strips decoration in one move. Per-section escapes live in the Sections list."
     >
       <PartialOptionsFields
         value={variant.optionDefaults}

@@ -109,7 +109,7 @@ export function BrandingEditor() {
               <Input
                 value={branding.note}
                 onChange={(e) => updateBranding({ note: e.target.value })}
-                placeholder="Confidential — not for redistribution"
+                placeholder="Confidential - not for redistribution"
               />
             </Field>
           </div>
@@ -187,7 +187,7 @@ export function BrandingEditor() {
           <div className="mt-5">
             <Field
               label="Brand color"
-              hint="The issuer's color. Applying it sets the accent on every variant — headings, links and item titles follow it."
+              hint="The issuer's color. Applying it sets the accent on every variant - headings, links and item titles follow it."
             >
               <div className="flex flex-wrap items-center gap-2">
                 <input
