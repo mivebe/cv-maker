@@ -40,6 +40,7 @@ interface AvatarHistoryState {
   recent: string[]
   rememberAvatar: (src: string) => void
   forgetAvatar: (src: string) => void
+  clearAvatars: () => void
 }
 
 export const useAvatarHistory = create<AvatarHistoryState>()(
@@ -54,6 +55,7 @@ export const useAvatarHistory = create<AvatarHistoryState>()(
         }),
       forgetAvatar: (src) =>
         set((s) => ({ recent: s.recent.filter((v) => v !== src) })),
+      clearAvatars: () => set({ recent: [] }),
     }),
     {
       name: 'cv-maker:avatar-history:v1',

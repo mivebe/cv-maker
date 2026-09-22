@@ -49,6 +49,8 @@ interface ColorHistoryState {
   /** Newest first, deduped, exactly COLOR_HISTORY_SIZE entries. */
   recent: string[]
   rememberColor: (value: string) => void
+  /** Back to the built-in swatches; there is no "no colours" state. */
+  clearColors: () => void
 }
 
 export const useColorHistory = create<ColorHistoryState>()(
@@ -61,6 +63,7 @@ export const useColorHistory = create<ColorHistoryState>()(
           if (!hex || s.recent[0] === hex) return s
           return { recent: padded([hex, ...s.recent.filter((c) => c !== hex)]) }
         }),
+      clearColors: () => set({ recent: DEFAULT_COLORS }),
     }),
     {
       name: 'cv-maker:color-history:v1',

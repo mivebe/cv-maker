@@ -631,7 +631,12 @@ function SectionBlock({
             <ChipGroup legend={g.name} items={g.skills} />
             {/* The inline fallback (theme.skillStyle = 'inline'); CSS shows one or the other. */}
             <div className="cv-skillgroup-inline">
-              <span className="cv-skillgroup-name">{g.name}: </span>
+              {/* An unnamed group is legitimate (one flat chip cloud, no
+                  legend); without the guard the inline fallback opens with a
+                  bare ": ". ChipGroup already treats an empty legend this way. */}
+              {g.name.trim() && (
+                <span className="cv-skillgroup-name">{g.name}: </span>
+              )}
               <span>{g.skills.filter((s) => s.trim()).join(', ')}</span>
             </div>
           </div>

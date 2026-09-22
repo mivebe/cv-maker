@@ -1,13 +1,6 @@
 import { useState } from 'react'
-import type {
-  ChartItem,
-  CVVariant,
-  LanguageItem,
-  Section,
-  SkillGroup,
-  TotalItem,
-} from '../../schema'
-import { LANGUAGE_STAGES } from '../../lib/sections'
+import type { CVVariant, Section } from '../../schema'
+import { itemLabel, itemSubtitle } from '../../lib/sections'
 import { useStore } from '../../store/useStore'
 import { EmptyHint } from '@/components/app-ui'
 import { Badge } from '@/components/ui/badge'
@@ -283,32 +276,10 @@ export function SectionItemsEditor({
           key={it.id}
           variant={variant}
           itemId={it.id}
-          title={itemTitle(section, it)}
-          subtitle={itemSubtitle(section, it)}
+          title={itemLabel(section.kind, it)}
+          subtitle={itemSubtitle(section.kind, it)}
         />
       ))}
     </div>
   )
-}
-
-/** Display name for an include-only row, per kind. */
-function itemTitle(sec: Section, it: Section['items'][number]): string {
-  if (sec.kind === 'skills') return (it as SkillGroup).name
-  if (sec.kind === 'totals') return (it as TotalItem).label
-  if (sec.kind === 'languages') return (it as LanguageItem).name
-  return (it as { title?: string }).title ?? ''
-}
-
-function itemSubtitle(
-  sec: Section,
-  it: Section['items'][number],
-): string | undefined {
-  if (sec.kind === 'skills') return (it as SkillGroup).skills.join(', ')
-  if (sec.kind === 'totals') return (it as TotalItem).value
-  if (sec.kind === 'chart') return String((it as ChartItem).value)
-  if (sec.kind === 'languages')
-    return LANGUAGE_STAGES[
-      Math.min(Math.max(1, (it as LanguageItem).level), 4) - 1
-    ]
-  return (it as { subtitle?: string }).subtitle || undefined
 }

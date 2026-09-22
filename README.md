@@ -135,8 +135,30 @@ keep in git.
   target role live in the variant's own Content tab.
 - **Variant editor** (`/variant/:id`) - Content / Design / ATS tabs, the
   Rearrange miniature, and a live preview beside the controls.
-- **Header** - Export JSON, Import JSON, reset to sample, appearance
-  (light/dark/system), and how lists reorder (drag & drop or arrow buttons).
+- **Header** - undo/redo, the history & saves panel, Export JSON, Import JSON,
+  and settings.
+- **Settings** (the gear) - every per-device preference in one place:
+  appearance (light/dark/auto), how lists reorder (arrows or drag & drop),
+  which page the app opens on (profile, variants, or wherever you were last),
+  autosave and its interval, a keyboard-shortcut reference, and a Data group
+  holding the destructive actions - reset to sample, clear everything, and
+  forget the suggestions / recent colours / recent photos this browser kept -
+  plus what all of that is costing in browser storage. None of it is part of
+  the document, so none of it travels in an export.
+- **Undo/redo** - `Ctrl+Z` / `Ctrl+Shift+Z` (`Ctrl+Y` too) anywhere, including
+  while a field has focus. A burst of typing in one field undoes as one step.
+- **History & saves panel** - a right-hand overlay, closed until the header
+  button opens it.
+  - *History* lists every change, newest first, named after what it touched
+    ("Removed Experience - Acme Corp"). Clicking one applies that change again
+    on top of the current document, as a new step - so a re-apply is itself
+    undoable. An entry whose target no longer exists is greyed out. History is
+    per session: the document is saved continuously, the stack of steps is not.
+  - *Saves* keeps named copies in the browser, so downloading JSON is not the
+    only way to hold on to a version. One save is active; `Ctrl+S` writes into
+    it, autosave rewrites it on an interval (on, every 5 minutes by default,
+    both changeable in the panel), and loading another makes that one active.
+    Each save can be renamed, downloaded as JSON, or deleted.
 
 ## Data model
 
@@ -178,7 +200,25 @@ The exported and persisted document is `{ version: 2, profile, variants }`.
 - **Zod is the single source of truth** ([src/schema](src/schema)) - the schemas
   validate imports *and* generate every TS type in the app.
 - **Zustand + persist** ([src/store/useStore.ts](src/store/useStore.ts)) -
-  state persisted to `localStorage` under `cv-maker:v2`.
+  state persisted to `localStorage` under `cv-maker:v2` on every change.
+- **Undo/redo is a store middleware**
+  ([src/store/useHistory.ts](src/store/useHistory.ts)) - it snapshots
+  `{ profile, variants }` before each mutation that changes them, and groups
+  repeats of the same action on the same target inside 600ms into one step, so
+  typing costs one undo rather than one per character. It also keeps the action
+  and its arguments, which is what "apply this change again" replays, and
+  [historyLabels.ts](src/store/historyLabels.ts) resolves those arguments into
+  a readable label at record time - while both the before and after documents
+  are still in hand, since a removal can only be named from the one that still
+  had it. Snapshots are in memory only: writing them to `localStorage` would
+  multiply the avatar data URL by the stack depth and hit the ~5MB quota.
+- **Saves are hand-rolled localStorage**
+  ([src/lib/saveStore.ts](src/lib/saveStore.ts)) rather than another `persist`
+  store: each save is its own key (`cv-maker:save:<id>`) under a metadata index
+  (`cv-maker:saves:v1`), so writing one does not rewrite the rest and the list
+  renders without parsing every document. A write that would overflow the quota
+  drops the oldest *autosaved* entries and retries; a save you made by hand is
+  never deleted for you.
 - **Variants resolve against the master** at render time
   ([src/lib/resolve.ts](src/lib/resolve.ts)): include → override → order →
   place → hide, plus the option merge.

@@ -1,11 +1,16 @@
 import { useEffect, useRef } from 'react'
-import { NavLink, Outlet } from 'react-router-dom'
+import { NavLink, Outlet, useLocation } from 'react-router-dom'
 import { FileText } from 'lucide-react'
-import { AppearanceToggle } from './AppearanceToggle'
 import { ImportExportButtons } from './ImportExportButtons'
-import { ReorderModeToggle } from './ReorderModeToggle'
+import { SettingsMenu } from './SettingsMenu'
+import { UndoRedoButtons } from './UndoRedoButtons'
+import { HistoryPanel, HistoryPanelButton } from './history/HistoryPanel'
 import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { useUndoShortcut } from '../store/useHistory'
+import { useSaveShortcut } from '../store/usePanel'
+import { useAutosave } from '../store/useSaves'
+import { useStartPage } from '../store/useStartPage'
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   cn(
@@ -16,6 +21,17 @@ const navLinkClass = ({ isActive }: { isActive: boolean }) =>
 
 export function Layout() {
   const headerRef = useRef<HTMLElement>(null)
+
+  // One document-wide set of listeners for every page: Ctrl+Z / Ctrl+Shift+Z,
+  // Ctrl+S, and the autosave timer.
+  useUndoShortcut()
+  useSaveShortcut()
+  useAutosave()
+
+  // Fuel for the "start on: last" setting.
+  const { pathname } = useLocation()
+  const remember = useStartPage((s) => s.remember)
+  useEffect(() => remember(pathname), [pathname, remember])
 
   // Pages that pin their own toolbars right below this header need its
   // rendered height (it wraps to two rows on mobile), so publish it as a
@@ -49,9 +65,10 @@ export function Layout() {
           </div>
           {/* Actions sit beside the logo on mobile; the nav wraps below them. */}
           <div className="order-2 ml-auto flex min-w-0 items-center gap-1 sm:order-3 sm:gap-2">
+            <UndoRedoButtons />
+            <HistoryPanelButton />
             <ImportExportButtons />
-            <ReorderModeToggle />
-            <AppearanceToggle />
+            <SettingsMenu />
           </div>
           <nav className="order-3 flex w-full items-center gap-1 sm:order-2 sm:w-auto">
             <NavLink to="/profile" className={navLinkClass}>
@@ -66,6 +83,7 @@ export function Layout() {
       <main className="w-full flex-1 px-3 py-4 sm:px-6 sm:py-6">
         <Outlet />
       </main>
+      <HistoryPanel />
     </div>
   )
 }

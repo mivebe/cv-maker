@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import type { StateCreator } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type {
   AppData,
@@ -22,6 +23,7 @@ import {
 } from '../lib/factory'
 import { sampleData } from '../lib/sample'
 import { defaultPlacement, reconcileSectionOrder } from '../lib/sections'
+import { withHistory } from './useHistory'
 
 type Direction = 'up' | 'down'
 
@@ -174,275 +176,276 @@ function patchVariant(
 
 const seed = sampleData()
 
+const createAppState: StateCreator<AppState, [], []> = (set, get) => ({
+  profile: seed.profile,
+  variants: seed.variants,
+
+  replaceAll: (data) => set({ profile: data.profile, variants: data.variants }),
+  resetToSample: () => {
+    const s = sampleData()
+    set({ profile: s.profile, variants: s.variants })
+  },
+  clearAll: () => {
+    // Drop all content and variants, keeping an empty master profile.
+    set({ profile: emptyProfile(), variants: [] })
+  },
+
+  // ---- basics ----
+  updateBasics: (patch) =>
+    patchProfile(set, (p) => ({ ...p, basics: { ...p.basics, ...patch } })),
+  updateBranding: (patch) =>
+    patchProfile(set, (p) => ({
+      ...p,
+      branding: { ...p.branding, ...patch },
+    })),
+  addLink: () =>
+    patchProfile(set, (p) => ({
+      ...p,
+      basics: { ...p.basics, links: [...p.basics.links, newLink()] },
+    })),
+  updateLink: (id, patch) =>
+    patchProfile(set, (p) => ({
+      ...p,
+      basics: {
+        ...p.basics,
+        links: p.basics.links.map((l) =>
+          l.id === id ? { ...l, ...patch } : l,
+        ),
+      },
+    })),
+  removeLink: (id) =>
+    patchProfile(set, (p) => ({
+      ...p,
+      basics: {
+        ...p.basics,
+        links: p.basics.links.filter((l) => l.id !== id),
+      },
+    })),
+  moveLink: (id, dir) =>
+    patchProfile(set, (p) => ({
+      ...p,
+      basics: { ...p.basics, links: moveById(p.basics.links, id, dir) },
+    })),
+  setLinkOrder: (ids) =>
+    patchProfile(set, (p) => ({
+      ...p,
+      basics: { ...p.basics, links: orderByIds(p.basics.links, ids) },
+    })),
+
+  // ---- sections ----
+  addSection: (kind) => {
+    const sec = newSection(kind)
+    patchProfile(set, (p) => ({ ...p, sections: [...p.sections, sec] }))
+    return sec.id
+  },
+  updateSection: (id, patch) =>
+    patchSection(set, id, (sec) => ({ ...sec, ...patch })),
+  updateSectionOptions: (id, patch) =>
+    patchSection(set, id, (sec) => ({
+      ...sec,
+      options: { ...sec.options, ...patch },
+    })),
+  removeSection: (id) =>
+    patchProfile(set, (p) => ({
+      ...p,
+      sections: p.sections.filter((sec) => sec.id !== id),
+    })),
+  moveSection: (id, dir) =>
+    patchProfile(set, (p) => ({
+      ...p,
+      sections: moveById(p.sections, id, dir),
+    })),
+
+  // ---- items ----
+  addItem: (sectionId) => {
+    const section = get().profile.sections.find((s) => s.id === sectionId)
+    if (!section) return undefined
+    const item = ITEM_FACTORIES[section.kind]()
+    if (!item) return undefined
+    patchSection(
+      set,
+      sectionId,
+      (sec) =>
+        ({
+          ...sec,
+          items: [...sec.items, item],
+        }) as Section,
+    )
+    return item.id
+  },
+  updateItem: (sectionId, itemId, patch) =>
+    patchSection(
+      set,
+      sectionId,
+      (sec) =>
+        ({
+          ...sec,
+          items: (sec.items as { id: string }[]).map((it) =>
+            it.id === itemId ? { ...it, ...patch } : it,
+          ),
+        }) as Section,
+    ),
+  removeItem: (sectionId, itemId) =>
+    patchSection(
+      set,
+      sectionId,
+      (sec) =>
+        ({
+          ...sec,
+          items: (sec.items as { id: string }[]).filter(
+            (it) => it.id !== itemId,
+          ),
+        }) as Section,
+    ),
+  moveItem: (sectionId, itemId, dir) =>
+    patchSection(
+      set,
+      sectionId,
+      (sec) =>
+        ({
+          ...sec,
+          items: moveById(sec.items as { id: string }[], itemId, dir),
+        }) as Section,
+    ),
+  setItemOrder: (sectionId, itemIds) =>
+    patchSection(
+      set,
+      sectionId,
+      (sec) =>
+        ({
+          ...sec,
+          items: orderByIds(sec.items as { id: string }[], itemIds),
+        }) as Section,
+    ),
+
+  // ---- variants ----
+  addVariant: (name) => {
+    const v = newVariant(get().profile, name)
+    set((s) => ({ variants: [...s.variants, v] }))
+    return v.id
+  },
+  duplicateVariant: (id) => {
+    const src = get().variants.find((v) => v.id === id)
+    if (!src) return undefined
+    const copy: CVVariant = {
+      ...structuredClone(src),
+      id: newVariant(get().profile).id,
+      name: `${src.name} (copy)`,
+    }
+    set((s) => ({ variants: [...s.variants, copy] }))
+    return copy.id
+  },
+  deleteVariant: (id) =>
+    set((s) => ({ variants: s.variants.filter((v) => v.id !== id) })),
+  renameVariant: (id, name) => patchVariant(set, id, (v) => ({ ...v, name })),
+  updateVariantMeta: (id, patch) =>
+    patchVariant(set, id, (v) => ({ ...v, ...patch })),
+  setVariantInclude: (id, itemId, included) =>
+    patchVariant(set, id, (v) => ({
+      ...v,
+      include: { ...v.include, [itemId]: included },
+    })),
+  setVariantSectionOrder: (id, order) =>
+    patchVariant(set, id, (v) => ({ ...v, sectionOrder: order })),
+  moveVariantSection: (id, sectionId, dir) =>
+    patchVariant(set, id, (v) => {
+      const order = reconcileSectionOrder(v.sectionOrder, get().profile)
+      const asItems = order.map((k) => ({ id: k }))
+      return {
+        ...v,
+        sectionOrder: moveById(asItems, sectionId, dir).map((x) => x.id),
+      }
+    }),
+  toggleSectionHidden: (id, sectionId) =>
+    patchVariant(set, id, (v) => ({
+      ...v,
+      hiddenSections: v.hiddenSections.includes(sectionId)
+        ? v.hiddenSections.filter((k) => k !== sectionId)
+        : [...v.hiddenSections, sectionId],
+    })),
+  setSectionPlacement: (id, sectionId, patch) =>
+    patchVariant(set, id, (v) => ({
+      ...v,
+      sectionLayout: {
+        ...v.sectionLayout,
+        [sectionId]: {
+          ...(v.sectionLayout[sectionId] ??
+            defaultPlacement(get().profile, sectionId)),
+          ...patch,
+        },
+      },
+    })),
+  setSectionTitle: (id, sectionId, title) =>
+    patchVariant(set, id, (v) => {
+      const sectionTitles = { ...v.sectionTitles }
+      // An empty rename means "use the default label", not "no heading".
+      if (title.trim()) sectionTitles[sectionId] = title
+      else delete sectionTitles[sectionId]
+      return { ...v, sectionTitles }
+    }),
+  setVariantOptionDefaults: (id, patch) =>
+    patchVariant(set, id, (v) => ({
+      ...v,
+      optionDefaults: { ...v.optionDefaults, ...patch },
+    })),
+  clearVariantOptionDefault: (id, key) =>
+    patchVariant(set, id, (v) => {
+      const optionDefaults = { ...v.optionDefaults }
+      delete optionDefaults[key]
+      return { ...v, optionDefaults }
+    }),
+  replaceVariantOptionDefaults: (id, value) =>
+    patchVariant(set, id, (v) => ({ ...v, optionDefaults: { ...value } })),
+  setVariantSectionOptions: (id, sectionId, patch) =>
+    patchVariant(set, id, (v) => ({
+      ...v,
+      sectionOptions: {
+        ...v.sectionOptions,
+        [sectionId]: { ...v.sectionOptions[sectionId], ...patch },
+      },
+    })),
+  clearVariantSectionOption: (id, sectionId, key) =>
+    patchVariant(set, id, (v) => {
+      const forSection = { ...v.sectionOptions[sectionId] }
+      delete forSection[key]
+      const sectionOptions = { ...v.sectionOptions }
+      if (Object.keys(forSection).length === 0) delete sectionOptions[sectionId]
+      else sectionOptions[sectionId] = forSection
+      return { ...v, sectionOptions }
+    }),
+  setOverride: (variantId, itemId, field, value) =>
+    patchVariant(set, variantId, (v) => ({
+      ...v,
+      overrides: {
+        ...v.overrides,
+        [itemId]: { ...v.overrides[itemId], [field]: value },
+      },
+    })),
+  clearOverride: (variantId, itemId, field) =>
+    patchVariant(set, variantId, (v) => {
+      const forItem = { ...v.overrides[itemId] }
+      delete forItem[field]
+      const overrides = { ...v.overrides }
+      if (Object.keys(forItem).length === 0) delete overrides[itemId]
+      else overrides[itemId] = forItem
+      return { ...v, overrides }
+    }),
+  updateVariantTheme: (id, patch) =>
+    patchVariant(set, id, (v) => ({
+      ...v,
+      theme: { ...v.theme, ...patch },
+    })),
+  updateVariantBasics: (id, patch) =>
+    patchVariant(set, id, (v) => ({
+      ...v,
+      basicsOverride: { ...v.basicsOverride, ...patch },
+    })),
+})
+
 export const useStore = create<AppState>()(
   persist(
-    (set, get) => ({
-      profile: seed.profile,
-      variants: seed.variants,
-
-      replaceAll: (data) =>
-        set({ profile: data.profile, variants: data.variants }),
-      resetToSample: () => {
-        const s = sampleData()
-        set({ profile: s.profile, variants: s.variants })
-      },
-      clearAll: () => {
-        // Drop all content and variants, keeping an empty master profile.
-        set({ profile: emptyProfile(), variants: [] })
-      },
-
-      // ---- basics ----
-      updateBasics: (patch) =>
-        patchProfile(set, (p) => ({ ...p, basics: { ...p.basics, ...patch } })),
-      updateBranding: (patch) =>
-        patchProfile(set, (p) => ({
-          ...p,
-          branding: { ...p.branding, ...patch },
-        })),
-      addLink: () =>
-        patchProfile(set, (p) => ({
-          ...p,
-          basics: { ...p.basics, links: [...p.basics.links, newLink()] },
-        })),
-      updateLink: (id, patch) =>
-        patchProfile(set, (p) => ({
-          ...p,
-          basics: {
-            ...p.basics,
-            links: p.basics.links.map((l) =>
-              l.id === id ? { ...l, ...patch } : l,
-            ),
-          },
-        })),
-      removeLink: (id) =>
-        patchProfile(set, (p) => ({
-          ...p,
-          basics: {
-            ...p.basics,
-            links: p.basics.links.filter((l) => l.id !== id),
-          },
-        })),
-      moveLink: (id, dir) =>
-        patchProfile(set, (p) => ({
-          ...p,
-          basics: { ...p.basics, links: moveById(p.basics.links, id, dir) },
-        })),
-      setLinkOrder: (ids) =>
-        patchProfile(set, (p) => ({
-          ...p,
-          basics: { ...p.basics, links: orderByIds(p.basics.links, ids) },
-        })),
-
-      // ---- sections ----
-      addSection: (kind) => {
-        const sec = newSection(kind)
-        patchProfile(set, (p) => ({ ...p, sections: [...p.sections, sec] }))
-        return sec.id
-      },
-      updateSection: (id, patch) =>
-        patchSection(set, id, (sec) => ({ ...sec, ...patch })),
-      updateSectionOptions: (id, patch) =>
-        patchSection(set, id, (sec) => ({
-          ...sec,
-          options: { ...sec.options, ...patch },
-        })),
-      removeSection: (id) =>
-        patchProfile(set, (p) => ({
-          ...p,
-          sections: p.sections.filter((sec) => sec.id !== id),
-        })),
-      moveSection: (id, dir) =>
-        patchProfile(set, (p) => ({
-          ...p,
-          sections: moveById(p.sections, id, dir),
-        })),
-
-      // ---- items ----
-      addItem: (sectionId) => {
-        const section = get().profile.sections.find((s) => s.id === sectionId)
-        if (!section) return undefined
-        const item = ITEM_FACTORIES[section.kind]()
-        if (!item) return undefined
-        patchSection(
-          set,
-          sectionId,
-          (sec) =>
-            ({
-              ...sec,
-              items: [...sec.items, item],
-            }) as Section,
-        )
-        return item.id
-      },
-      updateItem: (sectionId, itemId, patch) =>
-        patchSection(
-          set,
-          sectionId,
-          (sec) =>
-            ({
-              ...sec,
-              items: (sec.items as { id: string }[]).map((it) =>
-                it.id === itemId ? { ...it, ...patch } : it,
-              ),
-            }) as Section,
-        ),
-      removeItem: (sectionId, itemId) =>
-        patchSection(
-          set,
-          sectionId,
-          (sec) =>
-            ({
-              ...sec,
-              items: (sec.items as { id: string }[]).filter(
-                (it) => it.id !== itemId,
-              ),
-            }) as Section,
-        ),
-      moveItem: (sectionId, itemId, dir) =>
-        patchSection(
-          set,
-          sectionId,
-          (sec) =>
-            ({
-              ...sec,
-              items: moveById(sec.items as { id: string }[], itemId, dir),
-            }) as Section,
-        ),
-      setItemOrder: (sectionId, itemIds) =>
-        patchSection(
-          set,
-          sectionId,
-          (sec) =>
-            ({
-              ...sec,
-              items: orderByIds(sec.items as { id: string }[], itemIds),
-            }) as Section,
-        ),
-
-      // ---- variants ----
-      addVariant: (name) => {
-        const v = newVariant(get().profile, name)
-        set((s) => ({ variants: [...s.variants, v] }))
-        return v.id
-      },
-      duplicateVariant: (id) => {
-        const src = get().variants.find((v) => v.id === id)
-        if (!src) return undefined
-        const copy: CVVariant = {
-          ...structuredClone(src),
-          id: newVariant(get().profile).id,
-          name: `${src.name} (copy)`,
-        }
-        set((s) => ({ variants: [...s.variants, copy] }))
-        return copy.id
-      },
-      deleteVariant: (id) =>
-        set((s) => ({ variants: s.variants.filter((v) => v.id !== id) })),
-      renameVariant: (id, name) =>
-        patchVariant(set, id, (v) => ({ ...v, name })),
-      updateVariantMeta: (id, patch) =>
-        patchVariant(set, id, (v) => ({ ...v, ...patch })),
-      setVariantInclude: (id, itemId, included) =>
-        patchVariant(set, id, (v) => ({
-          ...v,
-          include: { ...v.include, [itemId]: included },
-        })),
-      setVariantSectionOrder: (id, order) =>
-        patchVariant(set, id, (v) => ({ ...v, sectionOrder: order })),
-      moveVariantSection: (id, sectionId, dir) =>
-        patchVariant(set, id, (v) => {
-          const order = reconcileSectionOrder(v.sectionOrder, get().profile)
-          const asItems = order.map((k) => ({ id: k }))
-          return {
-            ...v,
-            sectionOrder: moveById(asItems, sectionId, dir).map((x) => x.id),
-          }
-        }),
-      toggleSectionHidden: (id, sectionId) =>
-        patchVariant(set, id, (v) => ({
-          ...v,
-          hiddenSections: v.hiddenSections.includes(sectionId)
-            ? v.hiddenSections.filter((k) => k !== sectionId)
-            : [...v.hiddenSections, sectionId],
-        })),
-      setSectionPlacement: (id, sectionId, patch) =>
-        patchVariant(set, id, (v) => ({
-          ...v,
-          sectionLayout: {
-            ...v.sectionLayout,
-            [sectionId]: {
-              ...(v.sectionLayout[sectionId] ??
-                defaultPlacement(get().profile, sectionId)),
-              ...patch,
-            },
-          },
-        })),
-      setSectionTitle: (id, sectionId, title) =>
-        patchVariant(set, id, (v) => {
-          const sectionTitles = { ...v.sectionTitles }
-          // An empty rename means "use the default label", not "no heading".
-          if (title.trim()) sectionTitles[sectionId] = title
-          else delete sectionTitles[sectionId]
-          return { ...v, sectionTitles }
-        }),
-      setVariantOptionDefaults: (id, patch) =>
-        patchVariant(set, id, (v) => ({
-          ...v,
-          optionDefaults: { ...v.optionDefaults, ...patch },
-        })),
-      clearVariantOptionDefault: (id, key) =>
-        patchVariant(set, id, (v) => {
-          const optionDefaults = { ...v.optionDefaults }
-          delete optionDefaults[key]
-          return { ...v, optionDefaults }
-        }),
-      replaceVariantOptionDefaults: (id, value) =>
-        patchVariant(set, id, (v) => ({ ...v, optionDefaults: { ...value } })),
-      setVariantSectionOptions: (id, sectionId, patch) =>
-        patchVariant(set, id, (v) => ({
-          ...v,
-          sectionOptions: {
-            ...v.sectionOptions,
-            [sectionId]: { ...v.sectionOptions[sectionId], ...patch },
-          },
-        })),
-      clearVariantSectionOption: (id, sectionId, key) =>
-        patchVariant(set, id, (v) => {
-          const forSection = { ...v.sectionOptions[sectionId] }
-          delete forSection[key]
-          const sectionOptions = { ...v.sectionOptions }
-          if (Object.keys(forSection).length === 0)
-            delete sectionOptions[sectionId]
-          else sectionOptions[sectionId] = forSection
-          return { ...v, sectionOptions }
-        }),
-      setOverride: (variantId, itemId, field, value) =>
-        patchVariant(set, variantId, (v) => ({
-          ...v,
-          overrides: {
-            ...v.overrides,
-            [itemId]: { ...v.overrides[itemId], [field]: value },
-          },
-        })),
-      clearOverride: (variantId, itemId, field) =>
-        patchVariant(set, variantId, (v) => {
-          const forItem = { ...v.overrides[itemId] }
-          delete forItem[field]
-          const overrides = { ...v.overrides }
-          if (Object.keys(forItem).length === 0) delete overrides[itemId]
-          else overrides[itemId] = forItem
-          return { ...v, overrides }
-        }),
-      updateVariantTheme: (id, patch) =>
-        patchVariant(set, id, (v) => ({
-          ...v,
-          theme: { ...v.theme, ...patch },
-        })),
-      updateVariantBasics: (id, patch) =>
-        patchVariant(set, id, (v) => ({
-          ...v,
-          basicsOverride: { ...v.basicsOverride, ...patch },
-        })),
+    withHistory(createAppState, {
+      select: (s) => ({ profile: s.profile, variants: s.variants }),
     }),
     {
       /**

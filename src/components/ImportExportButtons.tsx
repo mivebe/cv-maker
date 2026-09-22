@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { Download, RotateCcw, Upload } from 'lucide-react'
+import { Download, Upload } from 'lucide-react'
 import { useStore } from '../store/useStore'
 import { downloadJson, importJson } from '../lib/io'
 import { APP_DATA_VERSION } from '../schema'
@@ -9,7 +9,6 @@ export function ImportExportButtons() {
   const profile = useStore((s) => s.profile)
   const variants = useStore((s) => s.variants)
   const replaceAll = useStore((s) => s.replaceAll)
-  const resetToSample = useStore((s) => s.resetToSample)
   const fileRef = useRef<HTMLInputElement>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -77,20 +76,6 @@ export function ImportExportButtons() {
       >
         <Upload />
         <span className="hidden sm:inline">Import JSON</span>
-      </Button>
-      <Button
-        variant="ghost"
-        size="icon"
-        aria-label="Reset to sample data"
-        title="Reset to sample data"
-        onClick={() => {
-          if (confirm('Replace all current data with the built-in sample?')) {
-            resetToSample()
-            flash('Loaded sample data.')
-          }
-        }}
-      >
-        <RotateCcw />
       </Button>
       <input
         ref={fileRef}

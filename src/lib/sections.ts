@@ -1,10 +1,15 @@
 import { sectionOptionsSchema } from '../schema'
 import type {
+  ChartItem,
+  LanguageItem,
   MasterProfile,
   Section,
+  SectionItem,
   SectionKind,
   SectionOptions,
   SectionPlacement,
+  SkillGroup,
+  TotalItem,
 } from '../schema'
 
 /**
@@ -107,6 +112,32 @@ export function effectiveOptions(section: Section): SectionOptions {
 /** Heading text for a section: its own title, or the kind's default label. */
 export function sectionLabel(section: Section): string {
   return section.title.trim() || KIND_LABELS[section.kind]
+}
+
+/**
+ * Display name for one item, per kind - the field that actually identifies it
+ * to a reader. Used anywhere an item has to be named outside the document:
+ * variant include rows, the change history.
+ */
+export function itemLabel(kind: SectionKind, item: SectionItem): string {
+  if (kind === 'skills') return (item as SkillGroup).name
+  if (kind === 'totals') return (item as TotalItem).label
+  if (kind === 'languages') return (item as LanguageItem).name
+  return (item as { title?: string }).title ?? ''
+}
+
+export function itemSubtitle(
+  kind: SectionKind,
+  item: SectionItem,
+): string | undefined {
+  if (kind === 'skills') return (item as SkillGroup).skills.join(', ')
+  if (kind === 'totals') return (item as TotalItem).value
+  if (kind === 'chart') return String((item as ChartItem).value)
+  if (kind === 'languages')
+    return LANGUAGE_STAGES[
+      Math.min(Math.max(1, (item as LanguageItem).level), 4) - 1
+    ]
+  return (item as { subtitle?: string }).subtitle || undefined
 }
 
 export function sectionById(
