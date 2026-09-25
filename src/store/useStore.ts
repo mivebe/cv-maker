@@ -62,6 +62,8 @@ interface AppState {
 
   // ---- whole document ----
   replaceAll: (data: AppData) => void
+  /** The assistant's edit: the whole document, as one undoable step. */
+  applyAiEdit: (data: AppData, request: string) => void
   resetToSample: () => void
   clearAll: () => void
 
@@ -181,6 +183,8 @@ const createAppState: StateCreator<AppState, [], []> = (set, get) => ({
   variants: seed.variants,
 
   replaceAll: (data) => set({ profile: data.profile, variants: data.variants }),
+  applyAiEdit: (data) =>
+    set({ profile: data.profile, variants: data.variants }),
   resetToSample: () => {
     const s = sampleData()
     set({ profile: s.profile, variants: s.variants })

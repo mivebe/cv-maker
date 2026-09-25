@@ -5,12 +5,14 @@ import { ImportExportButtons } from './ImportExportButtons'
 import { SettingsMenu } from './SettingsMenu'
 import { UndoRedoButtons } from './UndoRedoButtons'
 import { HistoryPanel, HistoryPanelButton } from './history/HistoryPanel'
+import { AiPanel, AiPanelButton } from './ai/AiPanel'
 import { buttonVariants } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { useUndoShortcut } from '../store/useHistory'
 import { useSaveShortcut } from '../store/usePanel'
 import { useAutosave } from '../store/useSaves'
 import { useStartPage } from '../store/useStartPage'
+import { useAi } from '../store/useAi'
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   cn(
@@ -21,6 +23,7 @@ const navLinkClass = ({ isActive }: { isActive: boolean }) =>
 
 export function Layout() {
   const headerRef = useRef<HTMLElement>(null)
+  const aiOpen = useAi((s) => s.open)
 
   // One document-wide set of listeners for every page: Ctrl+Z / Ctrl+Shift+Z,
   // Ctrl+S, and the autosave timer.
@@ -67,6 +70,7 @@ export function Layout() {
           <div className="order-2 ml-auto flex min-w-0 items-center gap-1 sm:order-3 sm:gap-2">
             <UndoRedoButtons />
             <HistoryPanelButton />
+            <AiPanelButton />
             <ImportExportButtons />
             <SettingsMenu />
           </div>
@@ -80,10 +84,17 @@ export function Layout() {
           </nav>
         </div>
       </header>
-      <main className="w-full flex-1 px-3 py-4 sm:px-6 sm:py-6">
+      <main
+        className={cn(
+          'w-full flex-1 px-3 py-4 sm:px-6 sm:py-6',
+          // Room for the docked assistant, so it never covers the preview.
+          aiOpen && 'lg:pr-[calc(24rem+1.5rem)]',
+        )}
+      >
         <Outlet />
       </main>
       <HistoryPanel />
+      <AiPanel />
     </div>
   )
 }

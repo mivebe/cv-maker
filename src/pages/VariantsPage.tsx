@@ -53,14 +53,16 @@ export function VariantsPage() {
         {variants.map((v) => (
           <Card
             key={v.id}
-            className="flex flex-col transition-[border-color,box-shadow] hover:border-primary/40 hover:shadow-md"
+            className="group relative flex flex-col transition-[border-color,box-shadow,transform] duration-200 hover:border-primary/60 hover:shadow-lg motion-safe:hover:-translate-y-0.5"
           >
             <CardHeader>
+              {/* The ::after overlay stretches this button over the whole card,
+                  so clicking anywhere opens the variant; the footer sits above it. */}
               <button
                 onClick={() => navigate(`/variant/${v.id}`)}
-                className="min-w-0 text-left"
+                className="min-w-0 text-left after:absolute after:inset-0 after:rounded-[inherit]"
               >
-                <CardTitle className="truncate hover:text-primary">
+                <CardTitle className="truncate transition-colors group-hover:text-primary">
                   {v.name}
                 </CardTitle>
                 <CardDescription className="mt-0.5 truncate text-xs">
@@ -73,7 +75,7 @@ export function VariantsPage() {
                 {THEME_PRESET_LABELS[v.theme.preset]}
               </p>
             </CardContent>
-            <CardFooter className="mt-auto flex flex-wrap items-center gap-2 border-t pt-3">
+            <CardFooter className="relative z-10 mt-auto flex flex-wrap items-center gap-2 border-t pt-3">
               <Button
                 variant="outline"
                 onClick={() => navigate(`/variant/${v.id}`)}

@@ -30,7 +30,7 @@ const GROUP_MS = 600
  * Actions whose repeats must stay separate steps: adding two items or moving
  * something twice are distinct edits even when they land in the same second.
  */
-const NEVER_GROUP = /^(add|remove|delete|duplicate|move|replace|reset|clear)/
+const NEVER_GROUP = /^(add|remove|delete|duplicate|move|replace|reset|clear|apply)/
 
 export interface HistoryEntry {
   id: string

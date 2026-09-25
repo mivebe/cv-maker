@@ -118,6 +118,13 @@ const str = (v: unknown) => (typeof v === 'string' ? v : '')
 const RULES: Record<string, Rule> = {
   // ---- whole document ----
   replaceAll: { describe: () => 'Imported a document' },
+  applyAiEdit: {
+    describe: ({ args }) => ({
+      title: 'AI assistant edit',
+      detail: str(args[1]).slice(0, 120) || undefined,
+      refs: [],
+    }),
+  },
   resetToSample: { describe: () => 'Reset to the sample document' },
   clearAll: { describe: () => 'Cleared everything' },
 

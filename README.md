@@ -102,6 +102,27 @@ Both directions of this round-trip are lossless: what the app exports is exactly
 what it persists, so the file is also a perfectly good backup and a sane thing to
 keep in git.
 
+### 3. In-app AI assistant - on your own free AI account
+
+The sparkles button in the header opens an assistant docked beside the editor.
+It can do everything the editor can: recreate a CV from an attached PDF or
+text file, write one from scratch, tighten bullets, add a variant, restyle a
+theme, or invent a character's CV.
+
+It runs on **your** account with a **free** provider, called straight from the
+browser - there is no CV Maker server and nobody pays:
+
+- **OpenRouter** - click *Connect OpenRouter*, sign in, and you are back with
+  a key; only free models are offered (about 50 requests a day).
+- **Google Gemini** - paste a free key from
+  [Google AI Studio](https://aistudio.google.com/apikey) (Flash-Lite allows a
+  few hundred requests a day).
+
+Keys stay in this browser's localStorage. Free tiers may log or train on what
+you send, so your CV text should be something you are fine sharing. Photos and
+logos are never sent. Each AI edit is validated against the schema and lands
+as one step in the history, so Ctrl+Z undoes it.
+
 ---
 
 ## Features
