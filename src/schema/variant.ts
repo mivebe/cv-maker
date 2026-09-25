@@ -189,6 +189,14 @@ export const variantSchema = z.object({
   name: z.string(),
   targetRole: z.string(),
   /**
+   * BCP 47 code of the language this variant is written in (see lib/i18n).
+   * Drives month names, "Present" and language-stage words on the page.
+   * Absent = English, which is what every variant was before this existed.
+   */
+  language: z.string().optional(),
+  /** Epoch ms of the last change to this variant. Absent on older data. */
+  updatedAt: z.number().optional(),
+  /**
    * itemId -> included?. Absence means "included" (new master items appear in
    * every variant by default). Set false to exclude an item from this variant.
    */
@@ -203,6 +211,8 @@ export const variantSchema = z.object({
    * is reading: a human likes "Portfolios", an ATS wants "Projects".
    */
   sectionTitles: z.record(z.string(), z.string()).default({}),
+  /** sectionId -> sub-line text, overriding the section's own subtitle. */
+  sectionSubtitles: z.record(z.string(), z.string()).optional(),
   /**
    * sectionId -> placement. Absent ids fall back to a per-kind default
    * (skills/education to the side column), so old variants keep their layout.
@@ -223,11 +233,19 @@ export const variantSchema = z.object({
   overrides: z.record(z.string(), z.record(z.string(), z.unknown())),
   /** Tailored headline/summary/location that override the master basics for this variant. */
   basicsOverride: z.object({
+    /** The name as this variant prints it, e.g. in Cyrillic for a Bulgarian CV. */
+    name: z.string().optional(),
     headline: z.string().optional(),
     summary: z.string().optional(),
     /** Per-variant location (e.g. target a local role) without touching master. */
     location: z.string().optional(),
   }),
   theme: themeConfigSchema,
+  /**
+   * Translation key -> the master text (JSON-encoded) that key was translated
+   * from. Comparing it with today's master is how a translation knows it is
+   * outdated. Keys are described in lib/translate.
+   */
+  translationSource: z.record(z.string(), z.string()).optional(),
 })
 export type CVVariant = z.infer<typeof variantSchema>

@@ -1,5 +1,5 @@
 import { useRef } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { useStore } from '../store/useStore'
 import { resolveVariant } from '../lib/resolve'
@@ -11,6 +11,7 @@ import { ThemeEditor } from '../components/variant/ThemeEditor'
 import { VariantOptionDefaultsCard } from '../components/variant/VariantOptionsEditor'
 import { ExportButton } from '../components/variant/ExportButton'
 import { AtsPanel } from '../components/variant/AtsPanel'
+import { TranslationPanel } from '../components/variant/TranslationPanel'
 import {
   HighlightProvider,
   useHighlightSurface,
@@ -31,6 +32,9 @@ function VariantEditor() {
   const profile = useStore((s) => s.profile)
   const docRef = useRef<HTMLDivElement>(null)
   const surface = useHighlightSurface()
+  // `?tab=translation` lets a freshly translated copy open on its translations.
+  const [params] = useSearchParams()
+  const initialTab = params.get('tab') ?? 'content'
 
   if (!variant) {
     return (
@@ -50,7 +54,7 @@ function VariantEditor() {
   const cv = resolveVariant(profile, variant)
 
   return (
-    <Tabs defaultValue="content" className="gap-0">
+    <Tabs key={variant.id} defaultValue={initialTab} className="gap-0">
       {/* Sticky toolbar pinned right under the app header (whose rendered
           height Layout publishes as --app-header-h). Negative margins undo
           <main>'s padding so the bar spans edge to edge and content scrolls
@@ -78,6 +82,9 @@ function VariantEditor() {
             </TabsTrigger>
             <TabsTrigger value="design" className="px-3">
               Design
+            </TabsTrigger>
+            <TabsTrigger value="translation" className="px-3">
+              Translation
             </TabsTrigger>
             <TabsTrigger value="ats" className="px-3">
               ATS
@@ -119,6 +126,9 @@ function VariantEditor() {
           >
             <ThemeEditor variant={variant} />
             <VariantOptionDefaultsCard variant={variant} />
+          </TabsContent>
+          <TabsContent value="translation">
+            <TranslationPanel variant={variant} />
           </TabsContent>
           <TabsContent value="ats">
             <AtsPanel cv={cv} theme={variant.theme} />

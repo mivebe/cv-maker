@@ -1,4 +1,9 @@
-import { forwardRef, type CSSProperties } from 'react'
+import {
+  createContext,
+  forwardRef,
+  useContext,
+  type CSSProperties,
+} from 'react'
 import type {
   Basics,
   Branding,
@@ -16,7 +21,7 @@ import type { ResolvedCV, ResolvedSection } from '../lib/resolve'
 import { BASICS_ID, useHighlightNode } from '../components/variant/highlight'
 import { displayPhone, telHref } from '../lib/phone'
 import { formatDate, type DateFormat } from '../lib/dates'
-import { LANGUAGE_STAGES } from '../lib/sections'
+import { languageInfo, type LanguageInfo } from '../lib/i18n'
 import { paginate } from './layout'
 import { chartColors, chartMarker, slicePath } from './chart'
 import { CVIcon } from './icons'
@@ -33,17 +38,27 @@ import './cv.css'
  */
 
 /**
- * `format` is the variant's date format; "Present" and any other text the date
- * parser doesn't recognise passes through as typed (see lib/dates).
+ * The variant's language, for the few words the renderer prints itself
+ * ("Present", language stages) and for month names. Set once by CVDocument.
+ */
+const LangContext = createContext<LanguageInfo>(languageInfo(undefined))
+const useLang = () => useContext(LangContext)
+
+/**
+ * `format` is the variant's date format; any text the date parser doesn't
+ * recognise ("Summer 2020") passes through as typed (see lib/dates).
  */
 function formatRange(
   start: string,
   end: string,
   format: DateFormat,
+  lang: LanguageInfo,
   current = false,
 ): string {
-  const right = current ? 'Present' : formatDate(end, format)
-  return [formatDate(start, format), right].filter(Boolean).join(' – ')
+  const right = current ? lang.present : formatDate(end, format, lang.code)
+  return [formatDate(start, format, lang.code), right]
+    .filter(Boolean)
+    .join(' – ')
 }
 
 /** Links read better without the scheme: `github.com/mivebe`, not `https://…`. */
@@ -118,7 +133,14 @@ function ExperienceBlock({
   options: SectionOptions
 }) {
   const hl = useHighlightNode()
-  const date = formatRange(item.startDate, item.endDate, format, item.current)
+  const lang = useLang()
+  const date = formatRange(
+    item.startDate,
+    item.endDate,
+    format,
+    lang,
+    item.current,
+  )
   const dateRight = options.datePosition === 'right'
   return (
     <article className="cv-item" {...hl(item.id)}>
@@ -188,7 +210,8 @@ function CustomBlock({
   options: SectionOptions
 }) {
   const hl = useHighlightNode()
-  const date = formatDate(item.date, format)
+  const lang = useLang()
+  const date = formatDate(item.date, format, lang.code)
   const dateRight = options.datePosition === 'right'
   // An item can legitimately carry nothing but a chip group - that is how a
   // labelled list ("Frameworks: LangGraph, FastAPI") is expressed outside the
@@ -498,7 +521,7 @@ function TitleListBlock({
 }
 
 /**
- * Languages. The stage labels come from LANGUAGE_STAGES, never typed, so the
+ * Languages. The stage labels come from the variant's language, never typed, so the
  * words and the notch count cannot disagree. Slider mode is the only display
  * that goes *below* the name: a track plus three labels does not fit beside a
  * language in a side column.
@@ -511,9 +534,10 @@ function LanguagesBlock({
   options: SectionOptions
 }) {
   const hl = useHighlightNode()
+  const { stages } = useLang()
   const mode = options.languageDisplay
   const stage = (level: number) =>
-    LANGUAGE_STAGES[Math.min(Math.max(1, Math.round(level)), 4) - 1]
+    stages[Math.min(Math.max(1, Math.round(level)), 4) - 1]
   return (
     <div className="cv-languages cv-list-grid" data-mode={mode}>
       {items.map((it) => (
@@ -525,7 +549,7 @@ function LanguagesBlock({
             )}
             {mode === 'notches' && (
               <span className="cv-language-notches" aria-hidden>
-                {LANGUAGE_STAGES.map((_, i) => (
+                {stages.map((_, i) => (
                   <span
                     key={i}
                     className="cv-language-notch"
@@ -540,9 +564,9 @@ function LanguagesBlock({
               <SliderTrack value={it.level} steps={4} />
               {options.languageShowLabels && (
                 <div className="cv-slider-labels">
-                  <span>{LANGUAGE_STAGES[0]}</span>
+                  <span>{stages[0]}</span>
                   <span className="cv-language-current">{stage(it.level)}</span>
-                  <span>{LANGUAGE_STAGES[3]}</span>
+                  <span>{stages[3]}</span>
                 </div>
               )}
             </>
@@ -565,6 +589,7 @@ function SectionBlock({
 }) {
   const centered = CENTERED_KINDS.has(section.kind)
   const hl = useHighlightNode()
+  const lang = useLang()
   const options = section.options
 
   return (
@@ -599,7 +624,12 @@ function SectionBlock({
 
       {section.kind === 'education' &&
         section.items.map((it) => {
-          const date = formatRange(it.startDate, it.endDate, theme.dateFormat)
+          const date = formatRange(
+            it.startDate,
+            it.endDate,
+            theme.dateFormat,
+            lang,
+          )
           const dateRight = options.datePosition === 'right'
           return (
             <article key={it.id} className="cv-item" {...hl(it.id)}>
@@ -951,57 +981,59 @@ export const CVDocument = forwardRef<HTMLDivElement, CVDocumentProps>(
     if (!pages.length) pages.push({ bands: [] })
 
     return (
-      <div
-        className="cv-root"
-        style={themeToStyle(theme)}
-        {...themeDataAttrs(theme)}
-        ref={ref}
-      >
-        {pages.map((page, pageIndex) => (
-          <div className="cv-page" key={pageIndex}>
-            {/* Branding first in the DOM, but none of it is in the flow: each
+      <LangContext.Provider value={languageInfo(cv.language)}>
+        <div
+          className="cv-root"
+          style={themeToStyle(theme)}
+          {...themeDataAttrs(theme)}
+          ref={ref}
+        >
+          {pages.map((page, pageIndex) => (
+            <div className="cv-page" key={pageIndex}>
+              {/* Branding first in the DOM, but none of it is in the flow: each
                 piece is positioned against the sheet. */}
-            {branding && theme.brandingBackdrop !== 'none' && (
-              <BrandBackdrop branding={branding} theme={theme} />
-            )}
-            {branding && theme.brandingEdge && (
-              <div className="cv-brandedge" aria-hidden />
-            )}
-            {branding && theme.brandingMark && (
-              <BrandMark branding={branding} theme={theme} />
-            )}
+              {branding && theme.brandingBackdrop !== 'none' && (
+                <BrandBackdrop branding={branding} theme={theme} />
+              )}
+              {branding && theme.brandingEdge && (
+                <div className="cv-brandedge" aria-hidden />
+              )}
+              {branding && theme.brandingMark && (
+                <BrandMark branding={branding} theme={theme} />
+              )}
 
-            {pageIndex === 0 && <Header basics={basics} theme={theme} />}
+              {pageIndex === 0 && <Header basics={basics} theme={theme} />}
 
-            {page.bands.map((band, bandIndex) =>
-              band.kind === 'full' ? (
-                <SectionBlock
-                  key={bandIndex}
-                  section={band.section}
-                  theme={theme}
-                />
-              ) : (
-                <div className="cv-cols" key={bandIndex}>
-                  <div className="cv-col cv-col-main">
-                    {band.main.map((s) => (
-                      <SectionBlock key={s.id} section={s} theme={theme} />
-                    ))}
+              {page.bands.map((band, bandIndex) =>
+                band.kind === 'full' ? (
+                  <SectionBlock
+                    key={bandIndex}
+                    section={band.section}
+                    theme={theme}
+                  />
+                ) : (
+                  <div className="cv-cols" key={bandIndex}>
+                    <div className="cv-col cv-col-main">
+                      {band.main.map((s) => (
+                        <SectionBlock key={s.id} section={s} theme={theme} />
+                      ))}
+                    </div>
+                    <div className="cv-col cv-col-side">
+                      {band.side.map((s) => (
+                        <SectionBlock key={s.id} section={s} theme={theme} />
+                      ))}
+                    </div>
                   </div>
-                  <div className="cv-col cv-col-side">
-                    {band.side.map((s) => (
-                      <SectionBlock key={s.id} section={s} theme={theme} />
-                    ))}
-                  </div>
-                </div>
-              ),
-            )}
+                ),
+              )}
 
-            {branding && theme.brandingFooter && (
-              <BrandFooter branding={branding} />
-            )}
-          </div>
-        ))}
-      </div>
+              {branding && theme.brandingFooter && (
+                <BrandFooter branding={branding} />
+              )}
+            </div>
+          ))}
+        </div>
+      </LangContext.Provider>
     )
   },
 )

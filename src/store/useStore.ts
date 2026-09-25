@@ -23,6 +23,12 @@ import {
 } from '../lib/factory'
 import { sampleData } from '../lib/sample'
 import { defaultPlacement, reconcileSectionOrder } from '../lib/sections'
+import {
+  withoutTranslation,
+  withTranslations,
+  type TValue,
+} from '../lib/translate'
+import { languageInfo } from '../lib/i18n'
 import { withHistory } from './useHistory'
 
 type Direction = 'up' | 'down'
@@ -104,7 +110,7 @@ interface AppState {
   renameVariant: (id: string, name: string) => void
   updateVariantMeta: (
     id: string,
-    patch: Partial<Pick<CVVariant, 'name' | 'targetRole'>>,
+    patch: Partial<Pick<CVVariant, 'name' | 'targetRole' | 'language'>>,
   ) => void
   setVariantInclude: (id: string, itemId: string, included: boolean) => void
   setVariantSectionOrder: (id: string, order: string[]) => void
@@ -145,6 +151,21 @@ interface AppState {
     id: string,
     patch: Partial<CVVariant['basicsOverride']>,
   ) => void
+
+  // ---- translation (keys are described in lib/translate) ----
+  /** Write translated text; each key remembers the master text it came from. */
+  setTranslations: (id: string, values: Record<string, TValue>) => void
+  /** Drop one translation so the master text prints again. */
+  clearTranslation: (id: string, key: string) => void
+  /**
+   * Copy `sourceId` into a new variant in `language` carrying `values`, as one
+   * undoable step. Returns the new id.
+   */
+  addTranslatedVariant: (
+    sourceId: string,
+    language: string,
+    values: Record<string, TValue>,
+  ) => string | undefined
 }
 
 function patchProfile(
@@ -166,14 +187,28 @@ function patchSection(
   }))
 }
 
+/** Every variant change goes through here, so this is what stamps `updatedAt`. */
 function patchVariant(
   set: (fn: (s: AppState) => Partial<AppState>) => void,
   id: string,
   fn: (v: CVVariant) => CVVariant,
 ) {
   set((s) => ({
-    variants: s.variants.map((v) => (v.id === id ? fn(v) : v)),
+    variants: s.variants.map((v) => {
+      if (v.id !== id) return v
+      const next = fn(v)
+      return next === v ? v : { ...next, updatedAt: Date.now() }
+    }),
   }))
+}
+
+/** Forget the recorded translation sources for keys that were just cleared. */
+function dropSources(v: CVVariant, keys: string[]): CVVariant {
+  if (!v.translationSource || !keys.some((k) => k in v.translationSource!))
+    return v
+  const translationSource = { ...v.translationSource }
+  for (const k of keys) delete translationSource[k]
+  return { ...v, translationSource }
 }
 
 const seed = sampleData()
@@ -183,8 +218,20 @@ const createAppState: StateCreator<AppState, [], []> = (set, get) => ({
   variants: seed.variants,
 
   replaceAll: (data) => set({ profile: data.profile, variants: data.variants }),
-  applyAiEdit: (data) =>
-    set({ profile: data.profile, variants: data.variants }),
+  applyAiEdit: (data) => {
+    // The assistant rewrites the whole document; stamp only what it touched.
+    const before = new Map(get().variants.map((v) => [v.id, v]))
+    const now = Date.now()
+    const variants = data.variants.map((v) => {
+      const old = before.get(v.id)
+      const same =
+        old &&
+        JSON.stringify({ ...old, updatedAt: 0 }) ===
+          JSON.stringify({ ...v, updatedAt: 0 })
+      return same ? v : { ...v, updatedAt: now }
+    })
+    set({ profile: data.profile, variants })
+  },
   resetToSample: () => {
     const s = sampleData()
     set({ profile: s.profile, variants: s.variants })
@@ -335,6 +382,7 @@ const createAppState: StateCreator<AppState, [], []> = (set, get) => ({
       ...structuredClone(src),
       id: newVariant(get().profile).id,
       name: `${src.name} (copy)`,
+      updatedAt: Date.now(),
     }
     set((s) => ({ variants: [...s.variants, copy] }))
     return copy.id
@@ -385,7 +433,10 @@ const createAppState: StateCreator<AppState, [], []> = (set, get) => ({
       // An empty rename means "use the default label", not "no heading".
       if (title.trim()) sectionTitles[sectionId] = title
       else delete sectionTitles[sectionId]
-      return { ...v, sectionTitles }
+      const next = { ...v, sectionTitles }
+      return title.trim()
+        ? next
+        : dropSources(next, [`section:${sectionId}:title`])
     }),
   setVariantOptionDefaults: (id, patch) =>
     patchVariant(set, id, (v) => ({
@@ -432,7 +483,11 @@ const createAppState: StateCreator<AppState, [], []> = (set, get) => ({
       const overrides = { ...v.overrides }
       if (Object.keys(forItem).length === 0) delete overrides[itemId]
       else overrides[itemId] = forItem
-      return { ...v, overrides }
+      // A link's label override is addressed as `link:<id>` (lib/translate).
+      return dropSources({ ...v, overrides }, [
+        `item:${itemId}:${field}`,
+        `link:${itemId}`,
+      ])
     }),
   updateVariantTheme: (id, patch) =>
     patchVariant(set, id, (v) => ({
@@ -440,10 +495,38 @@ const createAppState: StateCreator<AppState, [], []> = (set, get) => ({
       theme: { ...v.theme, ...patch },
     })),
   updateVariantBasics: (id, patch) =>
-    patchVariant(set, id, (v) => ({
-      ...v,
-      basicsOverride: { ...v.basicsOverride, ...patch },
-    })),
+    patchVariant(set, id, (v) => {
+      const cleared = Object.keys(patch)
+        .filter((k) => patch[k as keyof typeof patch] === undefined)
+        .map((k) => `basics:${k}`)
+      return dropSources(
+        { ...v, basicsOverride: { ...v.basicsOverride, ...patch } },
+        cleared,
+      )
+    }),
+
+  // ---- translation ----
+  setTranslations: (id, values) =>
+    patchVariant(set, id, (v) => withTranslations(get().profile, v, values)),
+  clearTranslation: (id, key) =>
+    patchVariant(set, id, (v) => withoutTranslation(v, key)),
+  addTranslatedVariant: (sourceId, language, values) => {
+    const src = get().variants.find((v) => v.id === sourceId)
+    if (!src) return undefined
+    const copy: CVVariant = withTranslations(
+      get().profile,
+      {
+        ...structuredClone(src),
+        id: newVariant(get().profile).id,
+        name: `${src.name} · ${languageInfo(language).native}`,
+        language,
+        updatedAt: Date.now(),
+      },
+      values,
+    )
+    set((s) => ({ variants: [...s.variants, copy] }))
+    return copy.id
+  },
 })
 
 export const useStore = create<AppState>()(

@@ -1,5 +1,6 @@
 import type { AppData, SectionItem, SectionKind } from '../schema'
 import { itemLabel, KIND_LABELS, sectionLabel } from '../lib/sections'
+import { languageInfo } from '../lib/i18n'
 
 /**
  * Turns a store action into something a person can recognise in the history
@@ -349,6 +350,36 @@ const RULES: Record<string, Rule> = {
       refs: [str(args[0])],
     }),
   },
+
+  // ---- translation ----
+  setTranslations: {
+    ids: [0],
+    describe: ({ args, before, after }) => {
+      const count = isPlainValues(args[1]) ? Object.keys(args[1]).length : 0
+      return {
+        title: `Translated ${variantName(before, after, str(args[0]))}`,
+        detail: count > 1 ? `${count} fields` : undefined,
+        refs: [str(args[0])],
+      }
+    },
+  },
+  clearTranslation: {
+    ids: [0],
+    describe: ({ args, before, after }) =>
+      `Cleared a translation in ${variantName(before, after, str(args[0]))}`,
+  },
+  addTranslatedVariant: {
+    ids: [0],
+    describe: ({ args, before, after }) => ({
+      title: `Translated copy of ${variantName(before, after, str(args[0]))}`,
+      detail: languageInfo(str(args[1])).name,
+      refs: [str(args[0])],
+    }),
+  },
+}
+
+function isPlainValues(v: unknown): v is Record<string, unknown> {
+  return typeof v === 'object' && v !== null && !Array.isArray(v)
 }
 
 export function describeAction(

@@ -21,6 +21,7 @@ import {
   reconcileSectionOrder,
   sectionLabel,
 } from './sections'
+import { DEFAULT_LANGUAGE } from './i18n'
 
 /** Placement + presentation facts every resolved section carries. */
 interface SectionBase {
@@ -51,6 +52,8 @@ export type ResolvedSection = SectionBase &
   )
 
 export interface ResolvedCV {
+  /** The variant's language code; the renderer localises dates and stages. */
+  language: string
   basics: Basics
   sections: ResolvedSection[]
   /** The issuing organisation, or null when the profile has no branding on. */
@@ -83,6 +86,9 @@ export function resolveVariant(
 ): ResolvedCV {
   const basics: Basics = {
     ...profile.basics,
+    name: variant.basicsOverride.name ?? profile.basics.name,
+    // Link labels are overridable like items (a translated "Portfolio").
+    links: profile.basics.links.map((l) => applyOverride(variant, l)),
     headline: variant.basicsOverride.headline ?? profile.basics.headline,
     summary: variant.basicsOverride.summary ?? profile.basics.summary,
     location: variant.basicsOverride.location ?? profile.basics.location,
@@ -115,7 +121,7 @@ export function resolveVariant(
     const base: SectionBase = {
       id,
       label: variant.sectionTitles[id]?.trim() || sectionLabel(section),
-      subtitle: section.subtitle,
+      subtitle: variant.sectionSubtitles?.[id] ?? section.subtitle,
       column: placement.column,
       pageBreakBefore: placement.pageBreakBefore,
       options,
@@ -147,6 +153,7 @@ export function resolveVariant(
   }
 
   return {
+    language: variant.language ?? DEFAULT_LANGUAGE,
     basics,
     sections,
     branding: profile.branding.enabled ? profile.branding : null,

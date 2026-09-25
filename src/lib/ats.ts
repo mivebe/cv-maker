@@ -3,7 +3,7 @@ import type { ResolvedCV } from './resolve'
 import { stripInline } from '../cv/RichText'
 import { displayPhone } from './phone'
 import { formatDate } from './dates'
-import { LANGUAGE_STAGES } from './sections'
+import { DEFAULT_LANGUAGE, languageInfo } from './i18n'
 
 /**
  * ATS tooling. Applicant-tracking systems read a PDF as a stream of text in one
@@ -21,7 +21,8 @@ import { LANGUAGE_STAGES } from './sections'
 export function atsLinearText(cv: ResolvedCV, theme: ThemeConfig): string {
   const lines: string[] = []
   const { basics, sections } = cv
-  const date = (raw: string) => formatDate(raw, theme.dateFormat)
+  const lang = languageInfo(cv.language)
+  const date = (raw: string) => formatDate(raw, theme.dateFormat, lang.code)
   const bullets = (items: string[]) =>
     items
       .filter((h) => h.trim())
@@ -50,7 +51,7 @@ export function atsLinearText(cv: ResolvedCV, theme: ThemeConfig): string {
     if (section.kind === 'experience') {
       for (const it of section.items) {
         lines.push(
-          `${it.role}${it.organization ? ` - ${it.organization}` : ''} (${[date(it.startDate), it.current ? 'Present' : date(it.endDate)].filter(Boolean).join('–')})`,
+          `${it.role}${it.organization ? ` - ${it.organization}` : ''} (${[date(it.startDate), it.current ? lang.present : date(it.endDate)].filter(Boolean).join('–')})`,
         )
         if (it.summary) lines.push(stripInline(it.summary))
         chips(it.tagsLabel, it.tags)
@@ -127,7 +128,7 @@ export function atsLinearText(cv: ResolvedCV, theme: ThemeConfig): string {
         section.items
           .map(
             (i) =>
-              `${i.name} - ${LANGUAGE_STAGES[Math.min(Math.max(1, i.level), 4) - 1]}`,
+              `${i.name} - ${lang.stages[Math.min(Math.max(1, i.level), 4) - 1]}`,
           )
           .join(', '),
       )
@@ -143,15 +144,16 @@ export interface AtsCheck {
   detail?: string
 }
 
-/** Standard section names ATS parsers recognize. */
-const STANDARD_LABELS = new Set([
-  'experience',
-  'work experience',
-  'employment',
-  'education',
-  'skills',
-  'projects',
-])
+/**
+ * Standard section names ATS parsers recognize: the variant language's own
+ * (see `headings` in lib/i18n) plus English, which parsers accept anywhere.
+ */
+function standardLabels(language: string): Set<string> {
+  return new Set([
+    ...languageInfo(DEFAULT_LANGUAGE).headings,
+    ...languageInfo(language).headings,
+  ])
+}
 
 /** Predict how cleanly a resolved CV + theme will parse in an ATS. */
 export function atsChecks(cv: ResolvedCV, theme: ThemeConfig): AtsCheck[] {
@@ -184,8 +186,9 @@ export function atsChecks(cv: ResolvedCV, theme: ThemeConfig): AtsCheck[] {
         },
   )
 
+  const standard = standardLabels(cv.language)
   const recognized = sections.filter((s) =>
-    STANDARD_LABELS.has(s.label.trim().toLowerCase()),
+    standard.has(s.label.trim().toLocaleLowerCase(cv.language)),
   ).length
   checks.push(
     recognized > 0
@@ -196,7 +199,8 @@ export function atsChecks(cv: ResolvedCV, theme: ThemeConfig): AtsCheck[] {
       : {
           level: 'warn',
           label: 'No standard section headings',
-          detail: 'Use headings like "Experience", "Education", "Skills".',
+          detail:
+            'Use headings like "Experience", "Education", "Skills" (or their standard wording in the variant language).',
         },
   )
 

@@ -189,5 +189,7 @@ export function newVariant(
     overrides: {},
     basicsOverride: {},
     theme: themeFromPreset('showcase'),
+    language: 'en',
+    updatedAt: Date.now(),
   }
 }

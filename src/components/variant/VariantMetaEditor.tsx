@@ -16,7 +16,7 @@ export function VariantMetaEditor({ variant }: { variant: CVVariant }) {
     <div className="rounded-xl" {...hl(BASICS_ID)}>
       <SectionCard
         title="Variant details"
-        description="Name this variant and tailor the headline/summary for the target role."
+        description="Name this variant and tailor the name, headline and summary it prints."
       >
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Variant name">
@@ -39,6 +39,20 @@ export function VariantMetaEditor({ variant }: { variant: CVVariant }) {
         </div>
 
         <div className="mt-4 space-y-4">
+          <Field
+            label="Name override"
+            hint={`Leave blank to use master: "${profile.basics.name || '-'}". Useful for a name in another script, e.g. Cyrillic.`}
+          >
+            <Input
+              value={variant.basicsOverride.name ?? ''}
+              placeholder={profile.basics.name}
+              onChange={(e) =>
+                updateVariantBasics(variant.id, {
+                  name: e.target.value || undefined,
+                })
+              }
+            />
+          </Field>
           <Field
             label="Headline override"
             hint={`Leave blank to use master: "${profile.basics.headline || '-'}"`}

@@ -5,7 +5,7 @@ import {
   ChevronUp,
   Eye,
   EyeOff,
-  Sparkles,
+  Scissors,
   SquareSplitVertical,
 } from 'lucide-react'
 import type { CVVariant, Section } from '../../schema'
@@ -318,7 +318,7 @@ export function VariantSectionsEditor({ variant }: { variant: CVVariant }) {
           title="Show only content this variant tailors away from the master"
           onClick={() => setTailoredOnly((v) => !v)}
         >
-          <Sparkles className="size-3.5" />
+          <Scissors className="size-3.5" />
           Tailored only
           {totalCount > 0 && (
             <Badge variant="secondary" className="px-1.5">

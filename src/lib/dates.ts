@@ -1,3 +1,5 @@
+import { DEFAULT_LANGUAGE, monthNames } from './i18n'
+
 /**
  * CV dates are half-structured on purpose. What a user types is kept verbatim
  * ("Summer 2020", "Present", "Q3 2019") because a CV tolerates that and a
@@ -91,17 +93,24 @@ export function toCanonical(d: PartialDate): string {
 }
 
 /**
- * Render a stored date in the theme's format. Unparseable text (and the empty
- * string) is returned untouched, so "Present" and "Q3 2019" still work.
+ * Render a stored date in the theme's format, with month names in the
+ * variant's language. Unparseable text (and the empty string) is returned
+ * untouched, so "Present" and "Q3 2019" still work.
  */
-export function formatDate(raw: string, format: DateFormat): string {
+export function formatDate(
+  raw: string,
+  format: DateFormat,
+  language: string = DEFAULT_LANGUAGE,
+): string {
   const d = parseDate(raw)
   if (!d) return raw.trim()
   // A year-only date has no month to show, whatever the format asks for.
   if (!d.month || format === 'yyyy') return String(d.year)
 
   const mm = String(d.month).padStart(2, '0')
-  const name = MONTHS[d.month - 1]
+  const english = language === DEFAULT_LANGUAGE
+  const long = english ? MONTHS : monthNames(language, 'long')
+  const name = long[d.month - 1] ?? MONTHS[d.month - 1]
   switch (format) {
     case 'MMMM yyyy':
       return `${name} ${d.year}`
@@ -110,7 +119,13 @@ export function formatDate(raw: string, format: DateFormat): string {
     case 'yyyy-MM':
       return `${d.year}-${mm}`
     case 'MMM yyyy':
-    default:
-      return `${name.slice(0, 3)} ${d.year}`
+    default: {
+      // Other languages abbreviate by their own rules ("sept.", "мар"), so
+      // only English gets the three-letter cut.
+      const short = english
+        ? name.slice(0, 3)
+        : (monthNames(language, 'short')[d.month - 1] ?? name)
+      return `${short} ${d.year}`
+    }
   }
 }
