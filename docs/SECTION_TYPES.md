@@ -1,4 +1,4 @@
-# CV Maker - Section Types
+# anyCV - Section Types
 
 Adds four new section types (chart, slider list, title list, languages) and a set of
 per-section display settings. Along the way it fixes the reason those were expensive:

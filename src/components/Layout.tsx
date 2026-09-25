@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
-import { FileText } from 'lucide-react'
 import { ImportExportButtons } from './ImportExportButtons'
+import { Logo } from './Logo'
 import { SettingsMenu } from './SettingsMenu'
 import { UndoRedoButtons } from './UndoRedoButtons'
 import { HistoryPanel, HistoryPanelButton } from './history/HistoryPanel'
@@ -60,12 +60,7 @@ export function Layout() {
         className="no-print sticky top-0 z-10 border-b bg-background/90 backdrop-blur"
       >
         <div className="flex w-full flex-wrap items-center gap-x-4 gap-y-2 px-3 py-2.5 sm:px-6 sm:py-3">
-          <div className="flex items-center gap-2">
-            <FileText className="size-5 shrink-0 text-primary" />
-            <span className="text-base font-semibold tracking-tight sm:text-lg">
-              CV Maker
-            </span>
-          </div>
+          <Logo />
           {/* Actions sit beside the logo on mobile; the nav wraps below them. */}
           <div className="order-2 ml-auto flex min-w-0 items-center gap-1 sm:order-3 sm:gap-2">
             <UndoRedoButtons />

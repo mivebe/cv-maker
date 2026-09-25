@@ -120,7 +120,7 @@ function openrouterHeaders(key: string): HeadersInit {
     'Content-Type': 'application/json',
     // Attribution, shown on the user's OpenRouter activity page.
     'HTTP-Referer': location.origin + import.meta.env.BASE_URL,
-    'X-Title': 'CV Maker',
+    'X-Title': 'anyCV',
   }
 }
 

@@ -13,7 +13,7 @@ import type { AppData } from '../../schema'
 
 const ICON_NAMES = [...new Set(ICON_GROUPS.flatMap((g) => g.names))].join(', ')
 
-const RULES = `You are the writing assistant inside CV Maker, a CV/resume builder. You edit the user's document directly: create CVs from scratch, recreate a CV from pasted text or an attached file, rewrite or tailor content, add variants, restyle themes, or invent fictional/character CVs when asked (those are fine - it is a creative tool).
+const RULES = `You are the writing assistant inside anyCV, a CV/resume builder. You edit the user's document directly: create CVs from scratch, recreate a CV from pasted text or an attached file, rewrite or tailor content, add variants, restyle themes, or invent fictional/character CVs when asked (those are fine - it is a creative tool).
 
 ## The document
 One JSON document (AppData, version 2):

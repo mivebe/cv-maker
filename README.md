@@ -1,4 +1,4 @@
-# CV Maker
+# anyCV
 
 A personal, local-first CV maker. One master profile → many role-tailored CV
 variants, with full design control and ATS-friendly PDF export. Everything lives
@@ -24,7 +24,7 @@ the header restores it at any point.
 
 ## How to use it
 
-There are two ways to work with CV Maker, and they meet in the same place - the
+There are two ways to work with anyCV, and they meet in the same place - the
 JSON document. Pick either, or start with one and finish with the other.
 
 ### 1. App only - everything through the UI
@@ -72,7 +72,7 @@ and get back a document the app will load.
 
 A prompt that works well:
 
-> Here is `cv-data.json` from an app called CV Maker, and here is my current CV.
+> Here is `cv-data.json` from an app called anyCV, and here is my current CV.
 > Rewrite the JSON so it describes *me* instead of the sample person.
 > Rules: keep `"version": 2`; keep the section `kind` values and the field names
 > exactly as they are; every `id` must stay unique; and if you change or remove
@@ -110,7 +110,7 @@ text file, write one from scratch, tighten bullets, add a variant, restyle a
 theme, or invent a character's CV.
 
 It runs on **your** account with a **free** provider, called straight from the
-browser - there is no CV Maker server and nobody pays:
+browser - there is no anyCV server and nobody pays:
 
 - **OpenRouter** - click *Connect OpenRouter*, sign in, and you are back with
   a key; only free models are offered (about 50 requests a day).

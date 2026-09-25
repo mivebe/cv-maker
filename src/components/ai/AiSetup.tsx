@@ -61,7 +61,7 @@ export function AiSetup() {
         <p className="mt-1 text-xs text-muted-foreground">
           The assistant can write, rewrite and restyle your CVs - or invent a
           character's. It runs on your account with a free AI provider, called
-          straight from this browser. Nothing goes through a CV Maker server,
+          straight from this browser. Nothing goes through an anyCV server,
           and your key never leaves this device.
         </p>
       </div>

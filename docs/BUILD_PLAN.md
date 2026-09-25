@@ -1,4 +1,4 @@
-# CV Maker - Build Plan
+# anyCV - Build Plan
 
 A personal, local-first CV maker. Built because existing tools lack the four
 features that matter most to me.
